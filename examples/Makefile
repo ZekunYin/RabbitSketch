@@ -1,19 +1,20 @@
 TARGET=minhash
 
 CXX=g++
-CXXFLAGS=-g 
+CXXFLAGS=-g -O2 
 
-INCLUDE=../include
+INCLUDE=../src
 #SRC=HashList.cpp HashPriorityQueue.cpp HashSet.cpp MinHashHeap.cpp MurmurHash3.cpp Sketch.cpp test.cpp
 
-OBJECTS=HashList.o HashPriorityQueue.o HashSet.o MinHashHeap.o MurmurHash3.o Sketch.o test.o
+OBJECTS=test.o libsketch.a
 
 $(TARGET):$(OBJECTS)
-	$(CXX) $(CXXFLAGS)  $^ -o $@ `gsl-config --cflags --libs`
+	$(CXX) $(CXXFLAGS)  $^ -o $@ `gsl-config --cflags --libs` -I$(INCLUDE)
 #	$(CXX) $(CXXFLAGS)  $^ -o $@ -lgsl -lgslcblas -lm
 
-%.o:%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+#%.o:%.cpp
+test.o:test.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -I$(INCLUDE)
 
 
 
