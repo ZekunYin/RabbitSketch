@@ -15,7 +15,7 @@
 #include <string>
 #include <string.h>
 #include "MinHashHeap.h"
-#include "ThreadPool.h"
+//#include "ThreadPool.h"
 
 namespace Sketch{
 
@@ -138,12 +138,13 @@ class MinHash
 		MinHash(Parameters parametersNew);
 		void update(char * seq);
 
-		double jaccard(MinHash & msh);			
-		double dist(MinHash & msh);
+		double jaccard(MinHash * msh);			
+		double dist(MinHash * msh);
 
 		HashList & getHashList();
 		void printHashList();
 		void writeToFile();
+		uint64_t getLength(){return length;}//return totalSeqence length.
 
 	private:
 		//Modified by qzh.Define the seq.
@@ -153,6 +154,8 @@ class MinHash
 		Parameters parameters;
 		MinHashHeap * minHashHeap;
 		Reference reference;
+		uint64_t length;
+		double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
 
 };
 
