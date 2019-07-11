@@ -4,10 +4,10 @@
 //
 // See the LICENSE.txt file included with this software for license information.
 
-#ifndef Sketch_h
-#define Sketch_h
+//Modified by qzh.
+//#ifndef Sketch_h
+//#define Sketch_h
 
-//#include "mash/capnp/MinHash.capnp.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <map>
@@ -17,23 +17,12 @@
 #include "MinHashHeap.h"
 #include "ThreadPool.h"
 
-static const char * capnpHeader = "Cap'n Proto";
-static const int capnpHeaderLength = strlen(capnpHeader);
-
-static const char * suffixSketch = ".msh";
-static const char * suffixSketchWindowed = ".msw";
-
-static const char * alphabetNucleotide = "ACGT";
-static const char * alphabetProtein = "ACDEFGHIKLMNPQRSTVWY";
-
-class Sketch
-{
-public:
+namespace Sketch{
     
     typedef uint64_t hash_t;
-    
-    struct Parameters
-    {
+
+	struct Parameters
+	{
         Parameters()
             :
             parallelism(1),
@@ -102,9 +91,8 @@ public:
         double targetCov;
         uint64_t genomeSize;
     };
-    
 
-    struct PositionHash
+	struct PositionHash
     {
         PositionHash(uint32_t positionNew, hash_t hashNew) :
             position(positionNew),
@@ -114,7 +102,7 @@ public:
         uint32_t position;
         hash_t hash;
     };
-    
+
     struct Locus
     {
         Locus(uint32_t sequenceNew, uint32_t positionNew)
@@ -126,7 +114,7 @@ public:
         uint32_t sequence;
         uint32_t position;
     };
-    
+
     typedef std::unordered_set<hash_t> Hash_set;
     
     struct Reference
@@ -138,101 +126,40 @@ public:
         HashList hashesSorted;
         std::vector<uint32_t> counts;
     };
-    
-	//Modified by qzh. And I don't know how to deal with the pointer of Parameters.
-    struct SketchInput
-    {
-    	SketchInput(char * seqNew, uint64_t lengthNew,  const Sketch::Parameters & parametersNew)
-    	:
-    	seq(seqNew),
-		length(lengthNew),
-    	parameters(parametersNew)
-    	{}
-    	
-    	~SketchInput()
-    	{
-    		if ( seq != 0 )
-    		{
-	    		delete [] seq;
-	    	}
-    	}
-    	
-    	char * seq;
-		uint64_t length;
-    	Sketch::Parameters parameters;
-    };
-    
-    struct SketchOutput
-    {
-    	std::vector<Reference> references;
-	    std::vector<std::vector<PositionHash>> positionHashesByReference;
-    };
-    
-    void getAlphabetAsString(std::string & alphabet) const;
-    uint32_t getAlphabetSize() const {return parameters.alphabetSize;}
-    bool getConcatenated() const {return parameters.concatenated;}
-    float getError() const {return parameters.error;}
-    int getHashCount() const {return lociByHash.size();}
-    uint32_t getHashSeed() const {return parameters.seed;}
-    const std::vector<Locus> & getLociByHash(hash_t hash) const;
-    float getMinHashesPerWindow() const {return parameters.minHashesPerWindow;}
-	int getMinKmerSize(uint64_t reference) const;
-	bool getPreserveCase() const {return parameters.preserveCase;}
-	double getRandomKmerChance(uint64_t reference) const;
-    const Reference & getReference(uint64_t index) const {return references.at(index);}
-    uint64_t getReferenceCount() const {return references.size();}
-    void getReferenceHistogram(uint64_t index, std::map<uint32_t, uint64_t> & histogram) const;
-    uint64_t getReferenceIndex(std::string id) const;
-    int getKmerSize() const {return parameters.kmerSize;}
-    double getKmerSpace() const {return kmerSpace;}
-    bool getUse64() const {return parameters.use64;}
-    uint64_t getWindowSize() const {return parameters.windowSize;}
-    bool getNoncanonical() const {return parameters.noncanonical;}
-    bool hasHashCounts() const {return references.size() > 0 && references.at(0).counts.size() > 0;}
-    bool hasLociByHash(hash_t hash) const {return lociByHash.count(hash);}
-    int initFromFiles(const std::vector<std::string> & files, const Parameters & parametersNew, int verbosity = 0, bool enforceParameters = false, bool contain = false);
-    void initFromReads(const std::vector<std::string> & files, const Parameters & parametersNew);
-    uint64_t initParametersFromCapnp(const char * file);
-    void setReferenceName(int i, const std::string name) {references[i].name = name;}
-    void setReferenceComment(int i, const std::string comment) {references[i].comment = comment;}
-	bool sketchFileBySequence(FILE * file, ThreadPool<Sketch::SketchInput, Sketch::SketchOutput> * threadPool);
-	void useThreadOutput(SketchOutput * output);
-    void warnKmerSize(uint64_t lengthMax, const std::string & lengthMaxName, double randomChance, int kMin, int warningCount) const;
-    bool writeToFile() const;
-    int writeToCapnp(const char * file) const;
-    
-private:
-    
-    void createIndex();
-    
-    std::vector<Reference> references;
-    std::unordered_map<std::string, int> referenceIndecesById;
-    std::vector<std::vector<PositionHash>> positionHashesByReference;
-    std::unordered_map<hash_t, std::vector<Locus>> lociByHash;
-    
-    Parameters parameters;
-    double kmerSpace;
-    std::string file;
 
-	MinHashHeap * minHashHeap;
+	class MinHash
+	{
 
-};
+	public:
+		//Modified by qzh.Remove const and the length in the function.	
+		//MinHash(const Parameters & parameters);
+		//void addMinHashes(char * seq, uint64_t length);
+		//void update(char * seq, uint64_t length);
+		MinHash(Parameters parametersNew);
+		void update(char * seq);
 
-void addMinHashes(MinHashHeap & minHashHeap, char * seq, uint64_t length, const Sketch::Parameters & parameters);
-void getMinHashPositions(std::vector<Sketch::PositionHash> & loci, char * seq, uint32_t length, const Sketch::Parameters & parameters, int verbosity = 0);
-bool hasSuffix(std::string const & whole, std::string const & suffix);
-Sketch::SketchOutput * loadCapnp(Sketch::SketchInput * input);
-void reverseComplement(const char * src, char * dest, int length);
-void setAlphabetFromString(Sketch::Parameters & parameters, const char * characters);
-void setMinHashesForReference(Sketch::Reference & reference, const MinHashHeap & hashes);
-Sketch::SketchOutput * sketchFile(Sketch::SketchInput * input);
-Sketch::SketchOutput * sketchSequence(Sketch::SketchInput * input);
+		double jaccard(MinHash & msh);			
+		double dist(MinHash & msh);
+			
+		HashList & getHashList();
+		void printHashList();
+		void writeToFile();
+	
+	private:
+    	//Modified by qzh.Define the seq.
+		char * seq;
+    	double kmerSpace;
 
-//Modified by qzh.
-void sketchOutput(Sketch::SketchInput * input);
+		Parameters parameters;
+		MinHashHeap * minHashHeap;
+		Reference reference;
 
-int def(int fdSource, int fdDest, int level);
-int inf(int fdSource, int fdDest);
-void zerr(int ret);
+	};
 
-#endif
+	class WMinHash{
+	};
+
+	class OMinHash{
+	};
+}
+
