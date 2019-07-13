@@ -1,7 +1,7 @@
 TARGET=minhash
 
 CXX=g++
-CXXFLAGS=-g -O2 
+CXXFLAGS=-g -O2 -std=c++11
 
 INCLUDE=../src
 #SRC=HashList.cpp HashPriorityQueue.cpp HashSet.cpp MinHashHeap.cpp MurmurHash3.cpp Sketch.cpp test.cpp
