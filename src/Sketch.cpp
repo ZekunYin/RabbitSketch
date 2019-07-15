@@ -59,20 +59,26 @@ void MinHash::update(char * seq)
     {
     	seqRev = new char[LENGTH];
         //reverseComplement(seq, seqRev, length);
+
+		char table[4] = {'T','G','A','C'};
 		for ( uint64_t i = 0; i < LENGTH; i++ )
 		{
 		    char base = seq[i];
+
+	  		base >>= 1;
+			base &= 0x03;
+		    seqRev[LENGTH - i - 1] = table[base];
+
 		    
-		    switch ( base )
-		    {
-		        case 'A': base = 'T'; break;
-		        case 'C': base = 'G'; break;
-		        case 'G': base = 'C'; break;
-		        case 'T': base = 'A'; break;
-		        default: break;
-		    }
-		    
-		    seqRev[LENGTH - i - 1] = base;
+//		    switch ( base )
+//		    {
+//		        case 'A': base = 'T'; break;
+//		        case 'C': base = 'G'; break;
+//		        case 'G': base = 'C'; break;
+//		        case 'T': base = 'A'; break;
+//		        default: break;
+//		    }
+//		    seqRev[LENGTH - i - 1] = base;
 		}
     }
     
