@@ -333,3 +333,211 @@ void MurmurHash3_x64_128 ( const void * key, const int len,
 
 //-----------------------------------------------------------------------------
 
+void MurmurHash3_x64_128_avx512_8x16 ( __m512i  * vkey1, __m512i * vkey2, int pend_len, int len, uint32_t seed, void * out )
+{
+	const int nblocks = len / 16; //real blocks
+	__m512i v5 = _mm512_set1_epi64(5);
+	__m512i vlen = _mm512_set1_epi64(len);
+	uint64_t h1[8];
+	uint64_t h2[8];
+
+	__m512i vh1_1;	
+	__m512i vh2_1;	
+	__m512i vh1_2;	
+	__m512i vh2_2;	
+
+	__m512i vk1_1;
+	__m512i vk2_1;
+	__m512i vk1_2;
+	__m512i vk2_2;
+
+	vh1_1 = _mm512_set1_epi64(seed);
+	vh2_1 = _mm512_set1_epi64(seed);
+	vh1_2 = _mm512_set1_epi64(seed);
+	vh2_2 = _mm512_set1_epi64(seed);
+
+  	const uint64_t c1 = BIG_CONSTANT(0x87c37b91114253d5);
+  	const uint64_t c2 = BIG_CONSTANT(0x4cf5ad432745937f);
+	__m512i vc1 = _mm512_set1_epi64(c1);
+	__m512i vc2 = _mm512_set1_epi64(c2);
+
+  	const uint64_t c3 = BIG_CONSTANT(0xff51afd7ed558ccd);
+  	const uint64_t c4 = BIG_CONSTANT(0xc4ceb9fe1a85ec53);
+	__m512i vc3 = _mm512_set1_epi64(c3);
+	__m512i vc4 = _mm512_set1_epi64(c4);
+
+	__m512i idx1 = _mm512_set_epi64(0xD,0x5,0xC,0x4,0x9,0x1,0x8,0x0);
+	__m512i idx2 = _mm512_set_epi64(0xF,0x7,0xE,0x6,0xB,0x3,0xA,0x2);
+
+  	//----------
+	//body
+
+  	for(int i = 0; i < nblocks; i++)
+	{
+
+		vk1_1 = vkey1[2 * i];//_mm512_loadu_epi64(&((uint64_t*)key)[i * 16]);
+		vk1_2 = vkey1[2 * i + 1];//_mm512_loadu_epi64(&((uint64_t*)key)[i * 16 + 8]);
+
+		vk2_1 = vkey2[2 * i];//_mm512_loadu_epi64(&((uint64_t*)key)[i * 16]);
+		vk2_2 = vkey2[2 * i + 1];//_mm512_loadu_epi64(&((uint64_t*)key)[i * 16 + 8]);
+
+
+		vk1_1 = _mm512_mullo_epi64(vk1_1, vc1);
+		vk2_1 = _mm512_mullo_epi64(vk2_1, vc1);
+
+		vk1_1 = _mm512_rol_epi64(vk1_1, 31);
+		vk2_1 = _mm512_rol_epi64(vk2_1, 31);
+
+		vk1_1 = _mm512_mullo_epi64(vk1_1, vc2);
+		vk2_1 = _mm512_mullo_epi64(vk2_1, vc2);
+
+		vh1_1 = _mm512_xor_epi64(vh1_1, vk1_1);
+		vh2_1 = _mm512_xor_epi64(vh2_1, vk2_1);
+
+	
+		vh1_1 = _mm512_rol_epi64(vh1_1, 27);
+		vh2_1 = _mm512_rol_epi64(vh2_1, 27);
+
+		vh1_1 = _mm512_add_epi64(vh1_1, vh1_2);
+		vh2_1 = _mm512_add_epi64(vh2_1, vh2_2);
+
+		vh1_1 = _mm512_add_epi64(_mm512_mullo_epi64(vh1_1, v5), _mm512_set1_epi64( 0x52dce729));
+		vh2_1 = _mm512_add_epi64(_mm512_mullo_epi64(vh2_1, v5), _mm512_set1_epi64( 0x52dce729));
+
+
+		vk1_2 = _mm512_mullo_epi64(vk1_2, vc2);
+		vk2_2 = _mm512_mullo_epi64(vk2_2, vc2);
+
+		vk1_2 = _mm512_rol_epi64(vk1_2, 33);
+		vk2_2 = _mm512_rol_epi64(vk2_2, 33);
+
+		vk1_2 = _mm512_mullo_epi64(vk1_2, vc1);
+		vk2_2 = _mm512_mullo_epi64(vk2_2, vc1);
+
+		vh1_2 = _mm512_xor_epi64(vh1_2, vk1_2);
+		vh2_2 = _mm512_xor_epi64(vh2_2, vk2_2);
+
+
+		vh1_2 = _mm512_rol_epi64(vh1_2, 31);
+		vh2_2 = _mm512_rol_epi64(vh2_2, 31);
+		
+		vh1_2 = _mm512_add_epi64(vh1_2, vh1_1);
+		vh2_2 = _mm512_add_epi64(vh2_2, vh2_1);
+
+		vh1_2 = _mm512_add_epi64(_mm512_mullo_epi64(vh1_2, v5), _mm512_set1_epi64(0x38495ab5));
+		vh2_2 = _mm512_add_epi64(_mm512_mullo_epi64(vh2_2, v5), _mm512_set1_epi64(0x38495ab5));
+
+
+	}
+
+
+	//TODO:deal with tail after pending
+	if(pend_len > len){
+
+		vk1_1 = vkey1[2 * nblocks];    //_mm512_loadu_epi64(&((uint64_t*)key)[nblocks * 16]);
+		vk1_2 = vkey1[2 * nblocks + 1];//_mm512_loadu_epi64(&((uint64_t*)key)[nblocks * 16 + 8]);
+
+		vk2_1 = vkey2[2 * nblocks];    //_mm512_loadu_epi64(&((uint64_t*)key)[nblocks * 16]);
+		vk2_2 = vkey2[2 * nblocks + 1];//_mm512_loadu_epi64(&((uint64_t*)key)[nblocks * 16 + 8]);
+
+
+		vk1_2 = _mm512_mullo_epi64(vk1_2, vc2);
+		vk2_2 = _mm512_mullo_epi64(vk2_2, vc2);
+
+		vk1_2 = _mm512_rol_epi64(vk1_2, 33);
+		vk2_2 = _mm512_rol_epi64(vk2_2, 33);
+
+		vk1_2 = _mm512_mullo_epi64(vk1_2, vc1);
+		vk2_2 = _mm512_mullo_epi64(vk2_2, vc1);
+
+		vh1_2 = _mm512_xor_epi64(vh1_2, vk1_2);
+		vh2_2 = _mm512_xor_epi64(vh2_2, vk2_2);
+
+
+		vk1_1 = _mm512_mullo_epi64(vk1_1, vc1);
+		vk2_1 = _mm512_mullo_epi64(vk2_1, vc1);
+
+		vk1_1 = _mm512_rol_epi64(vk1_1, 31);
+		vk2_1 = _mm512_rol_epi64(vk2_1, 31);
+
+		vk1_1 = _mm512_mullo_epi64(vk1_1, vc2);
+		vk2_1 = _mm512_mullo_epi64(vk2_1, vc2);
+
+		vh1_1 = _mm512_xor_epi64(vh1_1, vk1_1);
+		vh2_1 = _mm512_xor_epi64(vh2_1, vk2_1);
+
+	}
+	
+
+	vh1_1 = _mm512_xor_epi64(vh1_1, vlen);
+	vh2_1 = _mm512_xor_epi64(vh2_1, vlen);
+
+	vh1_2 = _mm512_xor_epi64(vh1_2, vlen);
+	vh2_2 = _mm512_xor_epi64(vh2_2, vlen);
+
+
+	vh1_1 = _mm512_add_epi64(vh1_1, vh1_2);
+	vh2_1 = _mm512_add_epi64(vh2_1, vh2_2);
+
+	vh1_2 = _mm512_add_epi64(vh1_2, vh1_1);
+	vh2_2 = _mm512_add_epi64(vh2_2, vh2_1);
+
+
+	vh1_1 = _mm512_xor_epi64(vh1_1, _mm512_srli_epi64(vh1_1, 33));
+	vh2_1 = _mm512_xor_epi64(vh2_1, _mm512_srli_epi64(vh2_1, 33));
+	vh1_1 = _mm512_mullo_epi64(vh1_1, vc3);
+	vh2_1 = _mm512_mullo_epi64(vh2_1, vc3);
+
+	vh1_1 = _mm512_xor_epi64(vh1_1, _mm512_srli_epi64(vh1_1, 33));
+	vh2_1 = _mm512_xor_epi64(vh2_1, _mm512_srli_epi64(vh2_1, 33));
+	vh1_1 = _mm512_mullo_epi64(vh1_1, vc4);
+	vh2_1 = _mm512_mullo_epi64(vh2_1, vc4);
+
+	vh1_1 = _mm512_xor_epi64(vh1_1, _mm512_srli_epi64(vh1_1, 33));
+	vh2_1 = _mm512_xor_epi64(vh2_1, _mm512_srli_epi64(vh2_1, 33));
+
+
+	vh1_2 = _mm512_xor_epi64(vh1_2, _mm512_srli_epi64(vh1_2, 33));
+	vh2_2 = _mm512_xor_epi64(vh2_2, _mm512_srli_epi64(vh2_2, 33));
+	vh1_2 = _mm512_mullo_epi64(vh1_2, vc3);
+	vh2_2 = _mm512_mullo_epi64(vh2_2, vc3);
+	
+	vh1_2 = _mm512_xor_epi64(vh1_2, _mm512_srli_epi64(vh1_2, 33));
+	vh2_2 = _mm512_xor_epi64(vh2_2, _mm512_srli_epi64(vh2_2, 33));
+	vh1_2 = _mm512_mullo_epi64(vh1_2, vc4);
+	vh2_2 = _mm512_mullo_epi64(vh2_2, vc4);
+
+	vh1_2 = _mm512_xor_epi64(vh1_2, _mm512_srli_epi64(vh1_2, 33));
+	vh2_2 = _mm512_xor_epi64(vh2_2, _mm512_srli_epi64(vh2_2, 33));
+
+	vh1_1 = _mm512_add_epi64(vh1_1, vh1_2);
+	vh2_1 = _mm512_add_epi64(vh2_1, vh2_2);
+	vh1_2 = _mm512_add_epi64(vh1_2, vh1_1);
+	vh2_2 = _mm512_add_epi64(vh2_2, vh2_1);
+
+	//reorganize output	
+	vk1_1 = _mm512_permutex2var_epi64(vh1_1,idx1,vh1_2);
+	vk2_1 = _mm512_permutex2var_epi64(vh2_1,idx1,vh2_2);
+	vk1_2 = _mm512_permutex2var_epi64(vh1_1,idx2,vh1_2);
+	vk2_2 = _mm512_permutex2var_epi64(vh2_1,idx2,vh2_2);
+
+	vh1_1 = _mm512_shuffle_i64x2(vk1_1,vk1_2,0x44);
+	vh1_2 = _mm512_shuffle_i64x2(vk1_1,vk1_2,0xEE);
+	vh2_1 = _mm512_shuffle_i64x2(vk2_1,vk2_2,0x44);
+	vh2_2 = _mm512_shuffle_i64x2(vk2_1,vk2_2,0xEE);
+
+	_mm512_storeu_si512((uint64_t*)out, vh1_1);
+	_mm512_storeu_si512(&((uint64_t*)out)[8], vh1_2);
+
+	_mm512_storeu_si512(&((uint64_t*)out)[16], vh2_1);
+	_mm512_storeu_si512(&((uint64_t*)out)[24], vh2_2);
+
+	//_mm512_storeu_epi64(h1, vh1);
+	//_mm512_storeu_epi64(h2, vh2);
+
+	//for(int j = 0; j < 8; j++){
+  	//	((uint64_t*)out)[0 + j * 2] = h1[j];
+  	//	((uint64_t*)out)[1 + j * 2] = h2[j];
+	//}
+
+}

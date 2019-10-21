@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.2)
 
 project(sketch)
 
+SET(CMAKE_CXX_COMPILER icpc)
+SET(CMAKE_C_COMPILER icc)
+
 INCLUDE_DIRECTORIES(src)
 
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)

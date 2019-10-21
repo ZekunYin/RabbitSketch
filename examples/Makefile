@@ -1,6 +1,6 @@
 TARGET=minhash
 
-CXX=g++
+CXX=icpc
 CXXFLAGS=-g -O2 -std=c++11
 
 INCLUDE=../src

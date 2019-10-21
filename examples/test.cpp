@@ -1,5 +1,6 @@
 #include "Sketch.h"
 #include <iostream>
+#include <unistd.h>
 
 using namespace std;
 
@@ -27,8 +28,8 @@ int main()
 	minHash2->update(seq5);
 	cout << "seq1 length: " << minHash1->getLength() << endl;
 	cout << "seq2 length: " << minHash2->getLength() << endl;
-	minHash1->update(seq5);
-	cout << "seq1+5 length: " << minHash1->getLength() << endl;
+	//minHash1->update(seq5);
+	//cout << "seq1+5 length: " << minHash1->getLength() << endl;
 //	exit(0);
 	
 	minHash1->printHashList();
@@ -36,9 +37,11 @@ int main()
 
 //	double hhh=minHash1->jaccard(minHash2);
 
-	cout << "The Value of Jaccard is: " << minHash1->jaccard(minHash2) << endl;
+    double jac_ = minHash1->jaccard(minHash2);
+    double dis_ = minHash1->dist(minHash2);
+	cout << "The Value of Jaccard is: " << jac_ << endl;
 	
-	cout << "The Value of Dist is: " << minHash1->dist(minHash2) << endl;
+	cout << "The Value of Dist is: " << dis_ << endl;
 
 
 	return 0;

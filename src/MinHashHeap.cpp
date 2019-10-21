@@ -1,4 +1,3 @@
-
 #include "MinHashHeap.h"
 #include <iostream>
 

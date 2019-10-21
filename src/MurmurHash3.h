@@ -23,6 +23,7 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 
 #endif // !defined(_MSC_VER)
+#include <immintrin.h>
 
 //-----------------------------------------------------------------------------
 
@@ -32,6 +33,8 @@ void MurmurHash3_x86_128 ( const void * key, int len, uint32_t seed, void * out 
 
 void MurmurHash3_x64_128 ( const void * key, int len, uint32_t seed, void * out );
 
+
+void MurmurHash3_x64_128_avx512_8x16 ( __m512i  * vkey1, __m512i * vkey2, int pend_len, int len, uint32_t seed, void * out );
 //-----------------------------------------------------------------------------
 
 #endif // _MURMURHASH3_H_
