@@ -4,7 +4,7 @@
 
 A Linux system on a recent x86_64 CPU is required.
 
-###Installing 
+### Installing 
 
 Step:
 
@@ -24,7 +24,7 @@ make
 
 We will find exist a file named "libsketch.a" in the build.
 
-###Testing
+### Testing
 
 Then we copy libsketch.a into the catalog named "example" and test.
 
