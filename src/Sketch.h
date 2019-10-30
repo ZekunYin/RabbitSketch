@@ -142,9 +142,11 @@ class MinHash
 		double dist(MinHash * msh);
 
 		HashList & getHashList();
-		void printHashList();
+	//	void printHashList();
+		void getMinHash();
 		void writeToFile();
 		uint64_t getLength(){return length;}//return totalSeqence length.
+		bool needToList = true;
 
 	private:
 		//Modified by qzh.Define the seq.
@@ -156,6 +158,7 @@ class MinHash
 		Reference reference;
 		uint64_t length;
 		double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
+		void heapToList();
 
 };
 

@@ -23,7 +23,8 @@
 using namespace std;
 using namespace Sketch;
 
-__m512i inline min512(__m512i v1, __m512i v2){
+__m512i inline min512(__m512i v1, __m512i v2)
+{
 	__mmask8 msk_gt, msk_lt;
 	msk_gt = _mm512_cmpgt_epi64_mask(v1, v2);
 	msk_lt = _mm512_cmplt_epi64_mask(v1, v2);
@@ -78,6 +79,7 @@ MinHash ::MinHash(Parameters parametersNew):parameters(parametersNew)
 	this->kmerSpace = pow(parameters.alphabetSize, parameters.kmerSize);
 	//cerr << "kmerSpace init from pow is " << this->kmerSpace << endl;
 	this->length = 0;
+	this->needToList = true;
 
 }
 
@@ -232,8 +234,6 @@ void MinHash::update(char * seq)
 
 		hash_u hash;
 		for(int j = 0; j < 16; j++){
-		//for(int j = 0; j < 32; j++){
-		//for(int j = 0; j < 8; j++){
 			hash.hash64 = res[j * 2];
 			//cout << hash.hash64 << endl;
 			minHashHeap->tryInsert(hash);
@@ -269,23 +269,43 @@ void MinHash::update(char * seq)
     {
         delete [] seqRev;
     }
+//	if(needToList){
+//		heapToList();
+//	}
+	needToList = true;
 }
 
-void MinHash::printHashList()
+void MinHash::heapToList()
 {
-	//setMinHashesForReference(reference, minHashHeap);
 	HashList & hashlist = reference.hashesSorted;
 	hashlist.clear();
+	hashlist.setUse64(parameters.use64);
 	minHashHeap -> toHashList(hashlist);
 	minHashHeap -> toCounts(reference.counts);
 	hashlist.sort();
 
-//	for(int i = 0; i < reference.hashesSorted.size(); i++){
-//		if(parameters.use64)
-//			cerr << "hash64 " <<  i << " " << reference.hashesSorted.at(i).hash64 << endl;
-//		else
-//			cerr << "hash32 " <<  i << " " << reference.hashesSorted.at(i).hash32 << endl;
-//	}
+}
+
+void MinHash::getMinHash()
+{
+	//setMinHashesForReference(reference, minHashHeap);
+//	HashList & hashlist = reference.hashesSorted;
+//	hashlist.clear();
+//	hashlist.setUse64(parameters.use64);
+//	minHashHeap -> toHashList(hashlist);
+//	minHashHeap -> toCounts(reference.counts);
+//	hashlist.sort();
+	if(needToList){
+		heapToList();
+		needToList = false;
+	}
+
+	for(int i = 0; i < reference.hashesSorted.size(); i++){
+		if(parameters.use64)
+			cerr << "hash64 " <<  i << " " << reference.hashesSorted.at(i).hash64 << endl;
+		else
+			cerr << "hash32 " <<  i << " " << reference.hashesSorted.at(i).hash32 << endl;
+	}
 	return;
 }
 
@@ -332,7 +352,15 @@ bool hashLessThan(hash_u hash1, hash_u hash2, bool use64)
 
 double MinHash::jaccard(MinHash * msh)
 {
-	
+	if(needToList){
+		heapToList();
+		needToList = false;
+	}
+	if(msh->needToList){
+		cout << "msh2 need to list addbyxxm " << endl;
+		msh->heapToList();
+		msh->needToList = false;
+	}
 
 //transport the previous parameter @xxm
 	uint64_t sketchSize = this->parameters.minHashesPerWindow;
@@ -345,10 +373,8 @@ double MinHash::jaccard(MinHash * msh)
     uint64_t denom = 0;
     const HashList & hashesSortedRef = this->reference.hashesSorted;
     const HashList & hashesSortedQry = msh->reference.hashesSorted;
-//	cout << "the size of hashesSortedRef is: " << hashesSortedRef.size() << endl;
-//	cout << "the size of hashesSortedQry is: " << hashesSortedQry.size() << endl;
-	cout << "the size of hashesSortedRef is: " << this->reference.hashesSorted.size() << endl;
-	cout << "the size of hashesSortedQry is: " << msh->reference.hashesSorted.size() << endl;
+	//cout << "the size of hashesSortedRef is: " << this->reference.hashesSorted.size() << endl;
+	//cout << "the size of hashesSortedQry is: " << msh->reference.hashesSorted.size() << endl;
 	
     while ( denom < sketchSize && i < hashesSortedRef.size() && j < hashesSortedQry.size() )
     {
