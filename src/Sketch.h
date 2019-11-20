@@ -4,7 +4,7 @@
 //
 // See the LICENSE.txt file included with this software for license information.
 
-//Modified by qzh.
+//Modified by qzh & yzk.
 #ifndef Sketch_h
 #define Sketch_h
 
@@ -19,154 +19,235 @@
 
 namespace Sketch{
 
-typedef uint64_t hash_t;
+	typedef uint64_t hash_t;
 
-struct Parameters
-{
-	Parameters()
-		:
-			parallelism(1),
-			kmerSize(0),
-			alphabetSize(0),
-			preserveCase(false),
-			use64(false),
-			seed(0),
-			error(0),
-			warning(0),
-			minHashesPerWindow(0),
-			windowSize(0),
-			windowed(false),
-			concatenated(false),
-			noncanonical(false),
-			reads(false),
-			memoryBound(0),
-			minCov(1),
-			targetCov(0),
-			genomeSize(0)
+	struct Parameters
 	{
-		memset(alphabet, 0, 256);
-	}
+		Parameters()
+			:
+				parallelism(1),
+				kmerSize(0),
+				alphabetSize(0),
+				preserveCase(false),
+				use64(false),
+				seed(0),
+				error(0),
+				warning(0),
+				minHashesPerWindow(0),
+				windowSize(0),
+				windowed(false),
+				concatenated(false),
+				noncanonical(false),
+				reads(false),
+				memoryBound(0),
+				minCov(1),
+				targetCov(0),
+				genomeSize(0),
+				//for OMinHash
+				l(2),
+				m(500),
+				rc(false)
+		{
+			memset(alphabet, 0, 256);
+		}
 
-	Parameters(const Parameters & other)
-		:
-			parallelism(other.parallelism),
-			kmerSize(other.kmerSize),
-			alphabetSize(other.alphabetSize),
-			preserveCase(other.preserveCase),
-			use64(other.use64),
-			seed(other.seed),
-			error(other.error),
-			warning(other.warning),
-			minHashesPerWindow(other.minHashesPerWindow),
-			windowSize(other.windowSize),
-			windowed(other.windowed),
-			concatenated(other.concatenated),
-			noncanonical(other.noncanonical),
-			reads(other.reads),
-			memoryBound(other.memoryBound),
-			minCov(other.minCov),
-			targetCov(other.targetCov),
-			genomeSize(other.genomeSize)
+		Parameters(const Parameters & other)
+			:
+				parallelism(other.parallelism),
+				kmerSize(other.kmerSize),
+				alphabetSize(other.alphabetSize),
+				preserveCase(other.preserveCase),
+				use64(other.use64),
+				seed(other.seed),
+				error(other.error),
+				warning(other.warning),
+				minHashesPerWindow(other.minHashesPerWindow),
+				windowSize(other.windowSize),
+				windowed(other.windowed),
+				concatenated(other.concatenated),
+				noncanonical(other.noncanonical),
+				reads(other.reads),
+				memoryBound(other.memoryBound),
+				minCov(other.minCov),
+				targetCov(other.targetCov),
+				genomeSize(other.genomeSize),
+				//for OMinHash
+				l(other.l),
+				m(other.m),
+				rc(other.rc)
+
+		{
+			memcpy(alphabet, other.alphabet, 256);
+		}
+
+		int parallelism;
+		int kmerSize;
+		bool alphabet[256];
+		uint32_t alphabetSize;
+		bool preserveCase;
+		bool use64;
+		uint32_t seed;
+		double error;
+		double warning;
+		uint64_t minHashesPerWindow;
+		uint64_t windowSize;
+		bool windowed;
+		bool concatenated;
+		bool noncanonical;
+		bool reads;
+		uint64_t memoryBound;
+		uint32_t minCov;
+		double targetCov;
+		uint64_t genomeSize;
+
+		//parameters for order minhash
+		int l;
+		int m;
+		bool rc;
+		//kmerSize for k
+	};
+
+	struct PositionHash
 	{
-		memcpy(alphabet, other.alphabet, 256);
-	}
+		PositionHash(uint32_t positionNew, hash_t hashNew) :
+			position(positionNew),
+			hash(hashNew)
+		{}
 
-	int parallelism;
-	int kmerSize;
-	bool alphabet[256];
-	uint32_t alphabetSize;
-	bool preserveCase;
-	bool use64;
-	uint32_t seed;
-	double error;
-	double warning;
-	uint64_t minHashesPerWindow;
-	uint64_t windowSize;
-	bool windowed;
-	bool concatenated;
-	bool noncanonical;
-	bool reads;
-	uint64_t memoryBound;
-	uint32_t minCov;
-	double targetCov;
-	uint64_t genomeSize;
-};
+		uint32_t position;
+		hash_t hash;
+	};
 
-struct PositionHash
-{
-	PositionHash(uint32_t positionNew, hash_t hashNew) :
-		position(positionNew),
-		hash(hashNew)
-	{}
+	struct Locus
+	{
+		Locus(uint32_t sequenceNew, uint32_t positionNew)
+			:
+				sequence(sequenceNew),
+				position(positionNew)
+		{}
 
-	uint32_t position;
-	hash_t hash;
-};
+		uint32_t sequence;
+		uint32_t position;
+	};
 
-struct Locus
-{
-	Locus(uint32_t sequenceNew, uint32_t positionNew)
-		:
-			sequence(sequenceNew),
-			position(positionNew)
-	{}
+	typedef std::unordered_set<hash_t> Hash_set;
 
-	uint32_t sequence;
-	uint32_t position;
-};
-
-typedef std::unordered_set<hash_t> Hash_set;
-
-struct Reference
-{
-	// no sequence for now
-	std::string name;
-	std::string comment;
-	uint64_t length;
-	HashList hashesSorted;
-	std::vector<uint32_t> counts;
-};
-
-class MinHash
-{
-
-	public:
-		//Modified by qzh.Remove const and the length in the function.	
-		//MinHash(const Parameters & parameters);
-		//void addMinHashes(char * seq, uint64_t length);
-		//void update(char * seq, uint64_t length);
-		MinHash(Parameters parametersNew);
-		void update(char * seq);
-
-		double jaccard(MinHash * msh);			
-		double dist(MinHash * msh);
-
-		HashList & getHashList();
-	//	void printHashList();
-		void getMinHash();
-		void writeToFile();
-		uint64_t getLength(){return length;}//return totalSeqence length.
-		bool needToList = true;
-
-	private:
-		//Modified by qzh.Define the seq.
-		char * seq;
-		double kmerSpace;
-
-		Parameters parameters;
-		MinHashHeap * minHashHeap;
-		Reference reference;
+	struct Reference
+	{
+		// no sequence for now
+		std::string name;
+		std::string comment;
 		uint64_t length;
-		double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
-		void heapToList();
+		HashList hashesSorted;
+		std::vector<uint32_t> counts;
+	};
 
-};
+	class MinHash
+	{
 
-class WMinHash{
-};
+		public:
+			//Modified by qzh.Remove const and the length in the function.	
+			//MinHash(const Parameters & parameters);
+			//void addMinHashes(char * seq, uint64_t length);
+			//void update(char * seq, uint64_t length);
+			MinHash(Parameters parametersNew);
+			void update(char * seq);
 
-class OMinHash{
-};
+			double jaccard(MinHash * msh);			
+			double dist(MinHash * msh);
+
+			HashList & getHashList();
+			//	void printHashList();
+			void getMinHash();
+			void writeToFile();
+			uint64_t getLength(){return length;}//return totalSeqence length.
+			bool needToList = true;
+
+		private:
+			//Modified by qzh.Define the seq.
+			//char * seq; //not used
+			double kmerSpace;
+
+			Parameters parameters;
+			MinHashHeap * minHashHeap;
+			Reference reference;
+			uint64_t length;
+			double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
+			void heapToList();
+
+	};
+
+	class WMinHash{
+	};
+
+	//OMinHash
+	struct OSketch {
+		//std::string       name;
+		int               k, l, m;
+		std::vector<char> data;
+		std::vector<char> rcdata;
+
+		bool operator==(const OSketch& rhs) const {
+			return k == rhs.k && l == rhs.l && m == rhs.m && data == rhs.data && rcdata == rhs.rcdata;
+		}
+
+		// Read a sketch into this
+		//void read(std::istream& is);
+
+		// Read a sketch
+		//static sketch from_stream(std::istream& is) {
+		//	sketch sk;
+		//	sk.read(is);
+		//	return sk;
+		//}
+
+		// Write sketch
+		//void write(std::ostream& os) const;
+	};
+
+	class OMinHash{
+
+		public:
+			//OMinHash(Parameters parametersNew);
+			OMinHash(Parameters parametersNew, char * seqNew);
+			//update -- not supported yet!
+
+			void sketch();
+			OSketch getSektch(){ return sk;}
+
+			double similarity();
+
+			double distance(){
+				return (double)1.0 - similarity();
+			}
+
+		protected:
+
+		private:
+			char * seq;
+			char * rcseq;
+			Parameters parameters;
+			int m_k, m_l, m_m;
+			bool rc;//reverse complement
+			OSketch sk;
+
+			inline void compute_sketch(char * ptr, const char * seq);
+
+	};
+
 }//namespace sketch
 
+template<typename BT>
+static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, BT block);
+
+struct mer_info {
+	size_t pos;
+	uint64_t hash;
+	unsigned occ;
+	mer_info(size_t p, unsigned o, uint64_t h)
+		: pos(p)
+		  , hash(h)
+		  , occ(o)
+	{ }
+};
 #endif //Sketch_h

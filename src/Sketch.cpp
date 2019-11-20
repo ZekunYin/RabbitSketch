@@ -4,14 +4,13 @@
 #include <list>
 #include <cstring>
 #include "Sketch.h"
-#include "kseq.h"
 #include "MurmurHash3.h"
-#include "kseq.h"
 #include "hash.h"
 #include <math.h>
 #include <gsl/gsl_cdf.h>
 #include <immintrin.h>
-
+#include <stdint.h>
+#include "xxhash.hpp"
 //#ifdef USE_BOOST
 //    #include <boost/math/distributions/binomial.hpp>
 //    using namespace::boost::math;
@@ -75,7 +74,7 @@ void inline transpose8_epi64(__m512i *row0, __m512i* row1, __m512i* row2,__m512i
 MinHash ::MinHash(Parameters parametersNew):parameters(parametersNew)
 {
 	minHashHeap = new MinHashHeap(parameters.use64, parameters.minHashesPerWindow, parameters.reads ?  parameters.minCov : 1);
-	
+
 	this->kmerSpace = pow(parameters.alphabetSize, parameters.kmerSize);
 	//cerr << "kmerSpace init from pow is " << this->kmerSpace << endl;
 	this->length = 0;
@@ -86,53 +85,53 @@ MinHash ::MinHash(Parameters parametersNew):parameters(parametersNew)
 void MinHash::update(char * seq)
 {
 	//addMinHashes(minHashHeap, seq, LENGTH, parameters);
-    //cout << "seq: " << seq << endl;
+	//cout << "seq: " << seq << endl;
 	const uint64_t LENGTH = strlen(seq);
 	this->length += LENGTH;
-    int kmerSize = parameters.kmerSize;
-    uint64_t mins = parameters.minHashesPerWindow;
-    bool noncanonical = parameters.noncanonical;//False.
-    
-    // uppercase TODO: alphabets?
-    for ( uint64_t i = 0; i < LENGTH; i++ )
-    {
-        if ( ! parameters.preserveCase && seq[i] > 96 && seq[i] < 123 )
-        {
-            seq[i] -= 32;
-        }
-    }
-    
-    char * seqRev;
-    
-    if ( ! noncanonical )
-    {
-    	seqRev = new char[LENGTH];
-        //reverseComplement(seq, seqRev, length);
+	int kmerSize = parameters.kmerSize;
+	uint64_t mins = parameters.minHashesPerWindow;
+	bool noncanonical = parameters.noncanonical;//False.
+
+	// uppercase TODO: alphabets?
+	for ( uint64_t i = 0; i < LENGTH; i++ )
+	{
+		if ( ! parameters.preserveCase && seq[i] > 96 && seq[i] < 123 )
+		{
+			seq[i] -= 32;
+		}
+	}
+
+	char * seqRev;
+
+	if ( ! noncanonical )
+	{
+		seqRev = new char[LENGTH];
+		//reverseComplement(seq, seqRev, length);
 
 		char table[4] = {'T','G','A','C'};
 		for ( uint64_t i = 0; i < LENGTH; i++ )
 		{
-		    char base = seq[i];
+			char base = seq[i];
 
-	  		base >>= 1;
+			base >>= 1;
 			base &= 0x03;
-		    seqRev[LENGTH - i - 1] = table[base];
+			seqRev[LENGTH - i - 1] = table[base];
 
-		    
-//		    switch ( base )
-//		    {
-//		        case 'A': base = 'T'; break;
-//		        case 'C': base = 'G'; break;
-//		        case 'G': base = 'C'; break;
-//		        case 'T': base = 'A'; break;
-//		        default: break;
-//		    }
-//		    seqRev[LENGTH - i - 1] = base;
+
+			//		    switch ( base )
+			//		    {
+			//		        case 'A': base = 'T'; break;
+			//		        case 'C': base = 'G'; break;
+			//		        case 'G': base = 'C'; break;
+			//		        case 'T': base = 'A'; break;
+			//		        default: break;
+			//		    }
+			//		    seqRev[LENGTH - i - 1] = base;
 		}
-    }
-    
-    //for ( uint64_t i = 0; i < LENGTH - kmerSize + 1; i++ )
-    //{
+	}
+
+	//for ( uint64_t i = 0; i < LENGTH - kmerSize + 1; i++ )
+	//{
 	//	// repeatedly skip kmers with bad characters
 	//	bool bad = false;
 	//	
@@ -157,29 +156,29 @@ void MinHash::update(char * seq)
 	//		// skipped to end
 	//		break;
 	//	}
-    //        
-    //    const char *kmer_fwd = seq + i;
-    //    const char *kmer_rev = seqRev + LENGTH - i - kmerSize;
-    //    const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
-    //    bool filter = false;
-    //    
-    //    hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
-    //    
+	//        
+	//    const char *kmer_fwd = seq + i;
+	//    const char *kmer_rev = seqRev + LENGTH - i - kmerSize;
+	//    const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
+	//    bool filter = false;
+	//    
+	//    hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
+	//    
 	//	minHashHeap -> tryInsert(hash);
-    //}
-    
-//============================================================================================================================================================
+	//}
+
+	//============================================================================================================================================================
 	//cout << "use the intel avx512 " << endl;
 	//exit(0);
 	//addbyxxm
-    //hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
-//  const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
+	//hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
+	//  const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
 	int n_kmers = length - kmerSize + 1;
 	int n_kmers_body = (n_kmers / 16) * 16;
 	//int n_kmers_body = (n_kmers / 32) * 32;
 	//int n_kmers_body = (n_kmers / 8) * 8;
-	
+
 	const uint8_t* input8 = (const uint8_t *)seq;
 	const uint8_t* input8_rev = (const uint8_t *)seqRev;
 	//uint64_t* res = (uint64_t* )_mm_malloc(n_kmers * 2 * sizeof(uint64_t), 64);
@@ -188,13 +187,13 @@ void MinHash::update(char * seq)
 	//uint64_t res[8 * 2];
 	uint64_t res2[2];
 	uint8_t kmer_buf[kmerSize];
-//	uint64_t result[16];
-	
+	//	uint64_t result[16];
+
 	__m512i v0, v1;
 	__m512i vi[8];
 	__m512i vj[8];
-//	__m512i vk[8];
-//	__m512i vl[8];
+	//	__m512i vk[8];
+	//	__m512i vl[8];
 	__m512i vzero = _mm512_setzero_si512();
 
 	__mmask64 mask_load = 0xffffffffffffffff;
@@ -224,8 +223,8 @@ void MinHash::update(char * seq)
 
 		transpose8_epi64(&vi[0], &vi[1], &vi[2], &vi[3], &vi[4], &vi[5], &vi[6], &vi[7]); 
 		transpose8_epi64(&vj[0], &vj[1], &vj[2], &vj[3], &vj[4], &vj[5], &vj[6], &vj[7]); 
-	//	transpose8_epi64(&vk[0], &vk[1], &vk[2], &vk[3], &vk[4], &vk[5], &vk[6], &vk[7]); 
-	//	transpose8_epi64(&vl[0], &vl[1], &vl[2], &vl[3], &vl[4], &vl[5], &vl[6], &vl[7]); 
+		//	transpose8_epi64(&vk[0], &vk[1], &vk[2], &vk[3], &vk[4], &vk[5], &vk[6], &vk[7]); 
+		//	transpose8_epi64(&vl[0], &vl[1], &vl[2], &vl[3], &vl[4], &vl[5], &vl[6], &vl[7]); 
 
 		//MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, 42, &res[2 * i]);// the seed in Mash is 42; verified by xxm;
 		MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, 42, res);// the seed in Mash is 42; verified by xxm;
@@ -254,7 +253,7 @@ void MinHash::update(char * seq)
 				kmer_buf[j] = input8_rev[length - i - kmerSize + j];
 			}
 		}
-			
+
 
 		//MurmurHash3_x64_128(kmer_buf, kmerSize, 42, &res[2 * i]);// the getHash just need the lower 64bit of the total 128bit of res[i];
 		MurmurHash3_x64_128(kmer_buf, kmerSize, 42, res2);// the getHash just need the lower 64bit of the total 128bit of res[i];
@@ -263,15 +262,15 @@ void MinHash::update(char * seq)
 		minHashHeap->tryInsert(hash);
 
 	}
-//============================================================================================================================================================
+	//============================================================================================================================================================
 
-    if ( ! noncanonical )
-    {
-        delete [] seqRev;
-    }
-//	if(needToList){
-//		heapToList();
-//	}
+	if ( ! noncanonical )
+	{
+		delete [] seqRev;
+	}
+	//	if(needToList){
+	//		heapToList();
+	//	}
 	needToList = true;
 }
 
@@ -289,12 +288,12 @@ void MinHash::heapToList()
 void MinHash::getMinHash()
 {
 	//setMinHashesForReference(reference, minHashHeap);
-//	HashList & hashlist = reference.hashesSorted;
-//	hashlist.clear();
-//	hashlist.setUse64(parameters.use64);
-//	minHashHeap -> toHashList(hashlist);
-//	minHashHeap -> toCounts(reference.counts);
-//	hashlist.sort();
+	//	HashList & hashlist = reference.hashesSorted;
+	//	hashlist.clear();
+	//	hashlist.setUse64(parameters.use64);
+	//	minHashHeap -> toHashList(hashlist);
+	//	minHashHeap -> toCounts(reference.counts);
+	//	hashlist.sort();
 	if(needToList){
 		heapToList();
 		needToList = false;
@@ -311,43 +310,43 @@ void MinHash::getMinHash()
 
 hash_u getHash(const char * seq, int length, uint32_t seed, bool use64)
 {
-    
+
 #ifdef ARCH_32
-    char data[use64 ? 8 : 4];
-    MurmurHash3_x86_32(seq, length > 16 ? 16 : length, seed, data);
-    if ( use64 )
-    {
-        MurmurHash3_x86_32(seq + 16, length - 16, seed, data + 4);
-    }
+	char data[use64 ? 8 : 4];
+	MurmurHash3_x86_32(seq, length > 16 ? 16 : length, seed, data);
+	if ( use64 )
+	{
+		MurmurHash3_x86_32(seq + 16, length - 16, seed, data + 4);
+	}
 #else
-    char data[16];
-    MurmurHash3_x64_128(seq, length, seed, data);
+	char data[16];
+	MurmurHash3_x64_128(seq, length, seed, data);
 #endif
-    
-    hash_u hash;
-    
-    if ( use64 )
-    {
-        hash.hash64 = *((hash64_t *)data);
-    }
-    else
-    {
-        hash.hash32 = *((hash32_t *)data);
-    }
-    
-    return hash;
+
+	hash_u hash;
+
+	if ( use64 )
+	{
+		hash.hash64 = *((hash64_t *)data);
+	}
+	else
+	{
+		hash.hash32 = *((hash32_t *)data);
+	}
+
+	return hash;
 }
 
 bool hashLessThan(hash_u hash1, hash_u hash2, bool use64)
 {
-    if ( use64 )
-    {
-        return hash1.hash64 < hash2.hash64;
-    }
-    else
-    {
-        return hash1.hash32 < hash2.hash32;
-    }
+	if ( use64 )
+	{
+		return hash1.hash64 < hash2.hash64;
+	}
+	else
+	{
+		return hash1.hash32 < hash2.hash32;
+	}
 }
 
 double MinHash::jaccard(MinHash * msh)
@@ -362,67 +361,67 @@ double MinHash::jaccard(MinHash * msh)
 		msh->needToList = false;
 	}
 
-//transport the previous parameter @xxm
+	//transport the previous parameter @xxm
 	uint64_t sketchSize = this->parameters.minHashesPerWindow;
 	int kmerSize = this->parameters.kmerSize;
 	//int kmerSpace = this->kmerSpace;
-	
-    uint64_t i = 0;
-    uint64_t j = 0;
-    uint64_t common = 0;
-    uint64_t denom = 0;
-    const HashList & hashesSortedRef = this->reference.hashesSorted;
-    const HashList & hashesSortedQry = msh->reference.hashesSorted;
+
+	uint64_t i = 0;
+	uint64_t j = 0;
+	uint64_t common = 0;
+	uint64_t denom = 0;
+	const HashList & hashesSortedRef = this->reference.hashesSorted;
+	const HashList & hashesSortedQry = msh->reference.hashesSorted;
 	//cout << "the size of hashesSortedRef is: " << this->reference.hashesSorted.size() << endl;
 	//cout << "the size of hashesSortedQry is: " << msh->reference.hashesSorted.size() << endl;
-	
-    while ( denom < sketchSize && i < hashesSortedRef.size() && j < hashesSortedQry.size() )
-    {
-        if ( hashLessThan(hashesSortedRef.at(i), hashesSortedQry.at(j), hashesSortedRef.get64()) )
-        {
-            i++;
-        }
-        else if ( hashLessThan(hashesSortedQry.at(j), hashesSortedRef.at(i), hashesSortedRef.get64()) )
-        {
-            j++;
-        }
-        else
-        {
-            i++;
-            j++;
-            common++;
-        }
-        
-        denom++;
-    }
- 
-    if ( denom < sketchSize )
-    {
-        // complete the union operation if possible
-        
-        if ( i < hashesSortedRef.size() )
-        {
-            denom += hashesSortedRef.size() - i;
-        }
-        
-        if ( j < hashesSortedQry.size() )
-        {
-            denom += hashesSortedQry.size() - j;
-        }
-        
-        if ( denom > sketchSize )
-        {
-            denom = sketchSize;
-        }
-    }
 
-//	cout << "the common is: " << common << endl;
-//	cout << "the denom is: " << denom << endl;
+	while ( denom < sketchSize && i < hashesSortedRef.size() && j < hashesSortedQry.size() )
+	{
+		if ( hashLessThan(hashesSortedRef.at(i), hashesSortedQry.at(j), hashesSortedRef.get64()) )
+		{
+			i++;
+		}
+		else if ( hashLessThan(hashesSortedQry.at(j), hashesSortedRef.at(i), hashesSortedRef.get64()) )
+		{
+			j++;
+		}
+		else
+		{
+			i++;
+			j++;
+			common++;
+		}
 
-    double jaccard = double(common) / denom;
+		denom++;
+	}
+
+	if ( denom < sketchSize )
+	{
+		// complete the union operation if possible
+
+		if ( i < hashesSortedRef.size() )
+		{
+			denom += hashesSortedRef.size() - i;
+		}
+
+		if ( j < hashesSortedQry.size() )
+		{
+			denom += hashesSortedQry.size() - j;
+		}
+
+		if ( denom > sketchSize )
+		{
+			denom = sketchSize;
+		}
+	}
+
+	//	cout << "the common is: " << common << endl;
+	//	cout << "the denom is: " << denom << endl;
+
+	double jaccard = double(common) / denom;
 	return jaccard;
-	
-	
+
+
 }
 
 double MinHash::dist(MinHash * msh)
@@ -434,116 +433,177 @@ double MinHash::dist(MinHash * msh)
 	uint64_t sketchSize = this->parameters.minHashesPerWindow;
 	int kmerSize = this->parameters.kmerSize;
 	//int kmerSpace = this->kmerSpace;
-	
-    uint64_t i = 0;
-    uint64_t j = 0;
-    uint64_t common = 0;
-    uint64_t denom = 0;
-    const HashList & hashesSortedRef = this->reference.hashesSorted;
-    const HashList & hashesSortedQry = msh->reference.hashesSorted;
-//	cout << "the size of hashesSortedRef is: " << hashesSortedRef.size() << endl;
-//	cout << "the size of hashesSortedQry is: " << hashesSortedQry.size() << endl;
-//	cout << "the size of hashesSortedRef is: " << this->reference.hashesSorted.size() << endl;
-//	cout << "the size of hashesSortedQry is: " << msh->reference.hashesSorted.size() << endl;
-	
-    while ( denom < sketchSize && i < hashesSortedRef.size() && j < hashesSortedQry.size() )
-    {
-        if ( hashLessThan(hashesSortedRef.at(i), hashesSortedQry.at(j), hashesSortedRef.get64()) )
-        {
-            i++;
-        }
-        else if ( hashLessThan(hashesSortedQry.at(j), hashesSortedRef.at(i), hashesSortedRef.get64()) )
-        {
-            j++;
-        }
-        else
-        {
-            i++;
-            j++;
-            common++;
-        }
-        
-        denom++;
-    }
- 
-    if ( denom < sketchSize )
-    {
-        // complete the union operation if possible
-        
-        if ( i < hashesSortedRef.size() )
-        {
-            denom += hashesSortedRef.size() - i;
-        }
-        
-        if ( j < hashesSortedQry.size() )
-        {
-            denom += hashesSortedQry.size() - j;
-        }
-        
-        if ( denom > sketchSize )
-        {
-            denom = sketchSize;
-        }
-    }
+
+	uint64_t i = 0;
+	uint64_t j = 0;
+	uint64_t common = 0;
+	uint64_t denom = 0;
+	const HashList & hashesSortedRef = this->reference.hashesSorted;
+	const HashList & hashesSortedQry = msh->reference.hashesSorted;
+	//	cout << "the size of hashesSortedRef is: " << hashesSortedRef.size() << endl;
+	//	cout << "the size of hashesSortedQry is: " << hashesSortedQry.size() << endl;
+	//	cout << "the size of hashesSortedRef is: " << this->reference.hashesSorted.size() << endl;
+	//	cout << "the size of hashesSortedQry is: " << msh->reference.hashesSorted.size() << endl;
+
+	while ( denom < sketchSize && i < hashesSortedRef.size() && j < hashesSortedQry.size() )
+	{
+		if ( hashLessThan(hashesSortedRef.at(i), hashesSortedQry.at(j), hashesSortedRef.get64()) )
+		{
+			i++;
+		}
+		else if ( hashLessThan(hashesSortedQry.at(j), hashesSortedRef.at(i), hashesSortedRef.get64()) )
+		{
+			j++;
+		}
+		else
+		{
+			i++;
+			j++;
+			common++;
+		}
+
+		denom++;
+	}
+
+	if ( denom < sketchSize )
+	{
+		// complete the union operation if possible
+
+		if ( i < hashesSortedRef.size() )
+		{
+			denom += hashesSortedRef.size() - i;
+		}
+
+		if ( j < hashesSortedQry.size() )
+		{
+			denom += hashesSortedQry.size() - j;
+		}
+
+		if ( denom > sketchSize )
+		{
+			denom = sketchSize;
+		}
+	}
 
 
 
-    double jaccard_ = double(common) / denom;
-    distance = -log(2 * jaccard_ / (1. + jaccard_)) / kmerSize;
-	
-    if ( distance > 1 )
-    {
-    	distance = 1;
-    }
-	
-    if ( maxDistance >= 0 && distance > maxDistance )
-    {
-        return 1.;
-    }
+	double jaccard_ = double(common) / denom;
+	distance = -log(2 * jaccard_ / (1. + jaccard_)) / kmerSize;
+
+	if ( distance > 1 )
+	{
+		distance = 1;
+	}
+
+	if ( maxDistance >= 0 && distance > maxDistance )
+	{
+		return 1.;
+	}
 	double pValue_ = pValue(common, this->length, msh->length, kmerSpace, denom);
 	if ( maxPValue >= 0 && pValue_ > maxPValue )
-    {
+	{
 		cerr << "the pValue is larger than maxPValue " << endl;
-        return 1.;
-    }
+		return 1.;
+	}
 	return distance;
-    
+
 
 }
 
 double MinHash::pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize)
 {
-    if ( x == 0 )
-    {
-        return 1.;
-    }
-    
-    double pX = 1. / (1. + kmerSpace / lengthRef);
-    double pY = 1. / (1. + kmerSpace / lengthQuery);
-//  cerr << endl;
-//	cerr << "kmerspace: " << kmerSpace << endl;
-//	cerr << "px: " << pX << endl;
-//	cerr << "py: " << pY << endl;
-    double r = pX * pY / (pX + pY - pX * pY);
-    
-    //double M = (double)kmerSpace * (pX + pY) / (1. + r);
-    
-    //return gsl_cdf_hypergeometric_Q(x - 1, r * M, M - r * M, sketchSize);
-// 	return 0.1;   
-//	cerr << "r = " << r << endl;
-    return gsl_cdf_binomial_Q(x - 1, r, sketchSize);
-//#ifdef USE_BOOST
-//    return cdf(complement(binomial(sketchSize, r), x - 1));
-//#else
-//    return gsl_cdf_binomial_Q(x - 1, r, sketchSize);
-//#endif
+	if ( x == 0 )
+	{
+		return 1.;
+	}
+
+	double pX = 1. / (1. + kmerSpace / lengthRef);
+	double pY = 1. / (1. + kmerSpace / lengthQuery);
+	//  cerr << endl;
+	//	cerr << "kmerspace: " << kmerSpace << endl;
+	//	cerr << "px: " << pX << endl;
+	//	cerr << "py: " << pY << endl;
+	double r = pX * pY / (pX + pY - pX * pY);
+
+	//double M = (double)kmerSpace * (pX + pY) / (1. + r);
+
+	//return gsl_cdf_hypergeometric_Q(x - 1, r * M, M - r * M, sketchSize);
+	// 	return 0.1;   
+	//	cerr << "r = " << r << endl;
+	return gsl_cdf_binomial_Q(x - 1, r, sketchSize);
+	//#ifdef USE_BOOST
+	//    return cdf(complement(binomial(sketchSize, r), x - 1));
+	//#else
+	//    return gsl_cdf_binomial_Q(x - 1, r, sketchSize);
+	//#endif
 }
 
 
 
+OMinHash::OMinHash(Parameters parametersNew, char * seqNew):
+	parameters(parametersNew),
+	seq(seqNew)
+{
+	m_k = parameters.kmerSize;
+	m_l = parameters.l;
+	m_m = parameters.m;
+	rc = parameters.rc;
 
+	if(rc){
+		//TODO:get reverse complement to rcseq
+	}
+	sketch();
+}
 
+void OMinHash::sketch(){
+	sk.k = m_k;		
+	sk.l = m_l;		
+	sk.m = m_m;		
 
+	sk.data.resize(std::max(sk.l, 1) * sk.m * sk.k);
+	compute_sketch(sk.data.data(), this->seq);
 
+	if(rc){
+		sk.rcdata.resize(std::max(sk.l, 1) * sk.m * sk.k);
+		compute_sketch(sk.rcdata.data(), this->rcseq);
+	}
+}
 
+inline void OMinHash::compute_sketch(char * ptr, const char * seq){
+	std::string seqStr(seq);
+	omh_pos(seqStr, m_k, m_l, m_m,
+			[&ptr, &seq, this](unsigned i, unsigned j, size_t pos) { memcpy(ptr, seq + pos, m_k); ptr += m_k; });
+}
 
+template<typename BT>
+static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, BT block) {
+	if(seq.size() < k) return;
+	const bool weight = l > 0;
+	if(l == 0) l = 1;
+
+	std::vector<mer_info> mers;
+	std::unordered_map<std::string, unsigned> occurrences;
+	size_t pos[l];
+
+	//  Create list of k-mers with occurrence numbers
+	for(size_t i = 0; i < seq.size() - k + 1; ++i) {
+		auto occ = occurrences[seq.substr(i, k)]++;
+		mers.emplace_back(i, occ, (uint64_t)0);
+	}
+
+	xxhash hash;
+	for(unsigned i = 0; i < m; ++i) {
+		const auto seed = i;//prg();
+		for(auto& meri : mers) {
+			hash.reset(seed);
+			hash.update(&seq.data()[meri.pos], k);
+			if(weight) hash.update(&meri.occ, sizeof(meri.occ));
+			meri.hash = hash.digest();
+		}
+
+		std::partial_sort(mers.begin(), mers.begin() + l, mers.end(), [&](const mer_info& x, const mer_info& y) { return x.hash < y.hash; });
+		std::sort(mers.begin(), mers.begin() + l, [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
+		for(unsigned j = 0; j < l; ++j)
+			block(i, j, mers[j].pos);
+	}
+}
