@@ -215,10 +215,10 @@ namespace Sketch{
 			void sketch();
 			OSketch getSektch(){ return sk;}
 
-			double similarity();
+			double similarity(OMinHash & omh2);
 
-			double distance(){
-				return (double)1.0 - similarity();
+			double distance(OMinHash & omh2){
+				return (double)1.0 - similarity(omh2);
 			}
 
 		protected:
@@ -232,6 +232,11 @@ namespace Sketch{
 			OSketch sk;
 
 			inline void compute_sketch(char * ptr, const char * seq);
+
+			double compare_sketches(const OSketch& sk1, const OSketch& sk2, 
+											  ssize_t m = -1, bool circular = false);
+			double compare_sketch_pair(const char* p1, const char* p2,
+									   unsigned m, unsigned k, unsigned l, bool circular);
 
 	};
 
