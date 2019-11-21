@@ -41,3 +41,9 @@ make
 ```
 
 We will get the value of jaccard and distance.
+
+### TODO
+- [ ] Add reverse complement to order minhash
+- [ ] Order minhash optimization(profiling)
+- [ ] Order minhash optimization(xxHash)
+- [ ] Order minhash optimization(sketch and compare)
