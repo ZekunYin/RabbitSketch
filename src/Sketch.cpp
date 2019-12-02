@@ -11,6 +11,8 @@
 #include <immintrin.h>
 #include <stdint.h>
 #include "xxhash.hpp"
+#include <random>
+
 //#ifdef USE_BOOST
 //    #include <boost/math/distributions/binomial.hpp>
 //    using namespace::boost::math;
@@ -592,8 +594,9 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	}
 
 	xxhash hash;
+	std::mt19937 gen32(32); //TODO: make 32 a parameter
 	for(unsigned i = 0; i < m; ++i) {
-		const auto seed = i;//prg();
+		const auto seed = gen32();//prg();
 		for(auto& meri : mers) {
 			hash.reset(seed);
 			hash.update(&seq.data()[meri.pos], k);
