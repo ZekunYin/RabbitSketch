@@ -15,7 +15,9 @@
 #include <string>
 #include <string.h>
 #include "MinHashHeap.h"
+#include "kmerSpectrum.h" //for weightedMinHash@xxm
 //#include "ThreadPool.h"
+
 
 namespace Sketch{
 
@@ -71,6 +73,12 @@ namespace Sketch{
 				minCov(other.minCov),
 				targetCov(other.targetCov),
 				genomeSize(other.genomeSize),
+				//for WMinHash
+				numBins(194481),
+				minimizerWindowSize(9),
+				histoSketch_sketchSize(50),
+				histoSketch_dimension(194481),
+
 				//for OMinHash
 				l(other.l),
 				m(other.m),
@@ -99,6 +107,14 @@ namespace Sketch{
 		uint32_t minCov;
 		double targetCov;
 		uint64_t genomeSize;
+
+
+		//parameters for weight minHash@xxm
+		int numBins;
+		int minimizerWindowSize;
+		int histoSketch_sketchSize;
+		int histoSketch_dimension;
+
 
 		//parameters for order minhash
 		int l;
@@ -178,6 +194,36 @@ namespace Sketch{
 	};
 
 	class WMinHash{
+		public:
+			WMinHash(Parameters parametersNew);
+			~WMinHash();
+
+			void update(char * seq);
+
+			double wJaccard(WMinHash * wmh);
+			double distance(WMinHash * wmh);
+			
+			void getWMinHash();
+			bool needToCompute = true;
+
+		private:
+			Parameters parameters;
+
+			double * binsArr;
+			double * countMinSketch; 
+			vector<uint64_t> sketches;
+			vector<Bin> kmerSpectrums;
+
+			void computeHistoSketch();
+
+			double * r;
+			double * c;
+			double * b;
+			uint32_t * histoSketch_sketch;
+			double * histoSketch_sketchWeight;
+
+
+
 	};
 
 	//OMinHash

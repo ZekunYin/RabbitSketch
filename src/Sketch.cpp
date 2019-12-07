@@ -12,6 +12,10 @@
 #include <stdint.h>
 #include "xxhash.hpp"
 #include <random>
+#include "countMin.h" //for EPSILON and DELTA@xxm
+#include "minimizer.h"
+#include "cws.h"
+#include "histoSketch.h"
 
 //#ifdef USE_BOOST
 //    #include <boost/math/distributions/binomial.hpp>
@@ -539,6 +543,150 @@ double MinHash::pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, dou
 	//    return gsl_cdf_binomial_Q(x - 1, r, sketchSize);
 	//#endif
 }
+//start the WMinHash@xxm
+WMinHash::WMinHash(Parameters parametersNew):parameters(parametersNew)
+{
+	binsArr = (double *) malloc (parameters.numBins * sizeof(double));
+	for(int i = 0; i < parameters.numBins; i++){
+		binsArr[i] = 0.0;
+	}
+
+	int g = ceil(2 / EPSILON);
+	int d = ceil(log(1 - DELTA) / log(0.5));
+	countMinSketch = (double *) malloc (d * g *sizeof(double));
+	for(int i = 0; i < d * g; i++){
+		countMinSketch[i] = 0.0;
+	}
+
+	r = (double *) malloc (parameters.histoSketch_sketchSize * parameters.histoSketch_dimension * sizeof(double));
+	c = (double *) malloc (parameters.histoSketch_sketchSize * parameters.histoSketch_dimension * sizeof(double));
+	b = (double *) malloc (parameters.histoSketch_sketchSize * parameters.histoSketch_dimension * sizeof(double));
+	getCWS(r, c, b, parameters.histoSketch_sketchSize, parameters.histoSketch_dimension);
+	
+	histoSketch_sketch = (uint32_t *) malloc (parameters.histoSketch_sketchSize * sizeof(uint32_t));
+	histoSketch_sketchWeight = (double *) malloc (parameters.histoSketch_sketchSize * sizeof(double));
+
+	needToCompute = true;
+
+}
+
+void WMinHash::update(char * seq)
+{
+	int k = parameters.kmerSize;
+	int w = parameters.minimizerWindowSize;
+	int numBins = parameters.numBins;
+	int histoSketch_sketchSize = parameters.histoSketch_sketchSize;
+	int histoSketch_dimension = parameters.histoSketch_dimension;
+
+	findMinimizers(k, w, seq, sketches);
+	kmerSpectrumAddHash(sketches, binsArr, parameters.numBins);
+//	for(int i = 0; i < parameters.numBins; i++){
+//		if(binsArr[i] != 0){
+//			printf("%d\t%lf\n", i, binsArr[i]);
+//		}
+//	}
+	sketches.clear();
+	needToCompute = true;
+
+}
+
+void WMinHash::computeHistoSketch()
+{
+	kmerSpectrumDump(binsArr, parameters.numBins, kmerSpectrums);
+	for(int i = 0; i < kmerSpectrums.size(); i++){
+		histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, parameters.histoSketch_sketchSize, false, r, c, b, parameters.histoSketch_sketchSize, parameters.histoSketch_dimension, histoSketch_sketch, histoSketch_sketchWeight);
+	}
+
+}
+
+void WMinHash::getWMinHash(){
+	if(needToCompute){
+		computeHistoSketch();
+		needToCompute = false;
+	}
+	cout << "the sketch is: " << endl;
+	for(int i = 0; i < parameters.histoSketch_sketchSize; i++){
+		printf("%d\n", histoSketch_sketch[i]);
+	}
+
+	cout << "the sketchweight is: " << endl;
+	for(int i = 0; i < parameters.histoSketch_sketchSize; i++){
+		printf("%lf\n", histoSketch_sketchWeight[i]);
+	}
+
+}
+
+double WMinHash::wJaccard(WMinHash * wmh)
+{
+	cout << "the needToCompute is: " << needToCompute << endl;
+	if(needToCompute){
+		computeHistoSketch();
+		needToCompute = false;
+	}
+	if(wmh->needToCompute){
+		wmh->computeHistoSketch();
+		wmh->needToCompute = false;
+	}
+	double intersectElement = 0.0;
+	double unionElement = 0.0;
+	double jaccard = 0.0;
+	for(int i = 0 ; i < parameters.histoSketch_sketchSize; i++){
+		double curWeightA = abs(histoSketch_sketchWeight[i]);
+		double curWeightB = abs(wmh->histoSketch_sketchWeight[i]);
+
+		//get the intersection and union values
+		if(histoSketch_sketch[i] = wmh->histoSketch_sketch[i]){
+			if(curWeightA < curWeightB){
+				intersectElement += curWeightA;
+				unionElement += curWeightB;
+			}
+			else{
+				intersectElement += curWeightB;
+				unionElement += curWeightA;
+			}
+		}
+		else{
+			if(curWeightA > curWeightB){
+				unionElement += curWeightA;
+			}
+			else{
+				unionElement += curWeightB;
+			}
+		}
+	
+	}
+	jaccard = intersectElement / unionElement;
+
+	return jaccard;
+
+}
+
+	
+double WMinHash::distance(WMinHash * wmh){
+	return 1 - wJaccard(wmh);
+}
+
+WMinHash::~WMinHash()
+{
+	free(binsArr);
+	free(countMinSketch);
+	free(r);
+	free(c);
+	free(b);
+	free(histoSketch_sketch);
+	free(histoSketch_sketchWeight);
+
+}
+
+	
+
+
+	
+
+
+
+
+
 
 
 

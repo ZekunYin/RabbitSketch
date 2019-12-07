@@ -19,8 +19,17 @@ int main(int argc, char* argv[])
 	parameters.seed = 42;
 	parameters.minHashesPerWindow  = 1000;
 
-	Sketch::MinHash * minHash1 = new Sketch::MinHash(parameters);
-	Sketch::MinHash * minHash2 = new Sketch::MinHash(parameters);
+	parameters.numBins = pow(parameters.kmerSize, parameters.alphabetSize);
+	parameters.minimizerWindowSize = 9;
+	parameters.histoSketch_sketchSize = 50;
+	parameters.histoSketch_dimension = 194481;
+
+
+//	Sketch::MinHash * minHash1 = new Sketch::MinHash(parameters);
+//	Sketch::MinHash * minHash2 = new Sketch::MinHash(parameters);
+	Sketch::WMinHash * wmh1 = new Sketch::WMinHash(parameters);
+	Sketch::WMinHash * wmh2 = new Sketch::WMinHash(parameters);
+
 	
 	//Writen by qzh.Should be add the Input.
 	//char seq[] = "AGCTCGTACGTACGTAGCTACGATCG";
@@ -56,6 +65,33 @@ CAACATTGTCGCCATTGCTCAGGGATCTTCTGAACGCTCAATCTCTGTCGTGGTAAATAACGATGATGCG\
 ACCACTGGCGTGCGCGTTACTCATCAGATGCTGTTCAATACCGATCAGGTTATCGAAGTGTTTGTGATTG\
 GCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGCTGGCTGAAGAATAAACA\
 TATCGACTTACGTGTCTGCGGTGTTGCCAACTCGAAGGCTCTGCTCACCAATGTACATGGCCTTAATCTG";
+	char seq2[] = "\
+AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGC\
+TTCTGAACTGGTTACCTGCCGTGAGTAAATTAAAATTTTATTGACTTAGGTCACTAAATACTTTAACCAA\
+TATAGGCATAGCGCACAGACAGATAAAAATTACAGAGTACACAACATCCATGAAACGCATTAGCACCACC\
+ATTACCACCACCATCACCATTACCACAGGTAACGGTGCGGGCTGACGCGTACAGGAAACACAGAAAAAAG\
+CCCGCACCTGACAGTGCGGGCTTTTTTTTTCGACCAAAGGTAACGAGGTAACAACCATGCGAGTGTTGAA\
+GTTCGGCGGTACATCAGTGGCAAATGCAGAACGTTTTCTGCGTGTTGCCGATATTCTGGAAAGCAATGCC\
+AGGCAGGGGCAGGTGGCCACCGTCCTCTCTGCCCCCGCCAAAATCACCAACCACCTGGTGGCGATGATTG\
+AAAAAACCATTAGCGGCCAGGATGCTTTACCCAATATCAGCGATGCCGAACGTATTTTTGCCGAACTTTT\
+GACGGGACTCGCCGCCGCCCAGCCGGGGTTCCCGCTGGCGCAATTGAAAACTTTCGTCGATCAGGAATTT\
+GCCCAAATAAAACATGTCCTGCATGGCATTAGTTTGTTGGGGCAGTGCCCGGATAGCATCAACGCTGCGC\
+TGATTTGCCGTGGCGAGAAAATGTCGATCGCCATTATGGCCGGCGTATTAGAAGCGCGCGGTCACAACGT\
+TACTGTTATCGATCCGGTCGAAAAACTGCTGGCAGTGGGGCATTACCTCGAATCTACCGTCGATATTGCT\
+GAGTCCACCCGCCGTATTGCGGCAAGCCGCATTCCGGCTGATCACATGGTGCTGATGGCAGGTTTCACCG\
+CCGGTAATGAAAAAGGCGAACTGGTGGTGCTTGGACGCAACGGTTCCGACTACTCTGCTGCGGTGCTGGC\
+TGCCTGTTTACGCGCCGATTGTTGCGAGATTTGGACGGACGTTGACGGGGTCTATACCTGCGACCCGCGT\
+CAGGTGCCCGATGCGAGGTTGTTGAAGTCGATGTCCTACCAGGAAGCGATGGAGCTTTCCTACTTCGGCG\
+CTAAAGTTCTTCACCCCCGCACCATTACCCCCATCGCCCAGTTCCAGATCCCTTGCCTGATTAAAAATAC\
+CGGAAATCCTCAAGCACCAGGTACGCTCATTGGTGCCAGCCGTGATGAAGACGAATTACCGGTCAAGGGC\
+ATTTCCAATCTGAATAACATGGCAATGTTCAGCGTTTCTGGTCCGGGGATGAAAGGGATGGTCGGCATGG\
+ATACAGCATCAGTTTCTGCGTTCCACAAAGCGACTGTGTGCGAGCTGAACGGGCAATGCAGGAAGAGTTC\
+TACCTGGAACTGAAAGAAGGCTTACTGGAGCCGCTGGCAGTGACGGAACGGCTGGCCATTATCTCGGTGG\
+TAGGTGATGGTATGCGCACCTTGCGTGGGATCTCGGCGAAATTCTTTGCCGCACTGGCCCGCGCCAATAT\
+CAACATTGTCGCCATTGCTCAGGGATCTTCTGAACGCTCAATCTCTGTCGTGGTAAATAACGATGATGCG\
+ACCACTGGCGTGCGCGTTACTCATCAGATGCTGTTCAATACCGATCAGGTTATCGAAGTGTTTGTGATTG\
+GCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGCTGGCTGAAGAATAAACA\
+TATCGACTTACGTGTCTGCGGTGTTGCCAACTCGAAGGCTCTGCTCACCAATGTACATGGCCTTAATCTG";
 char seq5[] = "\
 AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTCTCTGACAGCAGC\
 TTCTGAACTGGTTACCTGCCGTGAGTAAATTAAAATTTTATTGACTTAGGTCACTAAATACTTTAACCAA\
@@ -84,25 +120,61 @@ CTGGCCCGCGCCAATATCAACATTGTCGCTATTGCTCAGGGATCTTCTGAACGCTCAATCTCTGTCGTGG\
 TAAATAACGATGATGCGACCACTGGCGTGCGCGTTACTCATCAGATGCTGTTCAATACCGATCAGGTTAT\
 CGAAGTGTTTGTGATTGGCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGC";
 
-	minHash1->update(seq);
-	minHash2->update(seq5);
-	cout << "seq1 length: " << minHash1->getLength() << endl;
-	cout << "seq2 length: " << minHash2->getLength() << endl;
+	double distance = 1;
+	wmh1->update(seq);
+//	wmh1->getWMinHash();
+
+//	wmh2->update(seq2);
+//	double distance = wmh1->distance(wmh2);
+//	cout << "the distance is: " << distance << endl;
+
+//	wmh1->update(seq5);
+	wmh2->update(seq5);
+	wmh2->update(seq5);
+	wmh2->update(seq5);
+//	wmh2->update(seq2);
+	//wmh2->getWMinHash();
+	
+	distance = wmh1->distance(wmh2);
+	cout << "the distance is: " << distance << endl;
+
+//	wmh1->update(seq5);
+//	wmh1->update(seq5);
+//	wmh1->update(seq5);
+//
+//	//wmh2->update(seq5);
+//
+//	wmh2->update(seq5);
+//	wmh2->update(seq5);
+//	wmh2->update(seq5);
+//	wmh2->update(seq5);
+
+	//wmh1->getWMinHash();
+	//wmh2->getWMinHash();
+	
+	//distance = wmh1->distance(wmh2);
+	//cout << "the distance is: " << distance << endl;
+
+	
+//	minHash1->update(seq);
+//	minHash2->update(seq5);
+//	cout << "seq1 length: " << minHash1->getLength() << endl;
+//	cout << "seq2 length: " << minHash2->getLength() << endl;
 	//minHash1->update(seq5);
 	//cout << "seq1+5 length: " << minHash1->getLength() << endl;
 //	exit(0);
 	
 //	minHash1->printHashList();
 //	minHash2->printHashList();
-	minHash1->getMinHash();
+//	minHash1->getMinHash();
 	//minHash2->getMinHash();
 
-	double jaccard_num = minHash1->jaccard(minHash2);
-	double jaccard_num1 = minHash1->jaccard(minHash2);
-	double dist_num = minHash1->dist(minHash2);
-	cout << "The Value of Jaccard is: " << jaccard_num << endl;
-	cout << "The Value of Jaccard1 is: " << jaccard_num1 << endl;
-	cout << "The Value of Dist is: " << dist_num << endl;
+//	double jaccard_num = minHash1->jaccard(minHash2);
+//	double jaccard_num1 = minHash1->jaccard(minHash2);
+//	double dist_num = minHash1->dist(minHash2);
+//	cout << "The Value of Jaccard is: " << jaccard_num << endl;
+//	cout << "The Value of Jaccard1 is: " << jaccard_num1 << endl;
+//	cout << "The Value of Dist is: " << dist_num << endl;
 
 	//cout << "The Value of Jaccard is: " << minHash1->jaccard(minHash2) << endl;
 	//
