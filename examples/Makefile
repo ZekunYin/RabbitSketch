@@ -1,7 +1,7 @@
 TARGET=minhash
 
-CXX=icpc
-CXXFLAGS=-g -O2 -std=c++11
+CXX=g++
+CXXFLAGS=-g -O2 -std=c++17 -fpermissive 
 
 INCLUDE=../src
 #SRC=HashList.cpp HashPriorityQueue.cpp HashSet.cpp MinHashHeap.cpp MurmurHash3.cpp Sketch.cpp test.cpp

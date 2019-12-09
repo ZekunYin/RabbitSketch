@@ -2,6 +2,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace Sketch;
 
 int main(int argc, char* argv[])
 {
@@ -179,6 +180,27 @@ CGAAGTGTTTGTGATTGGCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGC";
 	//cout << "The Value of Jaccard is: " << minHash1->jaccard(minHash2) << endl;
 	//
 	//cout << "The Value of Dist is: " << minHash1->dist(minHash2) << endl;
+
+
+    static const size_t BITS = 10; //24
+    hll<WangHash> t(BITS);
+    hll<WangHash> t1(BITS);
+
+
+    t.update(seq);
+    t1.update(seq5);
+
+    //t1.showSketch();
+    //(t1 + t).showSketch();
+    hll<WangHash> t_all = t1 + t;
+    double sum = t_all.report();
+    double dist = t1.distance(t);
+    double us = t1.union_size(t);
+    fprintf(stderr, "HLL t report:             %lf\n", t.report());
+    fprintf(stderr, "HLL t1 report:            %lf\n", t1.report());
+    fprintf(stderr, "HLL t + t1 report:        %lf\n", sum);
+    fprintf(stderr, "HLL t1 and t union size:  %lf\n", us);
+    fprintf(stderr, "HLL distance =            %lf\n", dist);
 
 
 	return 0;

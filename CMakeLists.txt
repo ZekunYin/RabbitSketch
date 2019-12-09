@@ -9,7 +9,7 @@ INCLUDE_DIRECTORIES(src)
 
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ggdb -std=c++11 -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ggdb -std=c++17 -march=native -fpermissive ")
 
 #ADD_EXECUTABLE(${PROJECT_NAME} ${DIR_SRCS})
 ADD_LIBRARY(${PROJECT_NAME} STATIC ${DIR_SRCS})

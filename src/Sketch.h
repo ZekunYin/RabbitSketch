@@ -17,6 +17,7 @@
 #include "MinHashHeap.h"
 #include "kmerSpectrum.h" //for weightedMinHash@xxm
 //#include "ThreadPool.h"
+#include "hll/hll.h"
 
 
 namespace Sketch{
