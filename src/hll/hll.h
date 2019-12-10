@@ -1215,7 +1215,7 @@ public:
             }
             return calculate_estimate(counts, get_estim(), m(), p(), alpha());
         }
-        std::fprintf(stderr, "jestim is ERTL_JOINT_MLE: %s\n", JESTIM_STRINGS[jestim_]);
+        //std::fprintf(stderr, "jestim is ERTL_JOINT_MLE: %s\n", JESTIM_STRINGS[jestim_]);
         const auto full_counts = ertl_joint(*this, other);
         return full_counts[0] + full_counts[1] + full_counts[2];
     }
