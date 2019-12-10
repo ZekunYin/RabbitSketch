@@ -635,7 +635,7 @@ double WMinHash::wJaccard(WMinHash * wmh)
 		double curWeightB = abs(wmh->histoSketch_sketchWeight[i]);
 
 		//get the intersection and union values
-		if(histoSketch_sketch[i] = wmh->histoSketch_sketch[i]){
+		if(histoSketch_sketch[i] == wmh->histoSketch_sketch[i]){
 			if(curWeightA < curWeightB){
 				intersectElement += curWeightA;
 				unionElement += curWeightB;
