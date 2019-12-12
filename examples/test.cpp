@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
 	parameters.minimizerWindowSize = 9;
 	parameters.histoSketch_sketchSize = 50;
 	parameters.histoSketch_dimension = 194481;
+	parameters.paraDecayWeight = 0.1;
 
 
 	Sketch::MinHash * mh1 = new Sketch::MinHash(parameters);

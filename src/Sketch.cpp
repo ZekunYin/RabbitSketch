@@ -565,6 +565,23 @@ WMinHash::WMinHash(Parameters parametersNew):parameters(parametersNew)
 	
 	histoSketch_sketch = (uint32_t *) malloc (parameters.histoSketch_sketchSize * sizeof(uint32_t));
 	histoSketch_sketchWeight = (double *) malloc (parameters.histoSketch_sketchSize * sizeof(double));
+	
+	//add the applyConceptDrift and decayWeight.
+	if(parameters.paraDecayWeight < 0.0 || parameters.paraDecayWeight > 1.0){
+		cerr << "the paraDecayWeight must between 0.0 and 1.0 " << endl;
+		exit(1);
+	}
+	else{
+		applyConceptDrift = true;
+	}
+	if(parameters.paraDecayWeight == 1.0){
+		applyConceptDrift = false;
+	}
+	decayWeight = 1.0;
+	if(applyConceptDrift){
+		decayWeight = exp(-parameters.paraDecayWeight);
+	}
+
 
 	needToCompute = true;
 
@@ -594,7 +611,7 @@ void WMinHash::computeHistoSketch()
 {
 	kmerSpectrumDump(binsArr, parameters.numBins, kmerSpectrums);
 	for(int i = 0; i < kmerSpectrums.size(); i++){
-		histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, parameters.histoSketch_sketchSize, false, r, c, b, parameters.histoSketch_sketchSize, parameters.histoSketch_dimension, histoSketch_sketch, histoSketch_sketchWeight);
+		histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, parameters.histoSketch_sketchSize, applyConceptDrift, decayWeight, r, c, b, parameters.histoSketch_sketchSize, parameters.histoSketch_dimension, histoSketch_sketch, histoSketch_sketchWeight);
 	}
 
 }

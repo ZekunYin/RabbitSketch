@@ -25,9 +25,9 @@ double histoSketch_getSample(int i, int j, double freq, double * r, double * c, 
 
 
 
-void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, int histoSketchLength, bool applyConceptDrift, double * r, double * c, double * b, int sketchSize, int dimension, uint32_t * histoSketch_sketch, double * histoSketch_sketchWeight){
+void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, int histoSketchLength, bool applyConceptDrift, double decayWeight, double * r, double * c, double * b, int sketchSize, int dimension, uint32_t * histoSketch_sketch, double * histoSketch_sketchWeight){
 	
-	double estiFreq = countMinAdd(bin, value, false, countMinSketch);
+	double estiFreq = countMinAdd(bin, value, applyConceptDrift, decayWeight, countMinSketch);
 
 	for(int i = 0; i < histoSketchLength; i++){
 		//get the CWS value(A_Ka) for the incoming element
@@ -39,7 +39,7 @@ void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, 
 		double curMin;
 		if(applyConceptDrift){
 			//TODO
-			//curMin = histoSketch_sketchWeight[i] /decayWeight;
+			curMin = histoSketch_sketchWeight[i] /decayWeight;
 		}
 		else{
 			curMin = histoSketch_sketchWeight[i];

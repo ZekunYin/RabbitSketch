@@ -46,6 +46,15 @@ namespace Sketch{
 				minCov(1),
 				targetCov(0),
 				genomeSize(0),
+
+				//for WMinHash
+				numBins(194481),
+				minimizerWindowSize(9),
+				histoSketch_sketchSize(50),
+				histoSketch_dimension(194481),
+				//applyConceptDrift(false),
+				paraDecayWeight(0.0),
+
 				//for OMinHash
 				l(2),
 				m(500),
@@ -74,11 +83,14 @@ namespace Sketch{
 				minCov(other.minCov),
 				targetCov(other.targetCov),
 				genomeSize(other.genomeSize),
+
 				//for WMinHash
-				numBins(194481),
-				minimizerWindowSize(9),
-				histoSketch_sketchSize(50),
-				histoSketch_dimension(194481),
+				numBins(other.numBins),
+				minimizerWindowSize(other.minimizerWindowSize),
+				histoSketch_sketchSize(other.histoSketch_sketchSize),
+				histoSketch_dimension(other.histoSketch_dimension),
+				//applyConceptDrift(other.applyConceptDrift),
+				paraDecayWeight(other.paraDecayWeight),
 
 				//for OMinHash
 				l(other.l),
@@ -115,6 +127,8 @@ namespace Sketch{
 		int minimizerWindowSize;
 		int histoSketch_sketchSize;
 		int histoSketch_dimension;
+		//bool applyConceptDrift;
+		double paraDecayWeight;
 
 
 		//parameters for order minhash
@@ -222,6 +236,8 @@ namespace Sketch{
 			double * b;
 			uint32_t * histoSketch_sketch;
 			double * histoSketch_sketchWeight;
+			bool applyConceptDrift;
+			double decayWeight;
 
 
 
