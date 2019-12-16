@@ -18,7 +18,7 @@
 #include "kmerSpectrum.h" //for weightedMinHash@xxm
 //#include "ThreadPool.h"
 #include "hll/hll.h"
-
+#include <stdint.h>
 
 namespace Sketch{
 
@@ -318,4 +318,6 @@ struct mer_info {
 		  , occ(o)
 	{ }
 };
+
+static uint64_t hash_to_uint(const char * kmer, int k);
 #endif //Sketch_h

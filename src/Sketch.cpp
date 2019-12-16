@@ -16,6 +16,7 @@
 #include "minimizer.h"
 #include "cws.h"
 #include "histoSketch.h"
+#include "hash_int.h"
 
 //#ifdef USE_BOOST
 //    #include <boost/math/distributions/binomial.hpp>
@@ -759,16 +760,20 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	}
 
 	xxhash hash;
-	std::mt19937 gen32(32); //TODO: make 32 a parameter
+	std::mt19937_64 gen64(32); //TODO: make 32 a parameter
 	for(unsigned i = 0; i < m; ++i) {
-		const auto seed = gen32();//prg();
+		const auto seed = gen64();//prg();
 		for(auto& meri : mers) {
-			hash.reset(seed);
-			hash.update(&seq.data()[meri.pos], k);
-			if(weight) hash.update(&meri.occ, sizeof(meri.occ));
-			meri.hash = hash.digest();
+			//hash.reset(seed);
+			//hash.update(&seq.data()[meri.pos], k);//update kmer (chars)
+			//
+			//if(weight) hash.update(&meri.occ, sizeof(meri.occ));//update occurance to hash
+			uint64_t kmer_int = hash_to_uint(&seq.data()[meri.pos], k);
+			meri.hash = mc::murmur3_fmix(kmer_int, seed);
+			//meri.hash = hash.digest();
 		}
 
+		//top-k
 		std::partial_sort(mers.begin(), mers.begin() + l, mers.end(), [&](const mer_info& x, const mer_info& y) { return x.hash < y.hash; });
 		std::sort(mers.begin(), mers.begin() + l, [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
 		for(unsigned j = 0; j < l; ++j)
@@ -817,3 +822,19 @@ double OMinHash::compare_sketch_pair(const char* p1, const char* p2, unsigned m,
 double OMinHash::similarity(OMinHash & omh2){
 	return compare_sketches(this->sk, omh2.getSektch());	
 }
+
+inline uint64_t hash_to_uint(const char * kmer, int k)
+{
+	uint8_t mask = 0x06;
+	uint64_t res = 0;
+	for(int i = 0; i < k; i++)
+	{
+		uint8_t meri = (uint8_t)kmer[i];
+		meri &= mask;
+		meri >>= 1;
+		res |= (uint64_t)meri;
+		res <<= 2;
+	}
+
+	return res;
+}			
