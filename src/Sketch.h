@@ -319,5 +319,5 @@ struct mer_info {
 	{ }
 };
 
-static uint64_t hash_to_uint(const char * kmer, int k);
+inline uint64_t hash_to_uint(const char * kmer, int k);
 #endif //Sketch_h

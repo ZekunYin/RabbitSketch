@@ -1,8 +1,16 @@
 #include "Sketch.h"
 #include <iostream>
+#include <sys/time.h>
 
 using namespace std;
 using namespace Sketch;
+
+double get_sec(){
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (double)tv.tv_sec + (double)tv.tv_usec / 1000000;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -27,10 +35,6 @@ int main(int argc, char* argv[])
 	parameters.paraDecayWeight = 0.1;
 
 
-	Sketch::MinHash * mh1 = new Sketch::MinHash(parameters);
-	Sketch::MinHash * mh2 = new Sketch::MinHash(parameters);
-	Sketch::WMinHash * wmh1 = new Sketch::WMinHash(parameters);
-	Sketch::WMinHash * wmh2 = new Sketch::WMinHash(parameters);
 
 	
 //pay attention to "no space inside a sequence!!" @xxm
@@ -117,24 +121,40 @@ CTGGCCCGCGCCAATATCAACATTGTCGCTATTGCTCAGGGATCTTCTGAACGCTCAATCTCTGTCGTGG\
 TAAATAACGATGATGCGACCACTGGCGTGCGCGTTACTCATCAGATGCTGTTCAATACCGATCAGGTTAT\
 CGAAGTGTTTGTGATTGGCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGC";
 
+
 	double distance;
+	double time1 = get_sec();	
+
+	Sketch::WMinHash * wmh1 = new Sketch::WMinHash(parameters);
+	Sketch::WMinHash * wmh2 = new Sketch::WMinHash(parameters);
 	wmh1->update(seq);
 	wmh2->update(seq5);
-
+	distance = wmh1->distance(wmh2);
+	double time2 = get_sec();
+	cout << "WMinHash: the distance(1-WJ) is: " << distance << endl;
+	cout << "WMinHash time: " << time2 - time1  << endl;
+	
+	time1 = get_sec();
+	Sketch::MinHash * mh1 = new Sketch::MinHash(parameters);
+	Sketch::MinHash * mh2 = new Sketch::MinHash(parameters);
 	mh1->update(seq);	
 	mh2->update(seq5);	
 	double minhash_dist = mh1->jaccard(mh2);	
+	time2 = get_sec();
 	cout << "MinHash: the distance(1-J) is: " << 1.0 - minhash_dist << endl;
+	cout << "MinHash time: " << time2 - time1  << endl;
 
-	distance = wmh1->distance(wmh2);
-	cout << "WMinHash: the distance(1-WJ) is: " << distance << endl;
 
+	time1  = get_sec();
 	Sketch::OMinHash omh1(parameters, seq);
 	Sketch::OMinHash omh2(parameters, seq5);
 	double odist = omh1.distance(omh2);
+	time2 = get_sec();
 	cout << "OMinHash: the distance(1-J) is: " << odist << endl;
+	cout << "OMinHash time: " << time2 -  time1 << endl;
 
 
+	time1  = get_sec();
     static const size_t BITS = 10; //24
     hll<WangHash> t(BITS);
     hll<WangHash> t1(BITS);
@@ -143,17 +163,15 @@ CGAAGTGTTTGTGATTGGCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGC";
     t.update(seq);
     t1.update(seq5);
 
-    //t1.showSketch();
-    //(t1 + t).showSketch();
+    //.showSketch();
+    //( + t).showSketch();
     hll<WangHash> t_all = t1 + t;
     double sum = t_all.report();
     double dist = t1.distance(t);
     double us = t1.union_size(t);
-    //fprintf(stderr, "HLL t report:             %lf\n", t.report());
-    //fprintf(stderr, "HLL t1 report:            %lf\n", t1.report());
-    //fprintf(stderr, "HLL t + t1 report:        %lf\n", sum);
-    //fprintf(stderr, "HLL t1 and t union size:  %lf\n", us);
-    fprintf(stderr, "HLL distance(1-J) =       %lf\n", 1.0 - dist);
+	time2  = get_sec();
+    cout <<  "HLL distance(1-J) = " <<  1.0 - dist << endl;
+	cout << "HLL time: " << time2 -  time1 << endl;
 
 
 	return 0;
