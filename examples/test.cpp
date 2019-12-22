@@ -155,20 +155,14 @@ CGAAGTGTTTGTGATTGGCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGC";
 
 
 	time1  = get_sec();
-    static const size_t BITS = 10; //24
-    hll<WangHash> t(BITS);
-    hll<WangHash> t1(BITS);
-
+    static const size_t BITS = 20; //24
+	HyperLogLog t(BITS);
+	HyperLogLog t1(BITS);
 
     t.update(seq);
     t1.update(seq5);
 
-    //.showSketch();
-    //( + t).showSketch();
-    hll<WangHash> t_all = t1 + t;
-    double sum = t_all.report();
     double dist = t1.distance(t);
-    double us = t1.union_size(t);
 	time2  = get_sec();
     cout <<  "HLL distance(1-J) = " <<  1.0 - dist << endl;
 	cout << "HLL time: " << time2 -  time1 << endl;
