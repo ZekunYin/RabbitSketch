@@ -3,7 +3,8 @@
 #include <chrono>
 #include <algorithm>
 #include <numeric>
-#include "hll.h"
+//#include "hll.h"
+#include "hyperloglog.h"
 #include <string.h>
 
 using namespace Sketch;
@@ -12,9 +13,6 @@ using namespace Sketch;
 
 int main(int argc, char *argv[])
 {
-    static const size_t BITS = 10; //24
-    hll<WangHash> t(BITS);
-    hll<WangHash> t1(BITS);
     char seq1[] = "\
 AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGC\
 TTCTGAACTGGTTACCTGCCGTGAGTAAATTAAAATTTTATTGACTTAGGTCACTAAATACTTTAACCAA\
@@ -71,21 +69,35 @@ CTGGCCCGCGCCAATATCAACATTGTCGCTATTGCTCAGGGATCTTCTGAACGCTCAATCTCTGTCGTGG\
 TAAATAACGATGATGCGACCACTGGCGTGCGCGTTACTCATCAGATGCTGTTCAATACCGATCAGGTTAT\
 CGAAGTGTTTGTGATTGGCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGC";
 
-    t.update(seq1);
+    static const size_t BITS = 10; //24
+  
+  /*
+    hll<WangHash> dasht(BITS);
+    hll<WangHash> dasht1(BITS);
+	dasht.update(seq1);
+    dasht1.update(seq5);
+    double dashdist = dasht1.distance(dasht);
+    double dashus = dasht1.union_size(dasht);
+    fprintf(stderr, "dash t1 and t union size:  %lf\n", dashus);
+    fprintf(stderr, "dash distance =            %lf\n", dashdist);
+    */
+	HyperLogLog t(BITS);
+	HyperLogLog t1(BITS);
+	t.update(seq1);
     t1.update(seq5);
 
-    //t1.showSketch();
+    t1.showSketch();
     //(t1 + t).showSketch();
-    hll<WangHash> t_all = t1 + t;
-    double sum = t_all.report();
+    //hll<WangHash> t_all = t1 + t;
+    //double sum = t_all.report();
     double dist = t1.distance(t);
     double us = t1.union_size(t);
-    fprintf(stderr, "t report:             %lf\n", t.report());
-    fprintf(stderr, "t1 report:            %lf\n", t1.report());
-    fprintf(stderr, "t + t1 report:        %lf\n", sum);
+    //fprintf(stderr, "t report:             %lf\n", t.report());
+    //fprintf(stderr, "t1 report:            %lf\n", t1.report());
+    //fprintf(stderr, "t + t1 report:        %lf\n", sum);
     fprintf(stderr, "t1 and t union size:  %lf\n", us);
     fprintf(stderr, "distance =            %lf\n", dist);
 
-    t.finalize();
+    //t.finalize();
     return EXIT_SUCCESS;
 }

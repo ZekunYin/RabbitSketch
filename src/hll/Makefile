@@ -1,5 +1,7 @@
 CXX=g++
-FLAGS=-O3 -funroll-loops -pipe -march=native -fpermissive -I. -fpic -std=c++17 -Wall -Wextra -Wdisabled-optimization -DNDEBUG -DTHREADSAFE 
+#CXX=icpc
+#FLAGS=-O3 -funroll-loops -pipe -march=native -fpermissive -I. -fpic -std=c++17 -Wall -Wextra -Wdisabled-optimization -DNDEBUG -DTHREADSAFE 
+FLAGS=-O3 -funroll-loops -pipe -march=native -fpermissive -I. -fpic -std=c++17  -Wextra 
 
 ifeq ($(shell uname),Darwin)
 	FLAGS := $(FLAGS) -Wa,-q
