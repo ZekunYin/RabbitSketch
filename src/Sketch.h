@@ -184,10 +184,11 @@ namespace Sketch{
 			//void update(char * seq, uint64_t length);
 			MinHash(Parameters parametersNew);
 			void update(char * seq);
+			void merge(MinHash& msh);
 
 			double jaccard(MinHash * msh);			
 			double dist(MinHash * msh);
-
+			
 			HashList & getHashList();
 			//	void printHashList();
 			void getMinHash();
@@ -203,7 +204,7 @@ namespace Sketch{
 			Parameters parameters;
 			MinHashHeap * minHashHeap;
 			Reference reference;
-			uint64_t length;
+			uint64_t length = 0;
 			double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
 			void heapToList();
 

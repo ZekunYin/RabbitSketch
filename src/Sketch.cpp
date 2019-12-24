@@ -80,7 +80,7 @@ void inline transpose8_epi64(__m512i *row0, __m512i* row1, __m512i* row2,__m512i
 //Sketch::MinHash::MinHash(const Sketch::Parameters & parameters)
 MinHash ::MinHash(Parameters parametersNew):parameters(parametersNew)
 {
-	minHashHeap = new MinHashHeap(parameters.use64, parameters.minHashesPerWindow, parameters.reads ?  parameters.minCov : 1);
+	minHashHeap = new MinHashHeap(parameters.use64, parameters.minHashesPerWindow);// parameters.reads ?  parameters.minCov : 1);
 
 	this->kmerSpace = pow(parameters.alphabetSize, parameters.kmerSize);
 	//cerr << "kmerSpace init from pow is " << this->kmerSpace << endl;
@@ -94,6 +94,7 @@ void MinHash::update(char * seq)
 	//addMinHashes(minHashHeap, seq, LENGTH, parameters);
 	//cout << "seq: " << seq << endl;
 	const uint64_t LENGTH = strlen(seq);
+	cout << "seq_len: " << LENGTH << endl;
 	this->length += LENGTH;
 	int kmerSize = parameters.kmerSize;
 	uint64_t mins = parameters.minHashesPerWindow;
@@ -181,7 +182,7 @@ void MinHash::update(char * seq)
 	//hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
 	//  const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
-	int n_kmers = length - kmerSize + 1;
+	int n_kmers = LENGTH - kmerSize + 1;
 	int n_kmers_body = (n_kmers / 16) * 16;
 	//int n_kmers_body = (n_kmers / 32) * 32;
 	//int n_kmers_body = (n_kmers / 8) * 8;
@@ -208,23 +209,23 @@ void MinHash::update(char * seq)
 
 	for(int i = 0; i < n_kmers_body-1; i+=16){
 
-		vi[0] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 0, input8_rev + length - i - 0 - kmerSize, kmerSize) <= 0 ? input8 + i + 0 : input8_rev + length - i - 0 - kmerSize);
-		vi[1] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 1, input8_rev + length - i - 1 - kmerSize, kmerSize) <= 0 ? input8 + i + 1 : input8_rev + length - i - 1 - kmerSize);
-		vi[2] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 2, input8_rev + length - i - 2 - kmerSize, kmerSize) <= 0 ? input8 + i + 2 : input8_rev + length - i - 2 - kmerSize);
-		vi[3] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 3, input8_rev + length - i - 3 - kmerSize, kmerSize) <= 0 ? input8 + i + 3 : input8_rev + length - i - 3 - kmerSize);
-		vi[4] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 4, input8_rev + length - i - 4 - kmerSize, kmerSize) <= 0 ? input8 + i + 4 : input8_rev + length - i - 4 - kmerSize);
-		vi[5] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 5, input8_rev + length - i - 5 - kmerSize, kmerSize) <= 0 ? input8 + i + 5 : input8_rev + length - i - 5 - kmerSize);
-		vi[6] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 6, input8_rev + length - i - 6 - kmerSize, kmerSize) <= 0 ? input8 + i + 6 : input8_rev + length - i - 6 - kmerSize);
-		vi[7] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 7, input8_rev + length - i - 7 - kmerSize, kmerSize) <= 0 ? input8 + i + 7 : input8_rev + length - i - 7 - kmerSize);
+		vi[0] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 0, input8_rev + LENGTH - i - 0 - kmerSize, kmerSize) <= 0 ? input8 + i + 0 : input8_rev + LENGTH - i - 0 - kmerSize);
+		vi[1] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 1, input8_rev + LENGTH - i - 1 - kmerSize, kmerSize) <= 0 ? input8 + i + 1 : input8_rev + LENGTH - i - 1 - kmerSize);
+		vi[2] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 2, input8_rev + LENGTH - i - 2 - kmerSize, kmerSize) <= 0 ? input8 + i + 2 : input8_rev + LENGTH - i - 2 - kmerSize);
+		vi[3] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 3, input8_rev + LENGTH - i - 3 - kmerSize, kmerSize) <= 0 ? input8 + i + 3 : input8_rev + LENGTH - i - 3 - kmerSize);
+		vi[4] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 4, input8_rev + LENGTH - i - 4 - kmerSize, kmerSize) <= 0 ? input8 + i + 4 : input8_rev + LENGTH - i - 4 - kmerSize);
+		vi[5] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 5, input8_rev + LENGTH - i - 5 - kmerSize, kmerSize) <= 0 ? input8 + i + 5 : input8_rev + LENGTH - i - 5 - kmerSize);
+		vi[6] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 6, input8_rev + LENGTH - i - 6 - kmerSize, kmerSize) <= 0 ? input8 + i + 6 : input8_rev + LENGTH - i - 6 - kmerSize);
+		vi[7] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 7, input8_rev + LENGTH - i - 7 - kmerSize, kmerSize) <= 0 ? input8 + i + 7 : input8_rev + LENGTH - i - 7 - kmerSize);
 
-		vj[0] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 8, input8_rev + length - i - 8 - kmerSize, kmerSize) <= 0 ? input8 + i + 8 : input8_rev + length - i - 8 - kmerSize);
-		vj[1] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 9, input8_rev + length - i - 9 - kmerSize, kmerSize) <= 0 ? input8 + i + 9 : input8_rev + length - i - 9 - kmerSize);
-		vj[2] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 10, input8_rev + length - i - 10 - kmerSize, kmerSize) <= 0 ? input8 + i + 10 : input8_rev + length - i - 10 - kmerSize);
-		vj[3] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 11, input8_rev + length - i - 11 - kmerSize, kmerSize) <= 0 ? input8 + i + 11 : input8_rev + length - i - 11 - kmerSize);
-		vj[4] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 12, input8_rev + length - i - 12 - kmerSize, kmerSize) <= 0 ? input8 + i + 12 : input8_rev + length - i - 12 - kmerSize);
-		vj[5] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 13, input8_rev + length - i - 13 - kmerSize, kmerSize) <= 0 ? input8 + i + 13 : input8_rev + length - i - 13 - kmerSize);
-		vj[6] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 14, input8_rev + length - i - 14 - kmerSize, kmerSize) <= 0 ? input8 + i + 14 : input8_rev + length - i - 14 - kmerSize);
-		vj[7] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 15, input8_rev + length - i - 15 - kmerSize, kmerSize) <= 0 ? input8 + i + 15 : input8_rev + length - i - 15 - kmerSize);
+		vj[0] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 8, input8_rev + LENGTH - i - 8 - kmerSize, kmerSize) <= 0 ? input8 + i + 8 : input8_rev + LENGTH - i - 8 - kmerSize);
+		vj[1] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 9, input8_rev + LENGTH - i - 9 - kmerSize, kmerSize) <= 0 ? input8 + i + 9 : input8_rev + LENGTH - i - 9 - kmerSize);
+		vj[2] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 10, input8_rev + LENGTH - i - 10 - kmerSize, kmerSize) <= 0 ? input8 + i + 10 : input8_rev + LENGTH - i - 10 - kmerSize);
+		vj[3] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 11, input8_rev + LENGTH - i - 11 - kmerSize, kmerSize) <= 0 ? input8 + i + 11 : input8_rev + LENGTH - i - 11 - kmerSize);
+		vj[4] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 12, input8_rev + LENGTH - i - 12 - kmerSize, kmerSize) <= 0 ? input8 + i + 12 : input8_rev + LENGTH - i - 12 - kmerSize);
+		vj[5] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 13, input8_rev + LENGTH - i - 13 - kmerSize, kmerSize) <= 0 ? input8 + i + 13 : input8_rev + LENGTH - i - 13 - kmerSize);
+		vj[6] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 14, input8_rev + LENGTH - i - 14 - kmerSize, kmerSize) <= 0 ? input8 + i + 14 : input8_rev + LENGTH - i - 14 - kmerSize);
+		vj[7] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 15, input8_rev + LENGTH - i - 15 - kmerSize, kmerSize) <= 0 ? input8 + i + 15 : input8_rev + LENGTH - i - 15 - kmerSize);
 
 
 
@@ -241,13 +242,13 @@ void MinHash::update(char * seq)
 		hash_u hash;
 		for(int j = 0; j < 16; j++){
 			hash.hash64 = res[j * 2];
-			//cout << hash.hash64 << endl;
+			//cerr << "hashes: " << hash.hash64 << endl;
 			minHashHeap->tryInsert(hash);
 		}
 	}
 
 	for(int i = n_kmers_body; i < n_kmers; i++){
-		bool noRev = (memcmp(input8 + i, input8_rev + length - i - kmerSize, kmerSize) <= 0);
+		bool noRev = (memcmp(input8 + i, input8_rev + LENGTH - i - kmerSize, kmerSize) <= 0);
 		if(noRev){
 			for(int j = 0; j < kmerSize; j++){
 				//kmer_buf[j] = input8[i + j];
@@ -257,7 +258,7 @@ void MinHash::update(char * seq)
 		else{
 			for(int j = 0; j < kmerSize; j++){
 				//kmer_buf[j] = input8[i + j];
-				kmer_buf[j] = input8_rev[length - i - kmerSize + j];
+				kmer_buf[j] = input8_rev[LENGTH - i - kmerSize + j];
 			}
 		}
 
@@ -266,11 +267,13 @@ void MinHash::update(char * seq)
 		MurmurHash3_x64_128(kmer_buf, kmerSize, 42, res2);// the getHash just need the lower 64bit of the total 128bit of res[i];
 		hash_u hash;
 		hash.hash64 = res2[0];
+		//cerr << "hashes: " << hash.hash64 << endl;
 		minHashHeap->tryInsert(hash);
 
 	}
 	//============================================================================================================================================================
-
+	cout << "n_kmers_body: " << n_kmers_body << endl;
+	cout << "n_kmers: " << n_kmers << endl;
 	if ( ! noncanonical )
 	{
 		delete [] seqRev;
@@ -344,6 +347,19 @@ hash_u getHash(const char * seq, int length, uint32_t seed, bool use64)
 	return hash;
 }
 
+void MinHash::merge(MinHash& msh)
+{
+	msh.heapToList();
+	HashList & mshList = msh.reference.hashesSorted;	
+	for(int i = 0; i < mshList.size(); i++)
+	{
+		//cerr << "insert to heap" << mshList.at(i).hash64 << endl;
+		minHashHeap -> tryInsert(mshList.at(i));
+	}
+	needToList = true;
+		
+	return;	
+}
 bool hashLessThan(hash_u hash1, hash_u hash2, bool use64)
 {
 	if ( use64 )
