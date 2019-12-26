@@ -1,7 +1,10 @@
 #include "Sketch.h"
 #include <iostream>
 #include <sys/time.h>
+#include <zlib.h>
+#include "kseq.h"
 
+KSEQ_INIT(gzFile, gzread)
 using namespace std;
 using namespace Sketch;
 
@@ -34,7 +37,54 @@ int main(int argc, char* argv[])
 	parameters.histoSketch_dimension = 194481;
 	parameters.paraDecayWeight = 0.1;
 
+	gzFile fp;
+	kseq_t *ks;
+	
+	fp = gzopen(argv[2],"r");
+	if(NULL == fp){
+		fprintf(stderr,"Fail to open file: %s\n", argv[1]);
+		return 0;
+	}
 
+	ks = kseq_init(fp);
+
+	long count = 0;
+
+	std::vector<HyperLogLog*> vect_hll;
+	//std::vector<hll<WangHash>*> vect_hll;
+    static const size_t BITS = 10; //24
+	
+	//readfile & sketch
+	while( kseq_read(ks) >= 0 ){
+		//fprintf(stderr,"seq: %s\n", ks->seq.s);
+		count++;
+		if(count>=100)
+			break;
+		
+		HyperLogLog * test = new HyperLogLog(BITS);
+		//hll<WangHash> *test = new hll<WangHash>(BITS);
+		test->update(ks->seq.s);
+		vect_hll.push_back(test);
+	
+	}
+	
+	//distance
+	for(int i=0; i<vect_hll.size(); ++i) {
+		for(int j=i; j<vect_hll.size(); ++j){
+			double dist = vect_hll[i]->distance(*vect_hll[j]);
+			fprintf(stderr,"Distance between sketch[%d] and sketch[%d]: %lf \n", i, j, dist);
+		}
+		fprintf(stderr, "current is %d .\n",i);
+		//vect_hll[i]->showSketch();
+	}
+
+	kseq_destroy(ks);
+	gzclose(fp);
+
+
+    return EXIT_SUCCESS;
+  
+	/*
 
 	
 //pay attention to "no space inside a sequence!!" @xxm
@@ -169,5 +219,6 @@ CGAAGTGTTTGTGATTGGCGTCGGTGGCGTTGGCGGTGCGCTGCTGGAGCAACTGAAGCGTCAGCAAAGC";
 
 
 	return 0;
+	*/
 }
 

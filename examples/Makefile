@@ -9,12 +9,12 @@ INCLUDE=../src
 OBJECTS=test.o libsketch.a
 
 $(TARGET):$(OBJECTS)
-	$(CXX) $(CXXFLAGS)  $^ -o $@ `gsl-config --cflags --libs` -I$(INCLUDE)
+	$(CXX) $(CXXFLAGS)  $^ -o $@ `gsl-config --cflags --libs` -I$(INCLUDE) -lz
 #	$(CXX) $(CXXFLAGS)  $^ -o $@ -lgsl -lgslcblas -lm
 
 #%.o:%.cpp
 test.o:test.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@ -I$(INCLUDE)
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -I$(INCLUDE) -lz
 
 
 
