@@ -164,7 +164,6 @@ namespace Sketch {
 
 	class HyperLogLog{
 		protected:
-			//std::vector<uint8_t> core_(static_cast<uint64_t>(1)<<np_);//sketchInfo; TODO: allocator
 			std::vector<uint8_t> core_;//sketchInfo; TODO: allocator
 			mutable double value_; //cardinality
 			uint32_t np_; // 10-20
@@ -174,8 +173,8 @@ namespace Sketch {
 			//HashStruct                                 hf_;
 
 		public:
-			//HyperLogLog():core_(1uL<<10,0),np_(10){};
-			HyperLogLog(int np):core_(1uL<<np,0),np_(np){};
+			//HyperLogLog(int np):core_(1uL<<np,0),np_(np),estim_(2),jestim_(3){};
+			HyperLogLog(int np):core_(1uL<<np,0),np_(np),estim_(EstimationMethod::ERTL_MLE),jestim_(JointEstimationMethod::ERTL_JOINT_MLE) {};
 			~HyperLogLog(){};
 			//void update(const char* seq);
 			//void showSketch();
@@ -213,12 +212,22 @@ namespace Sketch {
 
 			// Call sum to recalculate if you have changed contents.
 			void sum() const {
-				//const auto counts(sum_counts(core_)); // std::array<uint32_t, 64>  // K->C
-				const auto counts(sum_counts(core())); // std::array<uint32_t, 64>  // K->C
+				//fprintf(stdout,"run in sum");
+				const auto counts(sum_counts(core_)); // std::array<uint32_t, 64>  // K->C
+#if DEBUG
+				fprintf(stdout,"[W:%s:%d] sum() Counts: ",__PRETTY_FUNCTION__, __LINE__);
+				fprintf(stdout,"Counts: ");
+				for(int i=0; i<64; i++)
+					fprintf(stdout,"%d, ", counts[i]);
+				fprintf(stdout,"\n");
+#endif
 				value_ = calculate_estimate(counts, estim_, m(), np_, alpha(), 1e-2);
 				is_calculated_ = 1;
 			}
-			void csum() const {if(!is_calculated_) sum();}
+			void csum() const {
+				//if(!is_calculated_) 
+				sum();
+			}
 
 			// Returns cardinality estimate. Sums if not calculated yet.
 			double creport() const {
@@ -342,8 +351,8 @@ namespace Sketch {
 			void showSketch(){
 				int vecSize = core_.size();
 				for(int i=0; i<vecSize; ++i)
-					fprintf( stderr,"%u, ",  core_[i] );
-				fprintf(stderr,"\n");
+					fprintf( stdout,"%u, ",  core_[i] );
+				fprintf(stdout,"\n");
 			}
 
 			double union_size(const HyperLogLog &other) const {
@@ -363,10 +372,6 @@ namespace Sketch {
 			}
 
 
-			double jaccard_index(HyperLogLog &h2) {
-				if(jestim_ != JointEstimationMethod::ERTL_JOINT_MLE) csum(), h2.csum();
-				return const_cast<HyperLogLog &>(*this).jaccard_index(const_cast<const HyperLogLog &>(h2));
-			}
 			double jaccard_index(const HyperLogLog &h2) const {
 				if(jestim_ == JointEstimationMethod::ERTL_JOINT_MLE) {
 					auto full_cmps = ertl_joint(*this, h2);
@@ -382,6 +387,13 @@ namespace Sketch {
 			double calculate_estimate(const std::array<uint32_t,64> &counts,
 					EstimationMethod estim, uint64_t m, uint32_t p, double alpha, double relerr) const {
 				assert(estim <= 3);
+#if DEBUG
+				fprintf(stdout,"[W:%s:%d] Counts: ",__PRETTY_FUNCTION__, __LINE__);
+				fprintf(stdout,"Counts: ");
+				for(int i=0; i<64; i++)
+					fprintf(stdout,"%d, ", counts[i]);
+				fprintf(stdout,"\n");
+#endif
 #if ENABLE_COMPUTED_GOTO
 				static constexpr void *arr [] {&&ORREST, &&ERTL_IMPROVED_EST, &&ERTL_MLE_EST};
 				goto *arr[estim];
@@ -397,10 +409,10 @@ ORREST: {
 								   double value(alpha * m * m / sum);
 								   if(value < small_range_correction_threshold(m)) {
 									   if(counts[0]) {
-//#if !NDEBUG
-//										   std::fprintf(stderr, "[W:%s:%d] Small value correction. Original estimate %lf. New estimate %lf.\n",
-//												   __PRETTY_FUNCTION__, __LINE__, value, m * std::log(static_cast<double>(m) / counts[0]));
-//#endif
+										   //#if !NDEBUG
+										   //										   std::fprintf(stderr, "[W:%s:%d] Small value correction. Original estimate %lf. New estimate %lf.\n",
+										   //												   __PRETTY_FUNCTION__, __LINE__, value, m * std::log(static_cast<double>(m) / counts[0]));
+										   //#endif
 										   value = m * std::log(static_cast<double>(m) / counts[0]);
 									   }
 								   } else if(value > LARGE_RANGE_CORRECTION_THRESHOLD) {
@@ -408,9 +420,9 @@ ORREST: {
 									   // I do think I've seen worse accuracy with the large range correction, but I would need to rerun experiments to be sure.
 									   sum = -std::pow(2.0L, 32) * std::log1p(-std::ldexp(value, -32));
 									   if(!std::isnan(sum)) value = sum;
-//#if !NDEBUG
-//									   else std::fprintf(stderr, "[W:%s:%d] Large range correction returned nan. Defaulting to regular calculation.\n", __PRETTY_FUNCTION__, __LINE__);
-//#endif
+									   //#if !NDEBUG
+									   //									   else std::fprintf(stderr, "[W:%s:%d] Large range correction returned nan. Defaulting to regular calculation.\n", __PRETTY_FUNCTION__, __LINE__);
+									   //#endif
 								   }
 								   return value;
 							   }
@@ -478,6 +490,14 @@ ERTL_MLE_EST: return ertl_ml_estimate(counts, p, 64 - p, relerr);
 					   -Ertl paper.
 TODO:  Consider adding this change to the method. This could improve our performance for other
 					 */
+
+#if DEBUG
+					fprintf(stdout,"[W:%s:%d] Counts: ",__PRETTY_FUNCTION__, __LINE__);
+					for(int i=0; i<64; i++)
+						fprintf(stdout,"%d, ", c[i]);
+					fprintf(stdout,"\n");
+#endif
+
 					const uint64_t m = 1ull << p;
 					if (c[q+1] == m) return std::numeric_limits<double>::infinity();
 
@@ -524,6 +544,9 @@ TODO:  Consider adding this change to the method. This could improve our perform
 						x += deltaX;
 						gprev = g;
 					}
+//#if DEBUG
+//					fprintf(stderr,"x = %lf, m = %lf \n", x, m);
+//#endif
 					return x*m;
 				}
 			template<typename HllType>

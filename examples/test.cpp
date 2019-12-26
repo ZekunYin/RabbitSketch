@@ -47,35 +47,34 @@ int main(int argc, char* argv[])
 	}
 
 	ks = kseq_init(fp);
-
-	long count = 0;
+	
+	int nums = 100;
+	if(argc >=4)
+		nums = stoi(argv[3]);
+	int count = 0;
 
 	std::vector<HyperLogLog*> vect_hll;
-	//std::vector<hll<WangHash>*> vect_hll;
     static const size_t BITS = 10; //24
 	
 	//readfile & sketch
 	while( kseq_read(ks) >= 0 ){
-		//fprintf(stderr,"seq: %s\n", ks->seq.s);
-		count++;
-		if(count>=100)
+		if(argc >= 4 && count+1 > nums )
 			break;
 		
 		HyperLogLog * test = new HyperLogLog(BITS);
-		//hll<WangHash> *test = new hll<WangHash>(BITS);
 		test->update(ks->seq.s);
 		vect_hll.push_back(test);
 	
+		count++;
 	}
 	
 	//distance
 	for(int i=0; i<vect_hll.size(); ++i) {
+		fprintf(stdout, "current is %d \n",i);
 		for(int j=i; j<vect_hll.size(); ++j){
 			double dist = vect_hll[i]->distance(*vect_hll[j]);
-			fprintf(stderr,"Distance between sketch[%d] and sketch[%d]: %lf \n", i, j, dist);
+			fprintf(stdout,"Distance between sketch[%d] and sketch[%d]: %lf \n", i, j, dist);
 		}
-		fprintf(stderr, "current is %d .\n",i);
-		//vect_hll[i]->showSketch();
 	}
 
 	kseq_destroy(ks);

@@ -37,7 +37,7 @@ cp ../build/libsketch.a .
 
 make
 
-./minhash 21 ~/workspace/file.fa
+./minhash 21 ~/workspace/file.fa 100
 ```
 
 We will get the value of jaccard and distance.
