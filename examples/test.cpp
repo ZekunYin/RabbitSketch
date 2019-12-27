@@ -73,7 +73,9 @@ int main(int argc, char* argv[])
 		fprintf(stdout, "current is %d \n",i);
 		for(int j=i; j<vect_hll.size(); ++j){
 			double dist = vect_hll[i]->distance(*vect_hll[j]);
-			fprintf(stdout,"Distance between sketch[%d] and sketch[%d]: %lf \n", i, j, dist);
+			double esti = (vect_hll[i]->merge(*vect_hll[j])).creport();
+			fprintf(stdout,"Seq[%d] and seq[%d] distance(J): %lf , estimation = %lf \n", i, j, dist, esti);
+			//fprintf(stdout,"Distance between sketch[%d] and sketch[%d]: %lf \n", i, j, dist);
 		}
 	}
 
