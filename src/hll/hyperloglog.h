@@ -174,7 +174,7 @@ namespace Sketch {
 
 		public:
 			//HyperLogLog(int np):core_(1uL<<np,0),np_(np),estim_(2),jestim_(3){};
-			HyperLogLog(int np):core_(1uL<<np,0),np_(np),estim_(EstimationMethod::ERTL_MLE),jestim_(JointEstimationMethod::ERTL_JOINT_MLE) {};
+			HyperLogLog(int np):core_(1uL<<np,0),np_(np),is_calculated_(0),estim_(EstimationMethod::ERTL_MLE),jestim_(JointEstimationMethod::ERTL_JOINT_MLE) {};
 			~HyperLogLog(){};
 			//void update(const char* seq);
 			//void showSketch();
@@ -224,10 +224,7 @@ namespace Sketch {
 				value_ = calculate_estimate(counts, estim_, m(), np_, alpha(), 1e-2);
 				is_calculated_ = 1;
 			}
-			void csum() const {
-				//if(!is_calculated_) 
-				sum();
-			}
+			void csum() const { if(!is_calculated_) sum(); }
 
 			// Returns cardinality estimate. Sums if not calculated yet.
 			double creport() const {
@@ -325,6 +322,19 @@ namespace Sketch {
 
 				}
 			}
+
+			HyperLogLog merge(const HyperLogLog &other) const {
+				if(other.p() != p())
+					throw std::runtime_error(std::string("p (") + std::to_string(p()) + " != other.p (" + std::to_string(other.p()));
+				HyperLogLog ret(*this);
+				//ret += other;
+				//ret.core_ = max(core_, other.core_);
+				for(uint64_t i=0; i<m(); ++i){
+					ret.core_[i] = std::max(core_[i],other.core_[i]); 
+				}
+				return ret;
+			}
+
 			//TODO: int hash
 			//HyperLogLog::inline void addh(uint64_t element) {
 			//	element = hash(element); //TODO: which hf_
@@ -544,9 +554,9 @@ TODO:  Consider adding this change to the method. This could improve our perform
 						x += deltaX;
 						gprev = g;
 					}
-//#if DEBUG
-//					fprintf(stderr,"x = %lf, m = %lf \n", x, m);
-//#endif
+					//#if DEBUG
+					//					fprintf(stderr,"x = %lf, m = %lf \n", x, m);
+					//#endif
 					return x*m;
 				}
 			template<typename HllType>
