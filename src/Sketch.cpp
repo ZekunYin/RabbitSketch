@@ -18,6 +18,10 @@
 #include "histoSketch.h"
 #include "hash_int.h"
 
+#ifndef NOPYTHON
+#include "pybind.h"
+#endif
+
 //#ifdef USE_BOOST
 //    #include <boost/math/distributions/binomial.hpp>
 //    using namespace::boost::math;

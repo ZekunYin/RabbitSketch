@@ -37,7 +37,7 @@ cp ../build/libsketch.a .
 
 make
 
-./minhash 21 ~/workspace/file.fa 100
+./minhash genome1.fna genome2.fna
 ```
 
 We will get the value of jaccard and distance.
