@@ -1,4 +1,5 @@
 #include "minimizer.h"
+#include <unordered_map>
 using namespace std;
 
 //hash64 -from minimap2
@@ -82,6 +83,7 @@ void findMinimizers(int k, int w, string s, vector <uint64_t> &minimizerSketch)
 
 	//q = queue.newQueue();
 	vector <Pair> q;
+	std::unordered_map<uint64_t, double> minimizerMap;
 
 	for(int i = 0; i < len; i++){
 		int windowIndex = i - w + 1;
@@ -175,14 +177,18 @@ void findMinimizers(int k, int w, string s, vector <uint64_t> &minimizerSketch)
 		//	}
 
 		//	minimizerSketch.push_back(q.front().X);
-			if(!findElement(minimizerSketch, q.front().X)){
-				minimizerSketch.push_back(q.front().X);
-				//printf("%lx\n",q.front().X);
-			}
+			minimizerMap.insert({q.front().X, 1.0});
+		//	if(!findElement(minimizerSketch, q.front().X)){
+		//		minimizerSketch.push_back(q.front().X);
+		//		//printf("%lx\n",q.front().X);
+		//	}
 
 		}
 
 	}//end of sequence.
+	for(auto& x:minimizerMap){
+		minimizerSketch.push_back(x.first);
+	}
 
 //	return minimizerSketch;
 }
