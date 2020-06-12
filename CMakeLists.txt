@@ -10,7 +10,7 @@ INCLUDE_DIRECTORIES(pybind11)
 
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ggdb -std=c++17 -march=native -fpermissive ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ggdb -std=c++14 -march=native -fpermissive ")
 
 add_subdirectory(pybind11)
 pybind11_add_module(sketch ${DIR_SRCS})
