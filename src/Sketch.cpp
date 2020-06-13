@@ -11,8 +11,9 @@
 #include <immintrin.h>
 #include <stdint.h>
 #include "xxhash.hpp"
+
 #include <random>
-#include "countMin.h" //for EPSILON and DELTA@xxm
+//#include "countMin.h" //for EPSILON and DELTA@xxm
 #include "minimizer.h"
 #include "cws.h"
 #include "histoSketch.h"

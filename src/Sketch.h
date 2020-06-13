@@ -15,7 +15,8 @@
 #include <string>
 #include <string.h>
 #include "MinHashHeap.h"
-#include "kmerSpectrum.h" //for weightedMinHash@xxm
+#include "histoSketch.h"
+//#include "kmerSpectrum.h" //for weightedMinHash@xxm
 //#include "ThreadPool.h"
 //#include "hll/hll.h"
 #include "hll/hyperloglog.h"
