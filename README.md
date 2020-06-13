@@ -22,18 +22,18 @@ cmake -DBUILDCXX=ON ..
 make
 ```
 
-We will find exist a file named "libsketch.a" in the build.
+We will find exist a file named "librabbitsketch.a" in the build.
 
 ### Testing (C++)
 
-Then we copy libsketch.a into the catalog named "example" and test.
+Then we copy librabbitsketch.a into the catalog named "example" and test.
 
 Step:
 
 ```
 cd ../examples/
 
-cp ../build/libsketch.a .
+cp ../build/librabbitsketch.a .
 
 make
 
@@ -66,16 +66,16 @@ time python3 examples/test.py #fastx is required
 - [x] Order minhash optimization(profiling)
 - [x] Order minhash optimization(xxHash)
 - [x] Order minhash optimization(sketch and compare)
-- [ ] remove gsl dependency
+- [x] remove gsl dependency
 - [x] wminhash speed problem
 - [ ] reorganize wminhash source
 - [ ] remove unrelated minhash code / clean minhash code
-- [ ] add robin-hood-hashing
+- [x] add robin-hood-hashing
 - [ ] support multiple types of hashing methods
 - [ ] portable to windows and osx?
 - [x] remove C++17 requirement (now C++ 14)
 - [x] cmake using parameters to compile C++ or python bind
 - [x] add setup.py for pip install
-- [ ] complete pybind.h interface (minhash done)
-- [ ] redesign parameters and all interfaces including minhash wmh omh and hll
+- [x] complete pybind.h interface (minhash wmh omh done)
+- [x] redesign parameters and all interfaces including minhash wmh omh and hll
 - [ ] add omhismb2019 license to license file
