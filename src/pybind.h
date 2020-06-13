@@ -1,5 +1,4 @@
 #include <pybind11/pybind11.h>
-
 namespace py = pybind11;
 
 PYBIND11_MODULE(sketch, m){
@@ -22,5 +21,20 @@ PYBIND11_MODULE(sketch, m){
 		.def("dist", &Sketch::MinHash::dist)
 		.def("getTotalLength", &Sketch::MinHash::getTotalLength)
 		.def("printMinHashes", &Sketch::MinHash::printMinHashes)
+		;
+
+	py::class_<Sketch::WMinHash>(m, "WMinHash")
+		.def(py::init<Sketch::Parameters>())
+		.def("update", &Sketch::WMinHash::update)
+		.def("wJaccard", &Sketch::WMinHash::wJaccard)
+		.def("distance", &Sketch::WMinHash::distance)
+		.def("getWMinHash", &Sketch::WMinHash::getWMinHash)
+		;
+
+	py::class_<Sketch::OMinHash>(m, "OMinHash")
+		.def(py::init<Sketch::Parameters, char *>())
+		.def("sketch", &Sketch::OMinHash::sketch)
+		.def("similarity", &Sketch::OMinHash::similarity)
+		.def("distance", &Sketch::OMinHash::distance)
 		;
 }
