@@ -8,8 +8,9 @@
 #ifndef Sketch_h
 #define Sketch_h
 
-#include <unordered_map>
-#include <unordered_set>
+//#include <unordered_map>
+#include "robin_hood.h"
+//#include <unordered_set>
 #include <map>
 #include <vector>
 #include <string>
@@ -129,7 +130,7 @@ namespace Sketch{
 		uint32_t position;
 	};
 
-	typedef std::unordered_set<hash_t> Hash_set;
+	typedef robin_hood::unordered_set<hash_t> Hash_set;
 
 	struct Reference
 	{

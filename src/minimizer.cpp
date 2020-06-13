@@ -1,5 +1,6 @@
 #include "minimizer.h"
-#include <unordered_map>
+//#include <unordered_map>
+#include "robin_hood.h"
 using namespace std;
 
 //hash64 -from minimap2
@@ -83,7 +84,7 @@ void findMinimizers(int k, int w, string s, vector <uint64_t> &minimizerSketch)
 
 	//q = queue.newQueue();
 	vector <Pair> q;
-	std::unordered_map<uint64_t, double> minimizerMap;
+	robin_hood::unordered_map<uint64_t, double> minimizerMap;
 
 	for(int i = 0; i < len; i++){
 		int windowIndex = i - w + 1;

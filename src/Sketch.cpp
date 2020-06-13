@@ -772,7 +772,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	if(l == 0) l = 1;
 
 	std::vector<mer_info> mers;
-	std::unordered_map<std::string, unsigned> occurrences;
+	robin_hood::unordered_map<std::string, unsigned> occurrences;
 	size_t pos[l];
 
 	//  Create list of k-mers with occurrence numbers
