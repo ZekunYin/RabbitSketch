@@ -58,9 +58,8 @@ cmake .. #default with pybind support
 make
 ```
 **test using bpython or python**
-```python
-import sketch
-help(sketch)
+```bash
+time python3 examples/test.py #fastx is required
 ```
 ### TODO
 - [ ] Add reverse complement to order minhash
@@ -77,6 +76,6 @@ help(sketch)
 - [x] remove C++17 requirement (now C++ 14)
 - [x] cmake using parameters to compile C++ or python bind
 - [x] add setup.py for pip install
-- [ ] complete pybind.h interface
+- [ ] complete pybind.h interface (minhash done)
 - [ ] redesign parameters and all interfaces including minhash wmh omh and hll
 - [ ] add omhismb2019 license to license file
