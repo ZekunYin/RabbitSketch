@@ -79,3 +79,4 @@ help(sketch)
 - [x] add setup.py for pip install
 - [ ] complete pybind.h interface
 - [ ] redesign parameters and all interfaces including minhash wmh omh and hll
+- [ ] add omhismb2019 license to license file
