@@ -300,7 +300,7 @@ void MinHash::heapToList()
 
 }
 
-void MinHash::getMinHash()
+void MinHash::printMinHashes()
 {
 	//setMinHashesForReference(reference, minHashHeap);
 	//	HashList & hashlist = reference.hashesSorted;

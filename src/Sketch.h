@@ -16,9 +16,6 @@
 #include <string.h>
 #include "MinHashHeap.h"
 #include "histoSketch.h"
-//#include "kmerSpectrum.h" //for weightedMinHash@xxm
-//#include "ThreadPool.h"
-//#include "hll/hll.h"
 #include "hll/hyperloglog.h"
 #include <stdint.h>
 
@@ -30,24 +27,14 @@ namespace Sketch{
 	{
 		Parameters()
 			:
-				parallelism(1),
+				//MinHash
 				kmerSize(21),
 				alphabetSize(4),
 				preserveCase(false),
 				use64(true),
 				seed(42),
-				error(0),
-				warning(0),
 				minHashesPerWindow(1000),
-				windowSize(0),
-				windowed(false),
-				concatenated(false),
 				noncanonical(false),
-				reads(false),
-				memoryBound(0),
-				minCov(1),
-				targetCov(0),
-				genomeSize(0),
 
 				//for WMinHash
 				numBins(194481),
@@ -67,24 +54,14 @@ namespace Sketch{
 
 		Parameters(const Parameters & other)
 			:
-				parallelism(other.parallelism),
+				//MinHash	
 				kmerSize(other.kmerSize),
 				alphabetSize(other.alphabetSize),
 				preserveCase(other.preserveCase),
 				use64(other.use64),
 				seed(other.seed),
-				error(other.error),
-				warning(other.warning),
 				minHashesPerWindow(other.minHashesPerWindow),
-				windowSize(other.windowSize),
-				windowed(other.windowed),
-				concatenated(other.concatenated),
 				noncanonical(other.noncanonical),
-				reads(other.reads),
-				memoryBound(other.memoryBound),
-				minCov(other.minCov),
-				targetCov(other.targetCov),
-				genomeSize(other.genomeSize),
 
 				//for WMinHash
 				numBins(other.numBins),
@@ -103,26 +80,15 @@ namespace Sketch{
 			memcpy(alphabet, other.alphabet, 256);
 		}
 
-		int parallelism;
+		//MinHash
 		int kmerSize;
 		bool alphabet[256];
 		uint32_t alphabetSize;
 		bool preserveCase;
 		bool use64;
 		uint32_t seed;
-		double error;
-		double warning;
-		uint64_t minHashesPerWindow;
-		uint64_t windowSize;
-		bool windowed;
-		bool concatenated;
+		uint64_t minHashesPerWindow; //SketchSize
 		bool noncanonical;
-		bool reads;
-		uint64_t memoryBound;
-		uint32_t minCov;
-		double targetCov;
-		uint64_t genomeSize;
-
 
 		//parameters for weight minHash@xxm
 		int numBins;
@@ -180,28 +146,19 @@ namespace Sketch{
 
 		public:
 			//Modified by qzh.Remove const and the length in the function.	
-			//MinHash(const Parameters & parameters);
-			//void addMinHashes(char * seq, uint64_t length);
-			//void update(char * seq, uint64_t length);
 			MinHash(Parameters parametersNew);
 			void update(char * seq);
 			void merge(MinHash& msh);
-
 			double jaccard(MinHash * msh);			
 			double dist(MinHash * msh);
-			
-			HashList & getHashList();
-			//	void printHashList();
-			void getMinHash();
-			void writeToFile();
-			uint64_t getLength(){return length;}//return totalSeqence length.
-			bool needToList = true;
+			//HashList & getHashList(); //TODO: return to vector instead of HashList
+			void getMinHash(); //return hash values to a vector?
+			void printMinHashes();
+			uint64_t getTotalLength(){return length;}//return totalSeqence length.
 
 		private:
-			//Modified by qzh.Define the seq.
-			//char * seq; //not used
+			bool needToList = true;
 			double kmerSpace;
-
 			Parameters parameters;
 			MinHashHeap * minHashHeap;
 			Reference reference;
