@@ -19,7 +19,7 @@ PYBIND11_MODULE(sketch, m){
 		.def("update", &Sketch::MinHash::update)
 		.def("merge", &Sketch::MinHash::merge)
 		.def("jaccard", &Sketch::MinHash::jaccard)
-		//.def("dist", &Sketch::MinHash::dist)
+		.def("dist", &Sketch::MinHash::dist)
 		.def("getTotalLength", &Sketch::MinHash::getTotalLength)
 		.def("printMinHashes", &Sketch::MinHash::printMinHashes)
 		;

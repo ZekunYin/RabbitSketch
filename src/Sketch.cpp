@@ -527,17 +527,17 @@ double MinHash::dist(MinHash * msh)
 	{
 		return 1.;
 	}
-	double pValue_ = pValue(common, this->length, msh->length, kmerSpace, denom);
-	if ( maxPValue >= 0 && pValue_ > maxPValue )
-	{
-		cerr << "the pValue is larger than maxPValue " << endl;
-		return 1.;
-	}
+	//double pValue_ = pValue(common, this->length, msh->length, kmerSpace, denom);
+	//if ( maxPValue >= 0 && pValue_ > maxPValue )
+	//{
+	//	cerr << "the pValue is larger than maxPValue " << endl;
+	//	return 1.;
+	//}
 	return distance;
 
 
 }
-
+/*
 double MinHash::pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize)
 {
 	if ( x == 0 )
@@ -565,6 +565,7 @@ double MinHash::pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, dou
 	//    return gsl_cdf_binomial_Q(x - 1, r, sketchSize);
 	//#endif
 }
+*/
 //start the WMinHash@xxm
 WMinHash::WMinHash(Parameters parametersNew):parameters(parametersNew)
 {
