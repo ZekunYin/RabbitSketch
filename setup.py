@@ -61,13 +61,13 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(
-    name='sketch',
+    name='rabbitsketch',
     version='0.0.1',
     author='Zekun Yin',
     author_email='zekun.yin@mail.sdu.edu.cn',
     description='a python package for sequence sketching',
-    long_description='',
-    ext_modules=[CMakeExtension('sketch')],
+    long_description='a python package for sequence sketching',
+    ext_modules=[CMakeExtension('rabbitsketch')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )

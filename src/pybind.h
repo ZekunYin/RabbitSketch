@@ -1,8 +1,8 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
-PYBIND11_MODULE(sketch, m){
-	m.doc() = "sketch pybind";
+PYBIND11_MODULE(rabbitsketch, m){
+	m.doc() = "rabbitsketch pybind";
 	py::class_<Sketch::Parameters>(m, "Parameters")
 		.def(py::init<Sketch::Parameters &>())
 		.def(py::init<>())

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(sketch)
+project(rabbitsketch)
 
 option(BUILDCXX "build pure c++ library instead of python bind interface" OFF)
 #SET(CMAKE_CXX_COMPILER /usr/bin/g++)
@@ -25,5 +25,5 @@ if (BUILDCXX)
 	set_target_properties("${PROJECT_NAME}_static" PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 else ()
 	add_subdirectory(pybind11)
-	pybind11_add_module(sketch ${DIR_SRCS})
+	pybind11_add_module(rabbitsketch ${DIR_SRCS})
 endif ()

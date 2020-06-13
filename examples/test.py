@@ -1,4 +1,4 @@
-import sketch
+import rabbitsketch as sketch
 import fastx
 
 p = sketch.Parameters()
