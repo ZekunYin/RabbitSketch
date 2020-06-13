@@ -180,11 +180,10 @@ namespace Sketch{
 			double distance(WMinHash * wmh);
 			
 			void getWMinHash();
-			bool needToCompute = true;
 
 		private:
 			Parameters parameters;
-
+			bool needToCompute = true;
 			double * binsArr;
 			double * countMinSketch; 
 			vector<uint64_t> sketches;
