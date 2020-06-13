@@ -7,7 +7,7 @@
 #include "MurmurHash3.h"
 #include "hash.h"
 #include <math.h>
-#include <gsl/gsl_cdf.h>
+//#include <gsl/gsl_cdf.h>
 #include <immintrin.h>
 #include <stdint.h>
 #include "xxhash.hpp"
