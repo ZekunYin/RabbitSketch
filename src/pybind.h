@@ -12,7 +12,16 @@ PYBIND11_MODULE(rabbitsketch, m){
 		.def_readwrite("use64", &Sketch::Parameters::use64)
 		.def_readwrite("sketchSize", &Sketch::Parameters::minHashesPerWindow)
 		.def_readwrite("noncanonical", &Sketch::Parameters::noncanonical)
+		.def_readwrite("bumBins", &Sketch::Parameters::numBins)
+		.def_readwrite("minimizerWindowSize", &Sketch::Parameters::minimizerWindowSize)
+		.def_readwrite("histoSketch_sketchSize", &Sketch::Parameters::histoSketch_sketchSize)
+		.def_readwrite("histoSketch_dimension", &Sketch::Parameters::histoSketch_dimension)
+		.def_readwrite("paraDecayWeight", &Sketch::Parameters::paraDecayWeight)
+		.def_readwrite("l", &Sketch::Parameters::l)
+		.def_readwrite("m", &Sketch::Parameters::m)
+		.def_readwrite("rc", &Sketch::Parameters::rc)
 		;
+
 	py::class_<Sketch::MinHash>(m, "MinHash")
 		.def(py::init<Sketch::Parameters>())
 		.def("update", &Sketch::MinHash::update)
