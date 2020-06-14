@@ -189,10 +189,10 @@ namespace Sketch{
 			double jaccard(MinHash * msh);			
 			double dist(MinHash * msh);
 			
-			HashList & getHashList();
+			// TODO: HashList & getHashList();
 			//	void printHashList();
 			void getMinHash();
-			void writeToFile();
+			// TODO: void writeToFile();
 			uint64_t getLength(){return length;}//return totalSeqence length.
 			bool needToList = true;
 
@@ -321,5 +321,19 @@ struct mer_info {
 	{ }
 };
 
-inline uint64_t hash_to_uint(const char * kmer, int k);
+inline uint64_t hash_to_uint(const char * kmer, int k)
+{
+	uint8_t mask = 0x06;
+	uint64_t res = 0;
+	for(int i = 0; i < k; i++)
+	{
+		uint8_t meri = (uint8_t)kmer[i];
+		meri &= mask;
+		meri >>= 1;
+		res |= (uint64_t)meri;
+		res <<= 2;
+	}
+
+	return res;
+}			
 #endif //Sketch_h
