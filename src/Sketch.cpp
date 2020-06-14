@@ -741,6 +741,19 @@ OMinHash::OMinHash(Parameters parametersNew, char * seqNew):
 
 	if(rc){
 		//TODO:get reverse complement to rcseq
+		int rc_len = strlen(seq);
+		rcseq = new char[rc_len];
+		char table[4] = {'T','G','A','C'};
+		for ( uint64_t i = 0; i < rc_len; i++ )
+		{
+			char base = seq[i];
+
+			base >>= 1;
+			base &= 0x03;
+			rcseq[rc_len - i - 1] = table[base];
+
+		}
+	
 	}
 	sketch();
 }

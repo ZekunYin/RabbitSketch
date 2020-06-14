@@ -2,6 +2,7 @@ import rabbitsketch as sketch
 import fastx
 
 p = sketch.Parameters()
+p.rc = True
 msh1 = sketch.MinHash(p)
 msh2 = sketch.MinHash(p)
 wmsh1 = sketch.WMinHash(p)

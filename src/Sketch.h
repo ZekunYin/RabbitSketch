@@ -233,6 +233,7 @@ namespace Sketch{
 		public:
 			//OMinHash(Parameters parametersNew);
 			OMinHash(Parameters parametersNew, char * seqNew);
+			~OMinHash() {if (rcseq != NULL) delete rcseq;};
 			//update -- not supported yet!
 
 			void sketch();
@@ -247,8 +248,8 @@ namespace Sketch{
 		protected:
 
 		private:
-			char * seq;
-			char * rcseq;
+			char * seq = NULL;
+			char * rcseq = NULL;
 			Parameters parameters;
 			int m_k, m_l, m_m;
 			bool rc;//reverse complement

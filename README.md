@@ -67,7 +67,7 @@ cd examples
 time python3 test.py #fastx is required
 ```
 ### TODO
-- [ ] Add reverse complement to order minhash
+- [x] Add reverse complement to order minhash
 - [x] Order minhash optimization(profiling)
 - [x] Order minhash optimization(xxHash)
 - [x] Order minhash optimization(sketch and compare)
