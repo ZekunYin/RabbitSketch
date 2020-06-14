@@ -46,9 +46,13 @@ We will get the value of jaccard and distance.
 **pip install:**
 ``` bash
 cd libsketch
-pip install . --user
+pip3 install . --user
 ```
-
+or
+```bash
+#pypi available
+pip3 install rabbitsketch --user
+```
 **cmake install**
 ```bash
 cd libsketch
