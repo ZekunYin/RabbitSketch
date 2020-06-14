@@ -59,7 +59,8 @@ make
 ```
 **test using bpython or python**
 ```bash
-time python3 examples/test.py #fastx is required
+cd examples
+time python3 test.py #fastx is required
 ```
 ### TODO
 - [ ] Add reverse complement to order minhash
