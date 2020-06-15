@@ -14,8 +14,8 @@
 
 #include <random>
 //#include "countMin.h" //for EPSILON and DELTA@xxm
-#include "minimizer.h"
-#include "cws.h"
+//#include "minimizer.h"
+//#include "cws.h"
 #include "histoSketch.h"
 #include "hash_int.h"
 
