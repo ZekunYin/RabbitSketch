@@ -310,7 +310,7 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 primary_domain = 'cpp'
-highlight_language = 'cpp'
+highlight_language = 'bash'
 
 
 def generate_doxygen_xml(app):

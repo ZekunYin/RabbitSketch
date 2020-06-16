@@ -1,5 +1,5 @@
-Install 
-=======
+Quick Install 
+=============
 
 Download
 ---------
@@ -33,4 +33,4 @@ Build C++ Dynamic and Static Libraries
   mkdir build && cd build
   cmake -DBUILDCXX=ON ..
   make -j4
-  make install //todo change it to make install 
+  make install #todo change it to make install 

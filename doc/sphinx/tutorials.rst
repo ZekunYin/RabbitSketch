@@ -7,6 +7,7 @@ Simple distance estimation
 Download example *E. coli* genomes:
 
 .. download::
+
 | `genome1.fna <https://gembox.cbcb.umd.edu/mash/genome1.fna>`_ 
 | `genome2.fna <https://gembox.cbcb.umd.edu/mash/genome2.fna>`_
 

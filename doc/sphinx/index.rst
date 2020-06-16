@@ -31,7 +31,7 @@ Documentation
    :maxdepth: 2
 
    install
+   introduction
    tutorials
-   sketches
-   distances
+   api
 
