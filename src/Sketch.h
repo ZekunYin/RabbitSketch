@@ -24,8 +24,9 @@ namespace Sketch{
 
 	typedef uint64_t hash_t;
 
-	struct Parameters
+	class Parameters
 	{
+	public:
 		Parameters()
 			:
 				//MinHash
@@ -51,6 +52,8 @@ namespace Sketch{
 				rc(false)
 		{
 			memset(alphabet, 0, 256);
+			getCWS(r, c, b, 50, 194481);
+			
 		}
 
 		Parameters(const Parameters & other)
@@ -71,6 +74,9 @@ namespace Sketch{
 				histoSketch_dimension(other.histoSketch_dimension),
 				//applyConceptDrift(other.applyConceptDrift),
 				paraDecayWeight(other.paraDecayWeight),
+				r(other.r),
+				c(other.c),
+				b(other.b),
 
 				//for OMinHash
 				l(other.l),
@@ -80,7 +86,58 @@ namespace Sketch{
 		{
 			memcpy(alphabet, other.alphabet, 256);
 		}
+//		int get_kmerSize(){ return kmerSize; }
+//		uint32_t get_alphabetSize(){ return alphabetSize;}
+//		bool get_preserveCase(){ return preserveCase;}
+//		bool get_use64(){ return use64;}
+		int get_numBins(){return numBins;}
+		int get_minimizerWindowSize(){return minimizerWindowSize;}
+		int get_histoSketch_sketchSize(){return histoSketch_sketchSize;}
+		int get_histoSketch_dimension(){return histoSketch_dimension;}
+		double get_paraDecayWeight(){return paraDecayWeight;}
+		double * getR(){
+			//printf("the point in getR of r is: %p\n",r);
+			return r;
+		}
+		double * getC(){
+			//printf("the point in getC of c is: %p\n",c);
+			return c;
+		}
+		double * getB(){
+			//printf("the point in getB of b is: %p\n",b);
+			return b;
+		}
+		
 
+		void set_numBins(int input){numBins = input;}
+		void set_minimizerWindowSize(int input){minimizerWindowSize = input;}
+		void set_histoSketch_sketchSize(int input){
+			histoSketch_sketchSize = input;
+			r = (double *)malloc(histoSketch_sketchSize * histoSketch_dimension * sizeof(double));
+			c = (double *)malloc(histoSketch_sketchSize * histoSketch_dimension * sizeof(double));
+			b = (double *)malloc(histoSketch_sketchSize * histoSketch_dimension * sizeof(double));
+			getCWS(r, c, b, histoSketch_sketchSize, histoSketch_dimension);
+			printf("the point in set histoSketch_sketchSize of r is: %p\n",r);
+			printf("the point in set histoSketch_sketchSize of c is: %p\n",c);
+			printf("the point in set histoSketch_sketchSize of b is: %p\n",b);
+		}
+		void set_histoSketch_dimension(int input){
+			histoSketch_dimension = input;
+			r = (double *)malloc(histoSketch_sketchSize * histoSketch_dimension * sizeof(double));
+			c = (double *)malloc(histoSketch_sketchSize * histoSketch_dimension * sizeof(double));
+			b = (double *)malloc(histoSketch_sketchSize * histoSketch_dimension * sizeof(double));
+			getCWS(r, c, b, histoSketch_sketchSize, histoSketch_dimension);
+			printf("the point in set histoSketch_dimension of r is: %p\n",r);
+			printf("the point in set histoSketch_dimension of c is: %p\n",c);
+			printf("the point in set histoSketch_dimension of b is: %p\n",b);
+		}
+		void set_paraDecayWeight(double input){paraDecayWeight = input;}
+
+		
+
+
+
+//	private:
 		//MinHash
 		int kmerSize;
 		bool alphabet[256];
@@ -91,6 +148,14 @@ namespace Sketch{
 		uint64_t minHashesPerWindow; //SketchSize
 		bool noncanonical;
 
+		//parameters for order minhash
+		int l;
+		int m;
+		bool rc;
+		//kmerSize for k
+	
+
+	private:
 		//parameters for weight minHash@xxm
 		int numBins;
 		int minimizerWindowSize;
@@ -99,12 +164,16 @@ namespace Sketch{
 		//bool applyConceptDrift;
 		double paraDecayWeight;
 
+		//double * r;
+		//double * c;
+		//double * b;
 
-		//parameters for order minhash
-		int l;
-		int m;
-		bool rc;
-		//kmerSize for k
+		double * r = (double *)malloc(50 * 194481 * sizeof(double));
+		double * c = (double *)malloc(50 * 194481 * sizeof(double));
+		double * b = (double *)malloc(50 * 194481 * sizeof(double));
+
+
+
 	};
 
 	struct PositionHash

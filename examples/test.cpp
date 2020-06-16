@@ -26,11 +26,19 @@ int main(int argc, char* argv[])
 	parameters.seed = 42;
 	parameters.minHashesPerWindow  = 1000;
 
-	parameters.numBins = pow(parameters.kmerSize, parameters.alphabetSize);
-	parameters.minimizerWindowSize = 9;
-	parameters.histoSketch_sketchSize = 50;
-	parameters.histoSketch_dimension = 194481;
-	parameters.paraDecayWeight = 0.1;
+
+	parameters.set_numBins(pow(parameters.kmerSize, parameters.alphabetSize));
+	parameters.set_minimizerWindowSize(9);
+	parameters.set_histoSketch_sketchSize(60);
+	parameters.set_histoSketch_dimension(194481);
+	parameters.set_paraDecayWeight(0.1);
+
+
+//	parameters.numBins = pow(parameters.kmerSize, parameters.alphabetSize);
+//	parameters.minimizerWindowSize = 9;
+//	parameters.histoSketch_sketchSize = 500;
+//	parameters.histoSketch_dimension = 194481;
+//	parameters.paraDecayWeight = 0.1;
 
 	gzFile fp1;
 	gzFile fp2;
@@ -93,8 +101,16 @@ int main(int argc, char* argv[])
 
 	Sketch::WMinHash * wmh1 = new Sketch::WMinHash(parameters);
 	Sketch::WMinHash * wmh2 = new Sketch::WMinHash(parameters);
+	cerr << "start the update seq1" << endl;
 	wmh1->update(seq1);
+	cerr << "start the update seq2" << endl;
 	wmh2->update(seq2);
+	cerr << "before getWMinHash" << endl;
+//	wmh1->getWMinHash();
+//	wmh2->getWMinHash();
+	cerr << "before distance " << endl;
+	
+
 
 	double time3 = get_sec();
 

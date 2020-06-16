@@ -567,10 +567,12 @@ double MinHash::pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, dou
 }
 */
 //start the WMinHash@xxm
-WMinHash::WMinHash(Parameters parametersNew):parameters(parametersNew)
-{
-	binsArr = (double *) malloc (parameters.numBins * sizeof(double));
-	for(int i = 0; i < parameters.numBins; i++){
+WMinHash::WMinHash(Parameters parametersNew)//:parameters(parametersNew)
+{	
+	parameters = parametersNew;
+
+	binsArr = (double *) malloc (parameters.get_numBins() * sizeof(double));
+	for(int i = 0; i < parameters.get_numBins(); i++){
 		binsArr[i] = 0.0;
 	}
 
@@ -581,28 +583,41 @@ WMinHash::WMinHash(Parameters parametersNew):parameters(parametersNew)
 		countMinSketch[i] = 0.0;
 	}
 
-	r = (double *) malloc (parameters.histoSketch_sketchSize * parameters.histoSketch_dimension * sizeof(double));
-	c = (double *) malloc (parameters.histoSketch_sketchSize * parameters.histoSketch_dimension * sizeof(double));
-	b = (double *) malloc (parameters.histoSketch_sketchSize * parameters.histoSketch_dimension * sizeof(double));
-	getCWS(r, c, b, parameters.histoSketch_sketchSize, parameters.histoSketch_dimension);
+	//r = (double *) malloc (parameters.get_histoSketch_sketchSize() * parameters.get_histoSketch_dimension() * sizeof(double));
+	//c = (double *) malloc (parameters.get_histoSketch_sketchSize() * parameters.get_histoSketch_dimension() * sizeof(double));
+	//b = (double *) malloc (parameters.get_histoSketch_sketchSize() * parameters.get_histoSketch_dimension() * sizeof(double));
 	
-	histoSketch_sketch = (uint32_t *) malloc (parameters.histoSketch_sketchSize * sizeof(uint32_t));
-	histoSketch_sketchWeight = (double *) malloc (parameters.histoSketch_sketchSize * sizeof(double));
+	//getCWS(r, c, b, parameters.get_histoSketch_sketchSize(), parameters.get_histoSketch_dimension());
+	//double * r = parameters.getR();
+	//double * c = parameters.getC();
+	//double * b = parameters.getB();
+	//		printf("the point in WMinHash of r is: %p\n",r);
+	//		printf("the point in WMinHash of c is: %p\n",c);
+	//		printf("the point in WMinHash of b is: %p\n",b);
+//	for(int i = 0; i < parameters.get_histoSketch_sketchSize() * parameters.get_histoSketch_dimension(); i++){
+//		cout << "the r[" << i << "] is: " << parameters.getR()[i] << endl;
+//		cout << "the c[" << i << "] is: " << parameters.getC()[i] << endl;
+//		cout << "the b[" << i << "] is: " << parameters.getB()[i] << endl;
+//	}
+	cerr << "the paremeters.get_histoSketch_sketchSize() in WMinHash is: " << parameters.get_histoSketch_sketchSize() << endl;
+	
+	histoSketch_sketch = (uint32_t *) malloc (parameters.get_histoSketch_sketchSize() * sizeof(uint32_t));
+	histoSketch_sketchWeight = (double *) malloc (parameters.get_histoSketch_sketchSize() * sizeof(double));
 	
 	//add the applyConceptDrift and decayWeight.
-	if(parameters.paraDecayWeight < 0.0 || parameters.paraDecayWeight > 1.0){
+	if(parameters.get_paraDecayWeight() < 0.0 || parameters.get_paraDecayWeight() > 1.0){
 		cerr << "the paraDecayWeight must between 0.0 and 1.0 " << endl;
 		exit(1);
 	}
 	else{
 		applyConceptDrift = true;
 	}
-	if(parameters.paraDecayWeight == 1.0){
+	if(parameters.get_paraDecayWeight() == 1.0){
 		applyConceptDrift = false;
 	}
 	decayWeight = 1.0;
 	if(applyConceptDrift){
-		decayWeight = exp(-parameters.paraDecayWeight);
+		decayWeight = exp(-parameters.get_paraDecayWeight());
 	}
 
 
@@ -613,13 +628,14 @@ WMinHash::WMinHash(Parameters parametersNew):parameters(parametersNew)
 void WMinHash::update(char * seq)
 {
 	int k = parameters.kmerSize;
-	int w = parameters.minimizerWindowSize;
-	int numBins = parameters.numBins;
-	int histoSketch_sketchSize = parameters.histoSketch_sketchSize;
-	int histoSketch_dimension = parameters.histoSketch_dimension;
+	int w = parameters.get_minimizerWindowSize();
+	int numBins = parameters.get_numBins();
+	int histoSketch_sketchSize = parameters.get_histoSketch_sketchSize();
+	int histoSketch_dimension = parameters.get_histoSketch_dimension();
+	cerr << "in the update the histoSketch_sketchSize is: " << parameters.get_histoSketch_sketchSize() << endl;
 
 	findMinimizers(k, w, seq, sketches);
-	kmerSpectrumAddHash(sketches, binsArr, parameters.numBins);
+	kmerSpectrumAddHash(sketches, binsArr, parameters.get_numBins());
 //	for(int i = 0; i < parameters.numBins; i++){
 //		if(binsArr[i] != 0){
 //			printf("%d\t%lf\n", i, binsArr[i]);
@@ -632,10 +648,19 @@ void WMinHash::update(char * seq)
 
 void WMinHash::computeHistoSketch()
 {
-	kmerSpectrumDump(binsArr, parameters.numBins, kmerSpectrums);
+	kmerSpectrumDump(binsArr, parameters.get_numBins(), kmerSpectrums);
+	//cerr << "finish the kmerSpectrumDump " << endl;
+	int hsSketchSize = parameters.get_histoSketch_sketchSize();
+	int hsDimension = parameters.get_histoSketch_dimension();
+	//cerr << "the hsSketchSize is " << hsSketchSize << endl;
+	//cerr << "the hsDimension is " << hsDimension << endl;
+
 	for(int i = 0; i < kmerSpectrums.size(); i++){
-		histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, parameters.histoSketch_sketchSize, applyConceptDrift, decayWeight, r, c, b, parameters.histoSketch_sketchSize, parameters.histoSketch_dimension, histoSketch_sketch, histoSketch_sketchWeight);
+	//cerr << "finish the " << i << " iterator to addElement" << endl;
+		//histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, parameters.get_histoSketch_sketchSize(), applyConceptDrift, decayWeight, r, c, b, parameters.get_histoSketch_sketchSize(), parameters.get_histoSketch_dimension(), histoSketch_sketch, histoSketch_sketchWeight);
+		histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, hsSketchSize, applyConceptDrift, decayWeight, parameters.getR(), parameters.getC(), parameters.getB(), hsSketchSize, hsDimension, histoSketch_sketch, histoSketch_sketchWeight);
 	}
+	//cerr << "finish the histoSketchAddElement " << endl;
 
 }
 
@@ -645,12 +670,12 @@ void WMinHash::getWMinHash(){
 		needToCompute = false;
 	}
 	cout << "the sketch is: " << endl;
-	for(int i = 0; i < parameters.histoSketch_sketchSize; i++){
+	for(int i = 0; i < parameters.get_histoSketch_sketchSize(); i++){
 		printf("%d\n", histoSketch_sketch[i]);
 	}
 
 	cout << "the sketchweight is: " << endl;
-	for(int i = 0; i < parameters.histoSketch_sketchSize; i++){
+	for(int i = 0; i < parameters.get_histoSketch_sketchSize(); i++){
 		printf("%lf\n", histoSketch_sketchWeight[i]);
 	}
 
@@ -670,7 +695,9 @@ double WMinHash::wJaccard(WMinHash * wmh)
 	double intersectElement = 0.0;
 	double unionElement = 0.0;
 	double jaccard = 0.0;
-	for(int i = 0 ; i < parameters.histoSketch_sketchSize; i++){
+	cerr << "the parameters.get_histoSketch_sketchSize() is: " << parameters.get_histoSketch_sketchSize() << endl;
+	for(int i = 0 ; i < parameters.get_histoSketch_sketchSize(); i++){
+
 		double curWeightA = abs(histoSketch_sketchWeight[i]);
 		double curWeightB = abs(wmh->histoSketch_sketchWeight[i]);
 
