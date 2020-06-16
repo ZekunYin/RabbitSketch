@@ -9,12 +9,13 @@
 
 |
 
-An efficient and versatile sketching library for biological sequences
+RabbitSketch --- An efficient and versatile sketching library for biological sequences.
+=======================================================================================
 
 |
 
 Publication
-============
+------------
 RabbitSketch paper is under review.
 
 .. .. toctree::
@@ -22,45 +23,14 @@ RabbitSketch paper is under review.
    
 ..   data
 
-Download
-=========
-
-* `Source Code <https://github.com/ZekunYin/RabbitSketch>`_
-
-Install Python Package
-=========================
-
-Install from pypi:
-
-.. code::
-
-  pip3 install rabbitsketch --user
-
-Install from source code:
-
-.. code::
-
-  git clone --recursive https://github.com/ZekunYin/RabbitSketch.git
-  cd RabbitSketch
-  pip3 install . --user
-
-Build C++ Dynamic and Static Libraries
-=======
-
-.. code::
-
-  git clone --recursive https://github.com/ZekunYin/RabbitSketch.git
-  cd RabbitSketch
-  mkdir build && cd build
-  cmake -DBUILDCXX=ON ..
-  make -j4
 
 Documentation
-=============
+-------------
 
 .. toctree::
    :maxdepth: 2
-   
+
+   install
    tutorials
    sketches
    distances
