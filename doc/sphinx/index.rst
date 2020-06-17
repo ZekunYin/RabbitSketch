@@ -5,7 +5,7 @@
 
 |
 
-.. image:: rabbit.png
+.. image:: sketch.png
 
 |
 

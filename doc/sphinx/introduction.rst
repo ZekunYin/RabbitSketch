@@ -1,5 +1,5 @@
-Sketches
-========
+Introduction
+============
 
 For sequences to be compared with :code:`mash`, they must first be `sketched`,
 which creates vastly reduced representations of them. This will happen
