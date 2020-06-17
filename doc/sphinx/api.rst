@@ -1,4 +1,4 @@
-Distance Estimation
+API Reference
 ===================
 
 MinHash Jaccard estimation

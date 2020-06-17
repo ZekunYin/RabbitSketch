@@ -1,21 +1,21 @@
-Quick Install 
+Quick Start 
 =============
 
-Download
----------
+Source Code
+-----------
 
-* `Source Code <https://github.com/ZekunYin/RabbitSketch>`_
+* `View source code on github <https://github.com/ZekunYin/RabbitSketch>`_
 
-Install Python Package
--------------------------
+Use RabbitSketch Python APIs
+-------------------------------
 
-Install from pypi:
+Install RabbitSketch from pypi:
 
 .. code::
 
   pip3 install rabbitsketch --user
 
-Install from source code:
+Install RabbitSketch from source code:
 
 .. code::
 
@@ -23,8 +23,17 @@ Install from source code:
   cd RabbitSketch
   pip3 install . --user
 
-Build C++ Dynamic and Static Libraries
-----------------------------------------
+Quick test:
+
+.. code::
+
+  cd RabbitSketch/examples
+  python3 test.py genom1.fna genome2.fna
+
+Use RabbitSketch C++ APIs
+-------------------------
+
+Install:
 
 .. code::
 
@@ -34,3 +43,11 @@ Build C++ Dynamic and Static Libraries
   cmake -DBUILDCXX=ON ..
   make -j4
   make install #todo change it to make install 
+
+Quick test:
+
+.. code::
+  
+  cd RabbitSketch/examples
+  make
+  ./test genome1.fna genome2.fna
