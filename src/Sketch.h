@@ -19,7 +19,7 @@
 #include "histoSketch.h"
 #include "hll/hyperloglog.h"
 #include <stdint.h>
-
+/// \brief Sketch namespace
 namespace Sketch{
 
 	typedef uint64_t hash_t;
@@ -211,15 +211,20 @@ namespace Sketch{
 		std::vector<uint32_t> counts;
 	};
 
+/// Sketching seqeunces using minhash method
 	class MinHash
 	{
 
 		public:
-			//Modified by qzh.Remove const and the length in the function.	
+			/// minhash init with parameters
 			MinHash(Parameters parametersNew);
+			/// minhash is updatable with multiple sequences
 			void update(char * seq);
+			/// merge two minhashes
 			void merge(MinHash& msh);
+			/// return the jaccard index
 			double jaccard(MinHash * msh);			
+			/// return distance defined in Mash and RabbitMash
 			double dist(MinHash * msh);
 			//HashList & getHashList(); //TODO: return to vector instead of HashList
 			void getMinHash(); //return hash values to a vector?
