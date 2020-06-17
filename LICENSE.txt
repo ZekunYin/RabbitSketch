@@ -41,7 +41,7 @@ Dashing
 
 omhismb2019
   https://github.com/Kingsford-Group/omhismb2019
-  #TODO ADD a license here
+  BSD 3-clauses license
 
 pybind11
   https://github.com/pybind/pybind11 
