@@ -83,7 +83,7 @@ time python3 test.py #fastx is required
 - [x] add setup.py for pip install
 - [x] complete pybind.h interface (minhash wmh omh done)
 - [x] redesign parameters and all interfaces including minhash wmh omh and hll
-- [ ] add omhismb2019 license to license file
+- [x] add omhismb2019 license to license file
 - [ ] add cpu dispatch
 - [ ] pypi publish(dealing with win32 and osx), dealing with requirements
 - [ ] pybind std::vector (omh result)
