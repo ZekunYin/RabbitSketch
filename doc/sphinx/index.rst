@@ -32,6 +32,6 @@ Documentation
 
    install
    introduction
+   supp
    tutorials
    api
-
