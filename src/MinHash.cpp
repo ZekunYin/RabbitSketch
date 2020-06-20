@@ -1,38 +1,418 @@
-#include <stdio.h>
-#include <iostream>
-#include <string.h>
-#include <list>
-#include <cstring>
+#include "MinHash.h"
 #include "Sketch.h"
 #include "MurmurHash3.h"
 #include "hash.h"
-#include <math.h>
-//#include <gsl/gsl_cdf.h>
-#include <immintrin.h>
-#include <stdint.h>
-#include "xxhash.hpp"
 
-#include <random>
-//#include "countMin.h" //for EPSILON and DELTA@xxm
-//#include "minimizer.h"
-//#include "cws.h"
-#include "histoSketch.h"
-#include "hash_int.h"
+#include <algorithm>
+#include <iostream>
+#include <immintrin.h>
+#include <string.h>
+#include <list>
+#include <cstring>
+#include <stdint.h>
+#include <math.h>
 
 #ifndef NOPYTHON
 #include "pybind.h"
 #endif
 
-//#ifdef USE_BOOST
-//    #include <boost/math/distributions/binomial.hpp>
-//    using namespace::boost::math;
-//#else
-//    #include <gsl/gsl_cdf.h>
-//#endif
-
-
 using namespace std;
-using namespace Sketch;
+
+hash_u HashList::at(int index) const
+{
+    hash_u hash;
+    
+    if ( use64 )
+    {
+        hash.hash64 = hashes64.at(index);
+    }
+    else
+    {
+        hash.hash32 = hashes32.at(index);
+    }
+    
+    return hash;
+}
+
+void HashList::clear()
+{
+    if ( use64 )
+    {
+        hashes64.clear();
+    }
+    else
+    {
+        hashes32.clear();
+    }
+}
+
+void HashList::resize(int size)
+{
+    if ( use64 )
+    {
+        hashes64.resize(size);
+    }
+    else
+    {
+        hashes32.resize(size);
+    }
+}
+
+void HashList::set32(int index, uint32_t value)
+{
+    hashes32[index] = value;
+}
+
+void HashList::set64(int index, uint64_t value)
+{
+    hashes64[index] = value;
+}
+
+void HashList::sort()
+{
+    if ( use64 )
+    {
+        std::sort(hashes64.begin(), hashes64.end());
+    }
+    else
+    {
+        std::sort(hashes32.begin(), hashes32.end());
+    }
+}
+
+void HashPriorityQueue::clear()
+{
+    if ( use64 )
+    {
+        while ( queue64.size() )
+        {
+            queue64.pop();
+        }
+    }
+    else
+    {
+        while ( queue32.size() )
+        {
+            queue32.pop();
+        }
+    }
+}
+
+hash_u HashPriorityQueue::top() const
+{
+    hash_u hash;
+    
+    if ( use64 )
+    {
+        hash.hash64 = queue64.top();
+    }
+    else
+    {
+        hash.hash32 = queue32.top();
+    }
+    
+    return hash;
+}
+
+uint32_t HashSet::count(hash_u hash) const
+{
+	if ( use64 )
+	{
+		if ( hashes64.count(hash.hash64) )
+		{
+			return hashes64.at(hash.hash64);
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		if ( hashes32.count(hash.hash32) )
+		{
+			return hashes32.at(hash.hash32);
+		}
+		else
+		{
+			return 0;
+		}
+	}
+}
+
+void HashSet::erase(hash_u hash)
+{
+    if ( use64 )
+    {
+        hashes64.erase(hash.hash64);
+    }
+    else
+    {
+        hashes32.erase(hash.hash32);
+    }
+}
+
+void HashSet::insert(hash_u hash, uint32_t count)
+{
+    if ( use64 )
+    {
+    	hash64_t hash64 = hash.hash64;
+    	
+    	if ( hashes64.count(hash64) )
+    	{
+    		hashes64[hash64] = hashes64.at(hash64) + count;
+    	}
+    	else
+    	{
+	        hashes64[hash64] = count;
+	    }
+    }
+    else
+    {
+    	hash32_t hash32 = hash.hash32;
+    	
+    	if ( hashes32.count(hash32) )
+    	{
+    		hashes32[hash32] = hashes32.at(hash32) + count;
+    	}
+    	else
+    	{
+	        hashes32[hash32] = count;
+	    }
+    }
+}
+
+void HashSet::toCounts(std::vector<uint32_t> & counts) const
+{
+    if ( use64 )
+    {
+        for ( robin_hood::unordered_map<hash64_t, uint32_t>::const_iterator i = hashes64.begin(); i != hashes64.end(); ++i )
+        {
+            counts.push_back(i->second);
+        }
+    }
+    else
+    {
+        for ( robin_hood::unordered_map<hash32_t, uint32_t>::const_iterator i = hashes32.begin(); i != hashes32.end(); ++i )
+        {
+            counts.push_back(i->second);
+        }
+    }
+}
+
+void HashSet::toHashList(HashList & hashList) const
+{
+    if ( use64 )
+    {
+        for ( robin_hood::unordered_map<hash64_t, uint32_t>::const_iterator i = hashes64.begin(); i != hashes64.end(); ++i )
+        {
+            hashList.push_back64(i->first);
+        }
+    }
+    else
+    {
+        for ( robin_hood::unordered_map<hash32_t, uint32_t>::const_iterator i = hashes32.begin(); i != hashes32.end(); ++i )
+        {
+            hashList.push_back32(i->first);
+        }
+    }
+}
+
+MinHashHeap::MinHashHeap(bool use64New, uint64_t cardinalityMaximumNew, uint64_t multiplicityMinimumNew, uint64_t memoryBoundBytes) :
+	use64(use64New),
+	hashes(use64New),
+	hashesQueue(use64New),
+	hashesPending(use64New),
+	hashesQueuePending(use64New)
+{
+	cardinalityMaximum = cardinalityMaximumNew;
+	multiplicityMinimum = multiplicityMinimumNew;
+	
+	multiplicitySum = 0;
+	
+	if ( memoryBoundBytes == 0 )
+	{
+		bloomFilter = 0;
+	}
+	else
+	{
+		bloom_parameters bloomParams;
+		
+		bloomParams.projected_element_count = 1000000000;//(uint64_t)parameters.genomeSize * 10l; // TODO: error rate based on platform and coverage
+		bloomParams.false_positive_probability = 0;//parameters.bloomError;
+		bloomParams.maximum_size = memoryBoundBytes * 8l;
+		bloomParams.compute_optimal_parameters();
+		
+		kmersTotal = 0;
+		kmersUsed = 0;
+		
+		//if ( i == 0 && verbosity > 0 )
+		{
+			//cerr << "   Bloom table size (bytes): " << bloomParams.optimal_parameters.table_size / 8 << endl;
+		}
+		
+		bloomFilter = new bloom_filter(bloomParams);
+	}
+}
+
+MinHashHeap::~MinHashHeap()
+{
+	if ( bloomFilter != 0 )
+	{
+		delete bloomFilter;
+	}
+}
+
+void MinHashHeap::computeStats()
+{
+	vector<uint32_t> counts;
+	hashes.toCounts(counts);
+	
+	for ( int i = 0; i < counts.size(); i++ )
+	{
+		cout << counts.at(i) << endl;
+	}
+}
+
+void MinHashHeap::clear()
+{
+	hashes.clear();
+	hashesQueue.clear();
+	
+	hashesPending.clear();
+	hashesQueuePending.clear();
+	
+	if ( bloomFilter != 0 )
+	{
+		bloomFilter->clear();
+	}
+	
+	multiplicitySum = 0;
+}
+
+void MinHashHeap::tryInsert(hash_u hash)
+{
+	if
+	(
+		hashes.size() < cardinalityMaximum ||
+		hashLessThan(hash, hashesQueue.top(), use64)
+	)
+	{
+		if ( hashes.count(hash) == 0 )
+		{
+			if ( bloomFilter != 0 )
+			{
+                const unsigned char * data = use64 ? (const unsigned char *)&hash.hash64 : (const unsigned char *)&hash.hash32;
+            	size_t length = use64 ? 8 : 4;
+            	
+                if ( bloomFilter->contains(data, length) )
+                {
+					hashes.insert(hash, 2);
+					hashesQueue.push(hash);
+					multiplicitySum += 2;
+	                kmersUsed++;
+                }
+            	else
+            	{
+	                bloomFilter->insert(data, length);
+	                kmersTotal++;
+	            }
+			}
+			else if ( multiplicityMinimum == 1 || hashesPending.count(hash) == multiplicityMinimum - 1 )
+			{
+				hashes.insert(hash, multiplicityMinimum);
+				hashesQueue.push(hash);
+				multiplicitySum += multiplicityMinimum;
+				
+				if ( multiplicityMinimum > 1 )
+				{
+					// just remove from set for now; will be removed from
+					// priority queue when it's on top
+					//
+					hashesPending.erase(hash);
+				}
+			}
+			else
+			{
+				if ( hashesPending.count(hash) == 0 )
+				{
+					hashesQueuePending.push(hash);
+				}
+			
+				hashesPending.insert(hash, 1);
+			}
+		}
+		else
+		{
+			hashes.insert(hash, 1);
+			multiplicitySum++;
+		}
+		
+		if ( hashes.size() > cardinalityMaximum )
+		{
+			multiplicitySum -= hashes.count(hashesQueue.top());
+			hashes.erase(hashesQueue.top());
+			
+			// loop since there could be zombie hashes (gone from hashesPending)
+			//
+			while ( hashesQueuePending.size() > 0 && hashLessThan(hashesQueue.top(), hashesQueuePending.top(), use64) )
+			{
+				if ( hashesPending.count(hashesQueuePending.top()) )
+				{
+					hashesPending.erase(hashesQueuePending.top());
+				}
+				
+				hashesQueuePending.pop();
+			}
+			
+			hashesQueue.pop();
+		}
+	}
+}
+
+hash_u getHash(const char * seq, int length, uint32_t seed, bool use64)
+{
+
+#ifdef ARCH_32
+	char data[use64 ? 8 : 4];
+	MurmurHash3_x86_32(seq, length > 16 ? 16 : length, seed, data);
+	if ( use64 )
+	{
+		MurmurHash3_x86_32(seq + 16, length - 16, seed, data + 4);
+	}
+#else
+	char data[16];
+	MurmurHash3_x64_128(seq, length, seed, data);
+#endif
+
+	hash_u hash;
+
+	if ( use64 )
+	{
+		hash.hash64 = *((hash64_t *)data);
+	}
+	else
+	{
+		hash.hash32 = *((hash32_t *)data);
+	}
+
+	return hash;
+}
+
+bool hashLessThan(hash_u hash1, hash_u hash2, bool use64)
+{
+	if ( use64 )
+	{
+		return hash1.hash64 < hash2.hash64;
+	}
+	else
+	{
+		return hash1.hash32 < hash2.hash32;
+	}
+}
+
+
+namespace Sketch{
 
 __m512i inline min512(__m512i v1, __m512i v2)
 {
@@ -42,6 +422,7 @@ __m512i inline min512(__m512i v1, __m512i v2)
 
 	return (msk_gt < msk_lt) ? v1 : v2;
 }
+
 void inline transpose8_epi64(__m512i *row0, __m512i* row1, __m512i* row2,__m512i* row3, __m512i* row4, __m512i * row5,__m512i* row6,__m512i * row7)
 {
 	__m512i __t0,__t1,__t2,__t3,__t4,__t5,__t6,__t7;
@@ -323,34 +704,6 @@ void MinHash::printMinHashes()
 	return;
 }
 
-hash_u getHash(const char * seq, int length, uint32_t seed, bool use64)
-{
-
-#ifdef ARCH_32
-	char data[use64 ? 8 : 4];
-	MurmurHash3_x86_32(seq, length > 16 ? 16 : length, seed, data);
-	if ( use64 )
-	{
-		MurmurHash3_x86_32(seq + 16, length - 16, seed, data + 4);
-	}
-#else
-	char data[16];
-	MurmurHash3_x64_128(seq, length, seed, data);
-#endif
-
-	hash_u hash;
-
-	if ( use64 )
-	{
-		hash.hash64 = *((hash64_t *)data);
-	}
-	else
-	{
-		hash.hash32 = *((hash32_t *)data);
-	}
-
-	return hash;
-}
 
 void MinHash::merge(MinHash& msh)
 {
@@ -364,17 +717,6 @@ void MinHash::merge(MinHash& msh)
 	needToList = true;
 		
 	return;	
-}
-bool hashLessThan(hash_u hash1, hash_u hash2, bool use64)
-{
-	if ( use64 )
-	{
-		return hash1.hash64 < hash2.hash64;
-	}
-	else
-	{
-		return hash1.hash32 < hash2.hash32;
-	}
 }
 
 double MinHash::jaccard(MinHash * msh)
@@ -566,337 +908,6 @@ double MinHash::pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, dou
 	//#endif
 }
 */
-//start the WMinHash@xxm
-WMinHash::WMinHash(Parameters parametersNew)//:parameters(parametersNew)
-{	
-	parameters = parametersNew;
 
-	binsArr = (double *) malloc (parameters.get_numBins() * sizeof(double));
-	for(int i = 0; i < parameters.get_numBins(); i++){
-		binsArr[i] = 0.0;
-	}
-
-	int g = ceil(2 / EPSILON);
-	int d = ceil(log(1 - DELTA) / log(0.5));
-	countMinSketch = (double *) malloc (d * g *sizeof(double));
-	for(int i = 0; i < d * g; i++){
-		countMinSketch[i] = 0.0;
-	}
-
-	//r = (double *) malloc (parameters.get_histoSketch_sketchSize() * parameters.get_histoSketch_dimension() * sizeof(double));
-	//c = (double *) malloc (parameters.get_histoSketch_sketchSize() * parameters.get_histoSketch_dimension() * sizeof(double));
-	//b = (double *) malloc (parameters.get_histoSketch_sketchSize() * parameters.get_histoSketch_dimension() * sizeof(double));
-	
-	//getCWS(r, c, b, parameters.get_histoSketch_sketchSize(), parameters.get_histoSketch_dimension());
-	//double * r = parameters.getR();
-	//double * c = parameters.getC();
-	//double * b = parameters.getB();
-	//		printf("the point in WMinHash of r is: %p\n",r);
-	//		printf("the point in WMinHash of c is: %p\n",c);
-	//		printf("the point in WMinHash of b is: %p\n",b);
-//	for(int i = 0; i < parameters.get_histoSketch_sketchSize() * parameters.get_histoSketch_dimension(); i++){
-//		cout << "the r[" << i << "] is: " << parameters.getR()[i] << endl;
-//		cout << "the c[" << i << "] is: " << parameters.getC()[i] << endl;
-//		cout << "the b[" << i << "] is: " << parameters.getB()[i] << endl;
-//	}
-	cerr << "the paremeters.get_histoSketch_sketchSize() in WMinHash is: " << parameters.get_histoSketch_sketchSize() << endl;
-	
-	histoSketch_sketch = (uint32_t *) malloc (parameters.get_histoSketch_sketchSize() * sizeof(uint32_t));
-	histoSketch_sketchWeight = (double *) malloc (parameters.get_histoSketch_sketchSize() * sizeof(double));
-	
-	//add the applyConceptDrift and decayWeight.
-	if(parameters.get_paraDecayWeight() < 0.0 || parameters.get_paraDecayWeight() > 1.0){
-		cerr << "the paraDecayWeight must between 0.0 and 1.0 " << endl;
-		exit(1);
-	}
-	else{
-		applyConceptDrift = true;
-	}
-	if(parameters.get_paraDecayWeight() == 1.0){
-		applyConceptDrift = false;
-	}
-	decayWeight = 1.0;
-	if(applyConceptDrift){
-		decayWeight = exp(-parameters.get_paraDecayWeight());
-	}
-
-
-	needToCompute = true;
 
 }
-
-void WMinHash::update(char * seq)
-{
-	int k = parameters.kmerSize;
-	int w = parameters.get_minimizerWindowSize();
-	int numBins = parameters.get_numBins();
-	int histoSketch_sketchSize = parameters.get_histoSketch_sketchSize();
-	int histoSketch_dimension = parameters.get_histoSketch_dimension();
-	cerr << "in the update the histoSketch_sketchSize is: " << parameters.get_histoSketch_sketchSize() << endl;
-
-	findMinimizers(k, w, seq, sketches);
-	kmerSpectrumAddHash(sketches, binsArr, parameters.get_numBins());
-//	for(int i = 0; i < parameters.numBins; i++){
-//		if(binsArr[i] != 0){
-//			printf("%d\t%lf\n", i, binsArr[i]);
-//		}
-//	}
-	sketches.clear();
-	needToCompute = true;
-
-}
-
-void WMinHash::computeHistoSketch()
-{
-	kmerSpectrumDump(binsArr, parameters.get_numBins(), kmerSpectrums);
-	//cerr << "finish the kmerSpectrumDump " << endl;
-	int hsSketchSize = parameters.get_histoSketch_sketchSize();
-	int hsDimension = parameters.get_histoSketch_dimension();
-	//cerr << "the hsSketchSize is " << hsSketchSize << endl;
-	//cerr << "the hsDimension is " << hsDimension << endl;
-
-	for(int i = 0; i < kmerSpectrums.size(); i++){
-	//cerr << "finish the " << i << " iterator to addElement" << endl;
-		//histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, parameters.get_histoSketch_sketchSize(), applyConceptDrift, decayWeight, r, c, b, parameters.get_histoSketch_sketchSize(), parameters.get_histoSketch_dimension(), histoSketch_sketch, histoSketch_sketchWeight);
-		histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, hsSketchSize, applyConceptDrift, decayWeight, parameters.getR(), parameters.getC(), parameters.getB(), hsSketchSize, hsDimension, histoSketch_sketch, histoSketch_sketchWeight);
-	}
-	//cerr << "finish the histoSketchAddElement " << endl;
-
-}
-
-void WMinHash::getWMinHash(){
-	if(needToCompute){
-		computeHistoSketch();
-		needToCompute = false;
-	}
-	cout << "the sketch is: " << endl;
-	for(int i = 0; i < parameters.get_histoSketch_sketchSize(); i++){
-		printf("%d\n", histoSketch_sketch[i]);
-	}
-
-	cout << "the sketchweight is: " << endl;
-	for(int i = 0; i < parameters.get_histoSketch_sketchSize(); i++){
-		printf("%lf\n", histoSketch_sketchWeight[i]);
-	}
-
-}
-
-double WMinHash::wJaccard(WMinHash * wmh)
-{
-	cout << "the needToCompute is: " << needToCompute << endl;
-	if(needToCompute){
-		computeHistoSketch();
-		needToCompute = false;
-	}
-	if(wmh->needToCompute){
-		wmh->computeHistoSketch();
-		wmh->needToCompute = false;
-	}
-	double intersectElement = 0.0;
-	double unionElement = 0.0;
-	double jaccard = 0.0;
-	cerr << "the parameters.get_histoSketch_sketchSize() is: " << parameters.get_histoSketch_sketchSize() << endl;
-	for(int i = 0 ; i < parameters.get_histoSketch_sketchSize(); i++){
-
-		double curWeightA = abs(histoSketch_sketchWeight[i]);
-		double curWeightB = abs(wmh->histoSketch_sketchWeight[i]);
-
-		//get the intersection and union values
-		if(histoSketch_sketch[i] == wmh->histoSketch_sketch[i]){
-			if(curWeightA < curWeightB){
-				intersectElement += curWeightA;
-				unionElement += curWeightB;
-			}
-			else{
-				intersectElement += curWeightB;
-				unionElement += curWeightA;
-			}
-		}
-		else{
-			if(curWeightA > curWeightB){
-				unionElement += curWeightA;
-			}
-			else{
-				unionElement += curWeightB;
-			}
-		}
-	
-	}
-	jaccard = intersectElement / unionElement;
-
-	return jaccard;
-
-}
-
-	
-double WMinHash::distance(WMinHash * wmh){
-	return 1 - wJaccard(wmh);
-}
-
-WMinHash::~WMinHash()
-{
-	free(binsArr);
-	free(countMinSketch);
-	free(r);
-	free(c);
-	free(b);
-	free(histoSketch_sketch);
-	free(histoSketch_sketchWeight);
-
-}
-
-	
-
-
-	
-
-
-
-
-
-
-
-
-OMinHash::OMinHash(Parameters parametersNew, char * seqNew):
-	parameters(parametersNew),
-	seq(seqNew)
-{
-	m_k = parameters.kmerSize;
-	m_l = parameters.l;
-	m_m = parameters.m;
-	rc = parameters.rc;
-
-	if(rc){
-		//TODO:get reverse complement to rcseq
-		int rc_len = strlen(seq);
-		rcseq = new char[rc_len];
-		char table[4] = {'T','G','A','C'};
-		for ( uint64_t i = 0; i < rc_len; i++ )
-		{
-			char base = seq[i];
-
-			base >>= 1;
-			base &= 0x03;
-			rcseq[rc_len - i - 1] = table[base];
-
-		}
-	
-	}
-	sketch();
-}
-
-void OMinHash::sketch(){
-	sk.k = m_k;		
-	sk.l = m_l;		
-	sk.m = m_m;		
-
-	sk.data.resize(std::max(sk.l, 1) * sk.m * sk.k);
-	compute_sketch(sk.data.data(), this->seq);
-
-	if(rc){
-		sk.rcdata.resize(std::max(sk.l, 1) * sk.m * sk.k);
-		compute_sketch(sk.rcdata.data(), this->rcseq);
-	}
-}
-
-inline void OMinHash::compute_sketch(char * ptr, const char * seq){
-	std::string seqStr(seq);
-	omh_pos(seqStr, m_k, m_l, m_m,
-			[&ptr, &seq, this](unsigned i, unsigned j, size_t pos) { memcpy(ptr, seq + pos, m_k); ptr += m_k; });
-}
-
-template<typename BT>
-static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, BT block) {
-	if(seq.size() < k) return;
-	const bool weight = l > 0;
-	if(l == 0) l = 1;
-
-	std::vector<mer_info> mers;
-	robin_hood::unordered_map<std::string, unsigned> occurrences;
-	size_t pos[l];
-
-	//  Create list of k-mers with occurrence numbers
-	for(size_t i = 0; i < seq.size() - k + 1; ++i) {
-		auto occ = occurrences[seq.substr(i, k)]++;
-		mers.emplace_back(i, occ, (uint64_t)0);
-	}
-
-	xxhash hash;
-	std::mt19937_64 gen64(32); //TODO: make 32 a parameter
-	for(unsigned i = 0; i < m; ++i) {
-		const auto seed = gen64();//prg();
-		for(auto& meri : mers) {
-			//hash.reset(seed);
-			//hash.update(&seq.data()[meri.pos], k);//update kmer (chars)
-			//
-			//if(weight) hash.update(&meri.occ, sizeof(meri.occ));//update occurance to hash
-			uint64_t kmer_int = hash_to_uint(&seq.data()[meri.pos], k);
-			meri.hash = mc::murmur3_fmix(kmer_int, seed);
-			//meri.hash = hash.digest();
-		}
-
-		//top-k
-		std::partial_sort(mers.begin(), mers.begin() + l, mers.end(), [&](const mer_info& x, const mer_info& y) { return x.hash < y.hash; });
-		std::sort(mers.begin(), mers.begin() + l, [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
-		for(unsigned j = 0; j < l; ++j)
-			block(i, j, mers[j].pos);
-	}
-}
-
-double OMinHash::compare_sketches(const OSketch& sk1, const OSketch& sk2, ssize_t m, bool circular) {
-	if(sk1.k != sk2.k || sk1.l != sk2.l) return -1; // Different k or l
-	if(m < 0) m = std::min(sk1.m, sk2.m);
-	if(m > sk1.m || m > sk2.m) return -1;  // Too short
-
-	const unsigned block = std::max(sk1.l, 1) * sk1.k;
-	if(sk1.data.size() < m * block || sk2.data.size() < m * block) return -1; // Truncated
-	const double fwd_score = compare_sketch_pair(sk1.data.data(), sk2.data.data(), m, sk1.k, sk1.l, circular);
-
-	double bwd_score = 0.0;
-	if(!sk1.rcdata.empty()) {
-		bwd_score = compare_sketch_pair(sk1.rcdata.data(), sk2.data.data(), m, sk1.k, sk1.l, circular);
-	} else if(!sk2.rcdata.empty()) {
-		bwd_score = compare_sketch_pair(sk1.data.data(), sk2.rcdata.data(), m, sk1.k, sk1.l, circular);
-	}
-
-	return std::max(fwd_score, bwd_score);
-}
-
-double OMinHash::compare_sketch_pair(const char* p1, const char* p2, unsigned m, unsigned k, unsigned l, bool circular) {
-	const unsigned block = std::max(l, (unsigned)1) * k;
-	unsigned count = 0;
-	if(!circular || l < 2) {
-		for(unsigned i = 0; i < m; ++i, p1 += block, p2 += block)
-			count += memcmp(p1, p2, block) == 0;
-	} else {
-		for(unsigned i = 0; i < m; ++i, p1 += block, p2 += block) {
-			for(unsigned j = 0; j < l; ++j) {
-				if(memcmp(p1, p2 + j * k, block - j * k) == 0 && memcmp(p1 + block - j * k, p2, j * k) == 0) {
-					++count;
-					break;
-				}
-			}
-		}
-	}
-	return (double)count / m;
-}
-
-double OMinHash::similarity(OMinHash & omh2){
-	return compare_sketches(this->sk, omh2.getSektch());	
-}
-
-inline uint64_t hash_to_uint(const char * kmer, int k)
-{
-	uint8_t mask = 0x06;
-	uint64_t res = 0;
-	for(int i = 0; i < k; i++)
-	{
-		uint8_t meri = (uint8_t)kmer[i];
-		meri &= mask;
-		meri >>= 1;
-		res |= (uint64_t)meri;
-		res <<= 2;
-	}
-
-	return res;
-}			

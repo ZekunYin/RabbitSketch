@@ -1,24 +1,17 @@
-// Copyright © 2015, Battelle National Biodefense Institute (BNBI);
-// all rights reserved. Authored by: Brian Ondov, Todd Treangen,
-// Sergey Koren, and Adam Phillippy
-//
-// See the LICENSE.txt file included with this software for license information.
-
-//Modified by qzh & yzk.
 #ifndef Sketch_h
 #define Sketch_h
 
-//#include <unordered_map>
 #include "robin_hood.h"
-//#include <unordered_set>
 #include <map>
 #include <vector>
 #include <string>
 #include <string.h>
-#include "MinHashHeap.h"
+#include "MinHash.h"
 #include "histoSketch.h"
 #include "hll/hyperloglog.h"
 #include <stdint.h>
+
+
 /// \brief Sketch namespace
 namespace Sketch{
 
@@ -176,30 +169,8 @@ namespace Sketch{
 
 	};
 
-	struct PositionHash
-	{
-		PositionHash(uint32_t positionNew, hash_t hashNew) :
-			position(positionNew),
-			hash(hashNew)
-		{}
 
-		uint32_t position;
-		hash_t hash;
-	};
-
-	struct Locus
-	{
-		Locus(uint32_t sequenceNew, uint32_t positionNew)
-			:
-				sequence(sequenceNew),
-				position(positionNew)
-		{}
-
-		uint32_t sequence;
-		uint32_t position;
-	};
-
-	typedef robin_hood::unordered_set<hash_t> Hash_set;
+	//typedef robin_hood::unordered_set<hash_t> Hash_set;
 
 	struct Reference
 	{
@@ -288,18 +259,6 @@ namespace Sketch{
 			return k == rhs.k && l == rhs.l && m == rhs.m && data == rhs.data && rcdata == rhs.rcdata;
 		}
 
-		// Read a sketch into this
-		//void read(std::istream& is);
-
-		// Read a sketch
-		//static sketch from_stream(std::istream& is) {
-		//	sketch sk;
-		//	sk.read(is);
-		//	return sk;
-		//}
-
-		// Write sketch
-		//void write(std::ostream& os) const;
 	};
 
 	class OMinHash{
@@ -340,19 +299,4 @@ namespace Sketch{
 
 }//namespace sketch
 
-template<typename BT>
-static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, BT block);
-
-struct mer_info {
-	size_t pos;
-	uint64_t hash;
-	unsigned occ;
-	mer_info(size_t p, unsigned o, uint64_t h)
-		: pos(p)
-		  , hash(h)
-		  , occ(o)
-	{ }
-};
-
-inline uint64_t hash_to_uint(const char * kmer, int k);
 #endif //Sketch_h
