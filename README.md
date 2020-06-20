@@ -87,3 +87,4 @@ time python3 test.py #fastx is required
 - [ ] add cpu dispatch
 - [ ] pypi publish(dealing with win32 and osx), dealing with requirements
 - [ ] pybind std::vector (omh result)
+- [ ] revise cmake for make install
