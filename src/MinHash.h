@@ -118,5 +118,7 @@ inline void MinHashHeap::toCounts(std::vector<uint32_t> & counts) const {hashes.
 
 namespace Sketch{
 
+void reverseComplement(const char * src, char * dest, int length);
+
 } //namespace Sketch
 #endif //__MINHASH_H__

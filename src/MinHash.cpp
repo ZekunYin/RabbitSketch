@@ -414,8 +414,8 @@ bool hashLessThan(hash_u hash1, hash_u hash2, bool use64)
 
 namespace Sketch{
 
-__m512i inline min512(__m512i v1, __m512i v2)
-{
+#if defined __AVX512F__ && defined __AVX512CD__
+__m512i inline min512(__m512i v1, __m512i v2){
 	__mmask8 msk_gt, msk_lt;
 	msk_gt = _mm512_cmpgt_epi64_mask(v1, v2);
 	msk_lt = _mm512_cmplt_epi64_mask(v1, v2);
@@ -461,33 +461,56 @@ void inline transpose8_epi64(__m512i *row0, __m512i* row1, __m512i* row2,__m512i
 	*row6 = _mm512_shuffle_i64x2(__tt2,__tt6,0xEE);
 	*row7 = _mm512_shuffle_i64x2(__tt3,__tt7,0xEE);
 }
+#else 
+#ifdef __AVX2__
+	// implement by avx2
+void inline transpose4_epi64(__m256i *row1, __m256i *row2, __m256i *row3, __m256i *row4)
+{
+	__m256i vt1, vt2, vt3, vt4;
 
-//Writen by qzh.
-//Sketch::MinHash::MinHash(const Sketch::Parameters & parameters)
+	vt1 = _mm256_unpacklo_epi64(*row1, *row2);
+	vt2 = _mm256_unpackhi_epi64(*row1, *row2);
+	vt3 = _mm256_unpacklo_epi64(*row3, *row4);
+	vt4 = _mm256_unpackhi_epi64(*row3, *row4);
+
+	*row1 =_mm256_permute2x128_si256(vt1, vt3, 0x20);
+	*row2 =_mm256_permute2x128_si256(vt2, vt4, 0x20);
+	*row3 =_mm256_permute2x128_si256(vt1, vt3, 0x31);
+	*row4 =_mm256_permute2x128_si256(vt2, vt4, 0x31);
+}
+
+	#else
+		#ifdef __SSE4_1__
+		// implement by sse
+		#else
+		//implement without optimization
+		#endif
+	#endif
+#endif
+
+
 MinHash ::MinHash(Parameters parametersNew):parameters(parametersNew)
 {
 	minHashHeap = new MinHashHeap(parameters.use64, parameters.minHashesPerWindow);// parameters.reads ?  parameters.minCov : 1);
 
 	this->kmerSpace = pow(parameters.alphabetSize, parameters.kmerSize);
 	//cerr << "kmerSpace init from pow is " << this->kmerSpace << endl;
-	this->length = 0;
+	this->totalLength = 0;
 	this->needToList = true;
 
 }
 
 void MinHash::update(char * seq)
 {
-	//addMinHashes(minHashHeap, seq, LENGTH, parameters);
-	//cout << "seq: " << seq << endl;
-	const uint64_t LENGTH = strlen(seq);
-	cout << "seq_len: " << LENGTH << endl;
-	this->length += LENGTH;
+	const uint64_t length = strlen(seq);
+	cout << "seq_len using avx512: " << length << endl;
+	totalLength += length;
 	int kmerSize = parameters.kmerSize;
 	uint64_t mins = parameters.minHashesPerWindow;
 	bool noncanonical = parameters.noncanonical;//False.
 
 	// uppercase TODO: alphabets?
-	for ( uint64_t i = 0; i < LENGTH; i++ )
+	for ( uint64_t i = 0; i < length; i++ )
 	{
 		if ( ! parameters.preserveCase && seq[i] > 96 && seq[i] < 123 )
 		{
@@ -495,84 +518,27 @@ void MinHash::update(char * seq)
 		}
 	}
 
-	char * seqRev;
+   char * seqRev;
+    
+    if ( ! noncanonical )
+    {
+    	seqRev = new char[length];
+        reverseComplement(seq, seqRev, length);
+    }
 
-	if ( ! noncanonical )
-	{
-		seqRev = new char[LENGTH];
-		//reverseComplement(seq, seqRev, length);
-
-		char table[4] = {'T','G','A','C'};
-		for ( uint64_t i = 0; i < LENGTH; i++ )
-		{
-			char base = seq[i];
-
-			base >>= 1;
-			base &= 0x03;
-			seqRev[LENGTH - i - 1] = table[base];
-
-
-			//		    switch ( base )
-			//		    {
-			//		        case 'A': base = 'T'; break;
-			//		        case 'C': base = 'G'; break;
-			//		        case 'G': base = 'C'; break;
-			//		        case 'T': base = 'A'; break;
-			//		        default: break;
-			//		    }
-			//		    seqRev[LENGTH - i - 1] = base;
-		}
-	}
-
-	//for ( uint64_t i = 0; i < LENGTH - kmerSize + 1; i++ )
-	//{
-	//	// repeatedly skip kmers with bad characters
-	//	bool bad = false;
-	//	
-	//	//Modified by qzh.To detect the correct of alphabet, but it consumes too much time. So we should optimize this process.
-	//	//for ( uint64_t j = i; j < i + kmerSize && i + kmerSize <= LENGTH; j++ )
-	//	//{
-	//	//	if ( ! parameters.alphabet[seq[j]] )
-	//	//	{
-	//	//		i = j; // skip to past the bad character
-	//	//		bad = true;
-	//	//		break;
-	//	//	}
-	//	//}
-	//	//
-	//	if ( bad )
-	//	{
-	//		continue;
-	//	}
-	//	//	
-	//	if ( i + kmerSize > LENGTH )
-	//	{
-	//		// skipped to end
-	//		break;
-	//	}
-	//        
-	//    const char *kmer_fwd = seq + i;
-	//    const char *kmer_rev = seqRev + LENGTH - i - kmerSize;
-	//    const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
-	//    bool filter = false;
-	//    
-	//    hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
-	//    
-	//	minHashHeap -> tryInsert(hash);
-	//}
-
-	//============================================================================================================================================================
-	//cout << "use the intel avx512 " << endl;
+#if defined __AVX512F__ && defined __AVX512BW__
+//============================================================================================================================================================
+	cerr << "using avx512 " << endl;
 	//exit(0);
 	//addbyxxm
-	//hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
-	//  const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
+    //hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
+//  const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
-	int n_kmers = LENGTH - kmerSize + 1;
+	int n_kmers = length - kmerSize + 1;
 	int n_kmers_body = (n_kmers / 16) * 16;
 	//int n_kmers_body = (n_kmers / 32) * 32;
 	//int n_kmers_body = (n_kmers / 8) * 8;
-
+	
 	const uint8_t* input8 = (const uint8_t *)seq;
 	const uint8_t* input8_rev = (const uint8_t *)seqRev;
 	//uint64_t* res = (uint64_t* )_mm_malloc(n_kmers * 2 * sizeof(uint64_t), 64);
@@ -581,60 +547,153 @@ void MinHash::update(char * seq)
 	//uint64_t res[8 * 2];
 	uint64_t res2[2];
 	uint8_t kmer_buf[kmerSize];
-	//	uint64_t result[16];
-
+//	uint64_t result[16];
+	
 	__m512i v0, v1;
 	__m512i vi[8];
 	__m512i vj[8];
-	//	__m512i vk[8];
-	//	__m512i vl[8];
+	__m512i vi_forword[8];
+	__m512i vi_reverse[8];
+	__m512i vj_forword[8];
+	__m512i vj_reverse[8];
+//	__m512i vk[8];
+//	__m512i vl[8];
 	__m512i vzero = _mm512_setzero_si512();
 
 	__mmask64 mask_load = 0xffffffffffffffff;
 	mask_load >>= (64 - kmerSize);
 
 	for(int i = 0; i < n_kmers_body-1; i+=16){
+	
+		vi_forword[0] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 0);
+		vi_forword[1] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 1);
+		vi_forword[2] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 2);
+		vi_forword[3] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 3);
+		vi_forword[4] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 4);
+		vi_forword[5] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 5);
+		vi_forword[6] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 6);
+		vi_forword[7] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 7);
 
-		vi[0] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 0, input8_rev + LENGTH - i - 0 - kmerSize, kmerSize) <= 0 ? input8 + i + 0 : input8_rev + LENGTH - i - 0 - kmerSize);
-		vi[1] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 1, input8_rev + LENGTH - i - 1 - kmerSize, kmerSize) <= 0 ? input8 + i + 1 : input8_rev + LENGTH - i - 1 - kmerSize);
-		vi[2] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 2, input8_rev + LENGTH - i - 2 - kmerSize, kmerSize) <= 0 ? input8 + i + 2 : input8_rev + LENGTH - i - 2 - kmerSize);
-		vi[3] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 3, input8_rev + LENGTH - i - 3 - kmerSize, kmerSize) <= 0 ? input8 + i + 3 : input8_rev + LENGTH - i - 3 - kmerSize);
-		vi[4] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 4, input8_rev + LENGTH - i - 4 - kmerSize, kmerSize) <= 0 ? input8 + i + 4 : input8_rev + LENGTH - i - 4 - kmerSize);
-		vi[5] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 5, input8_rev + LENGTH - i - 5 - kmerSize, kmerSize) <= 0 ? input8 + i + 5 : input8_rev + LENGTH - i - 5 - kmerSize);
-		vi[6] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 6, input8_rev + LENGTH - i - 6 - kmerSize, kmerSize) <= 0 ? input8 + i + 6 : input8_rev + LENGTH - i - 6 - kmerSize);
-		vi[7] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 7, input8_rev + LENGTH - i - 7 - kmerSize, kmerSize) <= 0 ? input8 + i + 7 : input8_rev + LENGTH - i - 7 - kmerSize);
 
-		vj[0] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 8, input8_rev + LENGTH - i - 8 - kmerSize, kmerSize) <= 0 ? input8 + i + 8 : input8_rev + LENGTH - i - 8 - kmerSize);
-		vj[1] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 9, input8_rev + LENGTH - i - 9 - kmerSize, kmerSize) <= 0 ? input8 + i + 9 : input8_rev + LENGTH - i - 9 - kmerSize);
-		vj[2] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 10, input8_rev + LENGTH - i - 10 - kmerSize, kmerSize) <= 0 ? input8 + i + 10 : input8_rev + LENGTH - i - 10 - kmerSize);
-		vj[3] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 11, input8_rev + LENGTH - i - 11 - kmerSize, kmerSize) <= 0 ? input8 + i + 11 : input8_rev + LENGTH - i - 11 - kmerSize);
-		vj[4] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 12, input8_rev + LENGTH - i - 12 - kmerSize, kmerSize) <= 0 ? input8 + i + 12 : input8_rev + LENGTH - i - 12 - kmerSize);
-		vj[5] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 13, input8_rev + LENGTH - i - 13 - kmerSize, kmerSize) <= 0 ? input8 + i + 13 : input8_rev + LENGTH - i - 13 - kmerSize);
-		vj[6] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 14, input8_rev + LENGTH - i - 14 - kmerSize, kmerSize) <= 0 ? input8 + i + 14 : input8_rev + LENGTH - i - 14 - kmerSize);
-		vj[7] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 15, input8_rev + LENGTH - i - 15 - kmerSize, kmerSize) <= 0 ? input8 + i + 15 : input8_rev + LENGTH - i - 15 - kmerSize);
+		vj_forword[0] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 8);
+		vj_forword[1] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 9);
+		vj_forword[2] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 10);
+		vj_forword[3] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 11);
+		vj_forword[4] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 12);
+		vj_forword[5] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 13);
+		vj_forword[6] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 14);
+		vj_forword[7] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 15);
+
+		if( !noncanonical){
+
+			vi_reverse[0] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 0 - kmerSize);
+			vi_reverse[1] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 1 - kmerSize);
+			vi_reverse[2] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 2 - kmerSize);
+			vi_reverse[3] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 3 - kmerSize);
+			vi_reverse[4] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 4 - kmerSize);
+			vi_reverse[5] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 5 - kmerSize);
+			vi_reverse[6] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 6 - kmerSize);
+			vi_reverse[7] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 7 - kmerSize);
+
+			vj_reverse[0] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 8 - kmerSize);
+			vj_reverse[1] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 9 - kmerSize);
+			vj_reverse[2] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 10 - kmerSize);
+			vj_reverse[3] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 11 - kmerSize);
+			vj_reverse[4] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 12 - kmerSize);
+			vj_reverse[5] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 13 - kmerSize);
+			vj_reverse[6] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 14 - kmerSize);
+			vj_reverse[7] = _mm512_mask_loadu_epi8(vzero, mask_load, input8_rev + length - i - 15 - kmerSize);
+
+
+			vi[0] = min512(vi_forword[0], vi_reverse[0]);
+			vi[1] = min512(vi_forword[1], vi_reverse[1]);
+			vi[2] = min512(vi_forword[2], vi_reverse[2]);
+			vi[3] = min512(vi_forword[3], vi_reverse[3]);
+			vi[4] = min512(vi_forword[4], vi_reverse[4]);
+			vi[5] = min512(vi_forword[5], vi_reverse[5]);
+			vi[6] = min512(vi_forword[6], vi_reverse[6]);
+			vi[7] = min512(vi_forword[7], vi_reverse[7]);
+
+			vj[0] = min512(vj_forword[0], vj_reverse[0]);
+			vj[1] = min512(vj_forword[1], vj_reverse[1]);
+			vj[2] = min512(vj_forword[2], vj_reverse[2]);
+			vj[3] = min512(vj_forword[3], vj_reverse[3]);
+			vj[4] = min512(vj_forword[4], vj_reverse[4]);
+			vj[5] = min512(vj_forword[5], vj_reverse[5]);
+			vj[6] = min512(vj_forword[6], vj_reverse[6]);
+			vj[7] = min512(vj_forword[7], vj_reverse[7]);
+
+		}else{
+
+			vi[0] = vi_forword[0];
+			vi[1] = vi_forword[1];
+			vi[2] = vi_forword[2];
+			vi[3] = vi_forword[3];
+			vi[4] = vi_forword[4];
+			vi[5] = vi_forword[5];
+			vi[6] = vi_forword[6];
+			vi[7] = vi_forword[7];
+
+			vj[0] = vj_forword[0];
+			vj[1] = vj_forword[1];
+			vj[2] = vj_forword[2];
+			vj[3] = vj_forword[3];
+			vj[4] = vj_forword[4];
+			vj[5] = vj_forword[5];
+			vj[6] = vj_forword[6];
+			vj[7] = vj_forword[7];
+		}
+
+	//	vi[0] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 0, input8_rev + length - i - 0 - kmerSize, kmerSize) <= 0 ? input8 + i + 0 : input8_rev + length - i - 0 - kmerSize);
+	//	vi[1] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 1, input8_rev + length - i - 1 - kmerSize, kmerSize) <= 0 ? input8 + i + 1 : input8_rev + length - i - 1 - kmerSize);
+	//	vi[2] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 2, input8_rev + length - i - 2 - kmerSize, kmerSize) <= 0 ? input8 + i + 2 : input8_rev + length - i - 2 - kmerSize);
+	//	vi[3] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 3, input8_rev + length - i - 3 - kmerSize, kmerSize) <= 0 ? input8 + i + 3 : input8_rev + length - i - 3 - kmerSize);
+	//	vi[4] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 4, input8_rev + length - i - 4 - kmerSize, kmerSize) <= 0 ? input8 + i + 4 : input8_rev + length - i - 4 - kmerSize);
+	//	vi[5] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 5, input8_rev + length - i - 5 - kmerSize, kmerSize) <= 0 ? input8 + i + 5 : input8_rev + length - i - 5 - kmerSize);
+	//	vi[6] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 6, input8_rev + length - i - 6 - kmerSize, kmerSize) <= 0 ? input8 + i + 6 : input8_rev + length - i - 6 - kmerSize);
+	//	vi[7] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 7, input8_rev + length - i - 7 - kmerSize, kmerSize) <= 0 ? input8 + i + 7 : input8_rev + length - i - 7 - kmerSize);
+
+	//	vj[0] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 8, input8_rev + length - i - 8 - kmerSize, kmerSize) <= 0 ? input8 + i + 8 : input8_rev + length - i - 8 - kmerSize);
+	//	vj[1] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 9, input8_rev + length - i - 9 - kmerSize, kmerSize) <= 0 ? input8 + i + 9 : input8_rev + length - i - 9 - kmerSize);
+	//	vj[2] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 10, input8_rev + length - i - 10 - kmerSize, kmerSize) <= 0 ? input8 + i + 10 : input8_rev + length - i - 10 - kmerSize);
+	//	vj[3] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 11, input8_rev + length - i - 11 - kmerSize, kmerSize) <= 0 ? input8 + i + 11 : input8_rev + length - i - 11 - kmerSize);
+	//	vj[4] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 12, input8_rev + length - i - 12 - kmerSize, kmerSize) <= 0 ? input8 + i + 12 : input8_rev + length - i - 12 - kmerSize);
+	//	vj[5] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 13, input8_rev + length - i - 13 - kmerSize, kmerSize) <= 0 ? input8 + i + 13 : input8_rev + length - i - 13 - kmerSize);
+	//	vj[6] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 14, input8_rev + length - i - 14 - kmerSize, kmerSize) <= 0 ? input8 + i + 14 : input8_rev + length - i - 14 - kmerSize);
+	//	vj[7] = _mm512_mask_loadu_epi8(vzero, mask_load, memcmp(input8 + i + 15, input8_rev + length - i - 15 - kmerSize, kmerSize) <= 0 ? input8 + i + 15 : input8_rev + length - i - 15 - kmerSize);
 
 
 
 		transpose8_epi64(&vi[0], &vi[1], &vi[2], &vi[3], &vi[4], &vi[5], &vi[6], &vi[7]); 
 		transpose8_epi64(&vj[0], &vj[1], &vj[2], &vj[3], &vj[4], &vj[5], &vj[6], &vj[7]); 
-		//	transpose8_epi64(&vk[0], &vk[1], &vk[2], &vk[3], &vk[4], &vk[5], &vk[6], &vk[7]); 
-		//	transpose8_epi64(&vl[0], &vl[1], &vl[2], &vl[3], &vl[4], &vl[5], &vl[6], &vl[7]); 
+	//	transpose8_epi64(&vk[0], &vk[1], &vk[2], &vk[3], &vk[4], &vk[5], &vk[6], &vk[7]); 
+	//	transpose8_epi64(&vl[0], &vl[1], &vl[2], &vl[3], &vl[4], &vl[5], &vl[6], &vl[7]); 
 
 		//MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, 42, &res[2 * i]);// the seed in Mash is 42; verified by xxm;
-		MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, 42, res);// the seed in Mash is 42; verified by xxm;
+		MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, parameters.seed, res);// the seed in Mash is 42; verified by xxm;
 		//MurmurHash3_x64_128_avx512_8x32(vi, vj, vk, vl, pend_k, kmerSize, 42, res);// the seed in Mash is 42; verified by xxm;
 		//MurmurHash3_x64_128_avx512_8x8(vi, pend_k, kmerSize, 42, res);// the seed in Mash is 42; verified by xxm;
 
 		hash_u hash;
 		for(int j = 0; j < 16; j++){
-			hash.hash64 = res[j * 2];
-			//cerr << "hashes: " << hash.hash64 << endl;
+		//for(int j = 0; j < 32; j++){
+		//for(int j = 0; j < 8; j++){
+			if(parameters.use64)
+				hash.hash64 = res[j * 2];
+			else
+				hash.hash32 = (uint32_t)res[j * 2];
+
+			//cout << hash.hash64 << endl;
 			minHashHeap->tryInsert(hash);
 		}
 	}
 
 	for(int i = n_kmers_body; i < n_kmers; i++){
-		bool noRev = (memcmp(input8 + i, input8_rev + LENGTH - i - kmerSize, kmerSize) <= 0);
+	//	bool noRev = (memcmp(input8 + i, input8_rev + length - i - kmerSize, kmerSize) <= 0) || noncanonical;
+		bool noRev = true;
+		if(!noncanonical && (memcmp(input8 + i, input8_rev + length - i - kmerSize, kmerSize) >= 0)){
+			noRev = false;
+		}
 		if(noRev){
 			for(int j = 0; j < kmerSize; j++){
 				//kmer_buf[j] = input8[i + j];
@@ -644,29 +703,127 @@ void MinHash::update(char * seq)
 		else{
 			for(int j = 0; j < kmerSize; j++){
 				//kmer_buf[j] = input8[i + j];
-				kmer_buf[j] = input8_rev[LENGTH - i - kmerSize + j];
+				kmer_buf[j] = input8_rev[length - i - kmerSize + j];
 			}
 		}
-
+			
 
 		//MurmurHash3_x64_128(kmer_buf, kmerSize, 42, &res[2 * i]);// the getHash just need the lower 64bit of the total 128bit of res[i];
-		MurmurHash3_x64_128(kmer_buf, kmerSize, 42, res2);// the getHash just need the lower 64bit of the total 128bit of res[i];
+		MurmurHash3_x64_128(kmer_buf, kmerSize, parameters.seed, res2);// the getHash just need the lower 64bit of the total 128bit of res[i];
 		hash_u hash;
-		hash.hash64 = res2[0];
-		//cerr << "hashes: " << hash.hash64 << endl;
+		if(parameters.use64)
+			hash.hash64 = res2[0];
+		else
+			hash.hash32 = (uint32_t)res2[0];
+
 		minHashHeap->tryInsert(hash);
 
 	}
-	//============================================================================================================================================================
-	cout << "n_kmers_body: " << n_kmers_body << endl;
-	cout << "n_kmers: " << n_kmers << endl;
-	if ( ! noncanonical )
-	{
-		delete [] seqRev;
+//============================================================================================================================================================
+
+#else
+	#if defined __AVX2__
+	//implement by avx2 
+	cerr << "using avx2" << endl;
+	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
+	int n_kmers = length - kmerSize + 1;
+	int n_kmers_body = (n_kmers / 4) * 4;
+	const uint8_t * input8 = (const uint8_t *)seq;
+	const uint8_t * input8_rev = (const uint8_t *)seqRev;
+	uint64_t res[4 * 2];
+	uint64_t res2[2];
+	uint8_t kmer_buf[kmerSize];
+
+	__m256i vi[4];
+	//__m256i vzero = _mm256_set1_epi32(0x0);
+	uint8_t maskArr[32];
+	for(int i = 0; i < kmerSize; i++){
+		maskArr[i] = 0xff;
 	}
-	//	if(needToList){
-	//		heapToList();
-	//	}
+	for(int i = kmerSize; i < 32; i++){
+		maskArr[i] = 0x0;
+	}
+	__m256i vmask = _mm256_loadu_si256((__m256i *)maskArr);
+	for(int i = 0; i < n_kmers_body - 1; i+=4){
+		vi[0] = _mm256_loadu_si256((__m256i *)(noncanonical || memcmp(input8 + i + 0, input8_rev + length - i - 0 - kmerSize, kmerSize) <= 0 ? input8 + i + 0 : input8_rev + length - i - 0 - kmerSize));
+		vi[1] = _mm256_loadu_si256((__m256i *)(noncanonical || memcmp(input8 + i + 1, input8_rev + length - i - 1 - kmerSize, kmerSize) <= 0 ? input8 + i + 1 : input8_rev + length - i - 1 - kmerSize));
+		vi[2] = _mm256_loadu_si256((__m256i *)(noncanonical || memcmp(input8 + i + 2, input8_rev + length - i - 2 - kmerSize, kmerSize) <= 0 ? input8 + i + 2 : input8_rev + length - i - 2 - kmerSize));
+		vi[3] = _mm256_loadu_si256((__m256i *)(noncanonical || memcmp(input8 + i + 3, input8_rev + length - i - 3 - kmerSize, kmerSize) <= 0 ? input8 + i + 3 : input8_rev + length - i - 3 - kmerSize));
+		vi[0] = _mm256_and_si256(vi[0], vmask);
+		vi[1] = _mm256_and_si256(vi[1], vmask);
+		vi[2] = _mm256_and_si256(vi[2], vmask);
+		vi[3] = _mm256_and_si256(vi[3], vmask);
+
+		transpose4_epi64(&vi[0], &vi[1], &vi[2], &vi[3]);
+
+		MurmurHash3_x64_128_avx2_8x4(vi, pend_k, kmerSize, parameters.seed, res);
+
+		hash_u hash;
+		for(int j = 0; j < 4; j++){
+			if(parameters.use64)	
+				hash.hash64 = res[j * 2];
+			else
+				hash.hash32 = (uint32_t)res[j * 2];
+
+			minHashHeap->tryInsert(hash);
+		}
+	}
+
+	for(int i = n_kmers_body; i < n_kmers; i++){
+		//bool noRev = (memcmp(input8 + i, input8_rev + length -i - kmerSize, kmerSize) <= 0) || noncanonical;
+		bool noRev = true;
+		if(!noncanonical && (memcmp(input8 + i, input8_rev + length - i - kmerSize, kmerSize) >= 0)){
+			noRev = false;
+		}
+		if(noRev){
+			for(int j = 0; j < kmerSize; j++){
+				kmer_buf[j] = input8[i + j];
+			}
+		}
+		else{
+			for(int j = 0; j < kmerSize; j++){
+				kmer_buf[j] = input8_rev[length - i - kmerSize + j];
+			}
+		}
+
+		MurmurHash3_x64_128(kmer_buf, kmerSize, parameters.seed, res2);
+		hash_u hash;
+		if(parameters.use64)
+			hash.hash64 = res2[0];
+		else
+			hash.hash32 = (uint32_t)res2[0];
+			
+		minHashHeap->tryInsert(hash);
+
+	}
+
+	#else
+
+//implement by no optmization
+//--------------------------------------------------------------------------------------------------------------------
+	cerr << "using no simd" << endl;
+    for ( uint64_t i = 0; i < length - kmerSize + 1; i++ )
+    {
+            
+        const char *kmer_fwd = seq + i;
+        const char *kmer_rev = seqRev + length - i - kmerSize;
+        const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
+        bool filter = false;
+        
+        hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
+        
+		minHashHeap->tryInsert(hash);
+    }
+	#endif
+#endif
+    
+    
+    if ( ! noncanonical )
+    {
+        delete [] seqRev;
+    }
+
+
 	needToList = true;
 }
 
@@ -908,6 +1065,28 @@ double MinHash::pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, dou
 	//#endif
 }
 */
+void reverseComplement(const char * src, char * dest, int length)
+{
+	char table[4] = {'T','G','A','C'};
+    for ( int i = 0; i < length; i++ )
+    {
+        char base = src[i];
+        
+     //   switch ( base )
+     //   {
+     //       case 'A': base = 'T'; break;
+     //       case 'C': base = 'G'; break;
+     //       case 'G': base = 'C'; break;
+     //       case 'T': base = 'A'; break;
+     //       default: break;
+     //   }
+		base >>= 1;
+		base &= 0x03;
 
+        
+     //   dest[length - i - 1] = base;
+        dest[length - i - 1] = table[base];
+    }
+}
 
 }

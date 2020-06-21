@@ -200,7 +200,7 @@ namespace Sketch{
 			//HashList & getHashList(); //TODO: return to vector instead of HashList
 			void getMinHash(); //return hash values to a vector?
 			void printMinHashes();
-			uint64_t getTotalLength(){return length;}//return totalSeqence length.
+			uint64_t getTotalLength(){return totalLength;}//return totalSeqence length.
 
 		private:
 			bool needToList = true;
@@ -208,7 +208,7 @@ namespace Sketch{
 			Parameters parameters;
 			MinHashHeap * minHashHeap;
 			Reference reference;
-			uint64_t length = 0;
+			uint64_t totalLength = 0;
 			double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
 			void heapToList();
 
