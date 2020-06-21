@@ -3,12 +3,12 @@ TARGET=minhash
 CXX=g++
 CXXFLAGS=-g -O2 -std=c++17
 
-INCLUDE=../src
-
-OBJECTS=test.o librabbitsketch.a
+INCLUDE=../build/include
+LIBS=../build/lib
+OBJECTS=test.o 
 
 $(TARGET):$(OBJECTS)
-	$(CXX) $(CXXFLAGS)  $^ -o $@ -I$(INCLUDE) -lz
+	$(CXX) $(CXXFLAGS)  $^ -o $@ -I$(INCLUDE) -lz -lrabbitsketch -L$(LIBS)
 #	$(CXX) $(CXXFLAGS)  $^ -o $@ -lgsl -lgslcblas -lm
 
 #%.o:%.cpp

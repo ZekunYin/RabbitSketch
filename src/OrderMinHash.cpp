@@ -4,6 +4,8 @@
 #include "xxhash.hpp"
 #include "hash_int.h"
 
+#include <algorithm>
+#include "robin_hood.h"
 namespace Sketch
 {
 

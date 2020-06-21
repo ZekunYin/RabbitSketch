@@ -6,37 +6,22 @@ A Linux system on a recent x86_64 CPU is required.
 
 ### Installing (C++ interface) 
 
-Step:
 
-First, we should produce a dynamic depot.
-
-```
+```bash
 cd libsketch
-
 mkdir build
-
 cd build
-
-cmake -DBUILDCXX=ON ..
-
+cmake -DCXX=ON .. -DCMAKE_INSTALL_PREFIX=.
 make
 ```
 
-We will find exist a file named "librabbitsketch.a" in the build.
 
 ### Testing (C++)
 
-Then we copy librabbitsketch.a into the catalog named "example" and test.
-
-Step:
-
-```
+```bash
 cd ../examples/
-
-cp ../build/librabbitsketch.a .
-
-make
-
+#default install dir: ../build/
+make 
 ./minhash genome1.fna genome2.fna
 ```
 
@@ -44,7 +29,7 @@ We will get the value of jaccard and distance.
 
 ### PYTHON bind
 **pip install:**
-``` bash
+```bash
 cd libsketch
 pip3 install . --user
 ```
@@ -89,3 +74,4 @@ time python3 test.py #fastx is required
 - [ ] pybind std::vector (omh result)
 - [ ] revise cmake for make install
 - [ ] fix wminhash pybind
+- [ ] remove unnecessary installed head files

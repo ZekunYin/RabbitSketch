@@ -1,15 +1,15 @@
 #ifndef Sketch_h
 #define Sketch_h
 
-#include "robin_hood.h"
 #include <map>
 #include <vector>
 #include <string>
-#include <string.h>
+//#include <string.h>
+#include <stdint.h>
+
 #include "MinHash.h"
 #include "histoSketch.h"
 #include "hll/hyperloglog.h"
-#include <stdint.h>
 
 
 /// \brief Sketch namespace
@@ -231,8 +231,8 @@ namespace Sketch{
 			bool needToCompute = true;
 			double * binsArr;
 			double * countMinSketch; 
-			vector<uint64_t> sketches;
-			vector<Bin> kmerSpectrums;
+			std::vector<uint64_t> sketches;
+			std::vector<Bin> kmerSpectrums;
 
 			void computeHistoSketch();
 
