@@ -75,4 +75,4 @@ time python3 test.py #fastx is required
 - [ ] revise cmake for make install
 - [ ] fix wminhash pybind
 - [ ] remove unnecessary installed head files
-- [ ] repo rename
+- [x] repo rename
