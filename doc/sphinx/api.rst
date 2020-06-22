@@ -13,5 +13,8 @@ Weighted MinHash
 Order MinHash
 -------------
 
+.. doxygenclass:: Sketch::OMinHash
+    :members:
+
 HyperLogLog
 -----------

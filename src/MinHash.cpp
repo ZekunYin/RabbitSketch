@@ -412,7 +412,8 @@ bool hashLessThan(hash_u hash1, hash_u hash2, bool use64)
 }
 
 
-namespace Sketch{
+namespace Sketch
+{
 
 #if defined __AVX512F__ && defined __AVX512CD__
 __m512i inline min512(__m512i v1, __m512i v2){
@@ -527,12 +528,9 @@ void MinHash::update(char * seq)
     }
 
 #if defined __AVX512F__ && defined __AVX512BW__
-//============================================================================================================================================================
+
 	cerr << "using avx512 " << endl;
-	//exit(0);
-	//addbyxxm
-    //hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
-//  const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
+
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
 	int n_kmers = length - kmerSize + 1;
 	int n_kmers_body = (n_kmers / 16) * 16;
@@ -563,8 +561,8 @@ void MinHash::update(char * seq)
 	__mmask64 mask_load = 0xffffffffffffffff;
 	mask_load >>= (64 - kmerSize);
 
-	for(int i = 0; i < n_kmers_body-1; i+=16){
-	
+	for(int i = 0; i < n_kmers_body-1; i+=16)
+	{
 		vi_forword[0] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 0);
 		vi_forword[1] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 1);
 		vi_forword[2] = _mm512_mask_loadu_epi8(vzero, mask_load, input8 + i + 2);
@@ -676,8 +674,8 @@ void MinHash::update(char * seq)
 
 		hash_u hash;
 		for(int j = 0; j < 16; j++){
-		//for(int j = 0; j < 32; j++){
-		//for(int j = 0; j < 8; j++){
+		//for(int j = 0; j < 32; j++)
+		//for(int j = 0; j < 8; j++)
 			if(parameters.use64)
 				hash.hash64 = res[j * 2];
 			else
@@ -694,14 +692,18 @@ void MinHash::update(char * seq)
 		if(!noncanonical && (memcmp(input8 + i, input8_rev + length - i - kmerSize, kmerSize) >= 0)){
 			noRev = false;
 		}
-		if(noRev){
-			for(int j = 0; j < kmerSize; j++){
+		if(noRev)
+		{
+			for(int j = 0; j < kmerSize; j++)
+			{
 				//kmer_buf[j] = input8[i + j];
 				kmer_buf[j] = input8[i + j];
 			}
 		}
-		else{
-			for(int j = 0; j < kmerSize; j++){
+		else
+		{
+			for(int j = 0; j < kmerSize; j++)
+			{
 				//kmer_buf[j] = input8[i + j];
 				kmer_buf[j] = input8_rev[length - i - kmerSize + j];
 			}
@@ -759,7 +761,8 @@ void MinHash::update(char * seq)
 		MurmurHash3_x64_128_avx2_8x4(vi, pend_k, kmerSize, parameters.seed, res);
 
 		hash_u hash;
-		for(int j = 0; j < 4; j++){
+		for(int j = 0; j < 4; j++)
+		{
 			if(parameters.use64)	
 				hash.hash64 = res[j * 2];
 			else
@@ -769,7 +772,8 @@ void MinHash::update(char * seq)
 		}
 	}
 
-	for(int i = n_kmers_body; i < n_kmers; i++){
+	for(int i = n_kmers_body; i < n_kmers; i++)
+	{
 		//bool noRev = (memcmp(input8 + i, input8_rev + length -i - kmerSize, kmerSize) <= 0) || noncanonical;
 		bool noRev = true;
 		if(!noncanonical && (memcmp(input8 + i, input8_rev + length - i - kmerSize, kmerSize) >= 0)){
@@ -951,7 +955,7 @@ double MinHash::jaccard(MinHash * msh)
 
 }
 
-double MinHash::dist(MinHash * msh)
+double MinHash::distance(MinHash * msh)
 {
 	double distance;
 	double maxDistance = 1;
@@ -967,10 +971,6 @@ double MinHash::dist(MinHash * msh)
 	uint64_t denom = 0;
 	const HashList & hashesSortedRef = this->reference.hashesSorted;
 	const HashList & hashesSortedQry = msh->reference.hashesSorted;
-	//	cout << "the size of hashesSortedRef is: " << hashesSortedRef.size() << endl;
-	//	cout << "the size of hashesSortedQry is: " << hashesSortedQry.size() << endl;
-	//	cout << "the size of hashesSortedRef is: " << this->reference.hashesSorted.size() << endl;
-	//	cout << "the size of hashesSortedQry is: " << msh->reference.hashesSorted.size() << endl;
 
 	while ( denom < sketchSize && i < hashesSortedRef.size() && j < hashesSortedQry.size() )
 	{
@@ -1071,20 +1071,8 @@ void reverseComplement(const char * src, char * dest, int length)
     for ( int i = 0; i < length; i++ )
     {
         char base = src[i];
-        
-     //   switch ( base )
-     //   {
-     //       case 'A': base = 'T'; break;
-     //       case 'C': base = 'G'; break;
-     //       case 'G': base = 'C'; break;
-     //       case 'T': base = 'A'; break;
-     //       default: break;
-     //   }
 		base >>= 1;
 		base &= 0x03;
-
-        
-     //   dest[length - i - 1] = base;
         dest[length - i - 1] = table[base];
     }
 }

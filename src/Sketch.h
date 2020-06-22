@@ -141,7 +141,7 @@ namespace Sketch{
 		uint64_t minHashesPerWindow; //SketchSize
 		bool noncanonical;
 
-		//parameters for order minhash
+		//parameters for Order MinHash
 		int l;
 		int m;
 		bool rc;
@@ -196,7 +196,7 @@ namespace Sketch{
 			/// return the jaccard index
 			double jaccard(MinHash * msh);			
 			/// return distance defined in Mash and RabbitMash
-			double dist(MinHash * msh);
+			double distance(MinHash * msh);
 			//HashList & getHashList(); //TODO: return to vector instead of HashList
 			void getMinHash(); //return hash values to a vector?
 			void printMinHashes();
@@ -209,6 +209,7 @@ namespace Sketch{
 			MinHashHeap * minHashHeap;
 			Reference reference;
 			uint64_t totalLength = 0;
+			/// get pValue for distance
 			double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
 			void heapToList();
 
@@ -261,32 +262,36 @@ namespace Sketch{
 
 	};
 
+	/// Sketching and compare sequences or strings using Order MinHash algorithm.
 	class OMinHash{
 
 		public:
-			//OMinHash(Parameters parametersNew);
+			/// Order MinHash constructor
 			OMinHash(Parameters parametersNew, char * seqNew);
 			~OMinHash() {if (rcseq != NULL) delete rcseq;};
-			//update -- not supported yet!
 
-			void sketch();
+			/// return sketch result in OSketch type
 			OSketch getSektch(){ return sk;}
 
+			/// return similarity (not jaccard index) between two Order MinHash sketches 
 			double similarity(OMinHash & omh2);
 
-			double distance(OMinHash & omh2){
+			/// return distance between tow Order MinHash sketches
+			double distance(OMinHash & omh2)
+			{
 				return (double)1.0 - similarity(omh2);
 			}
 
-		protected:
-
 		private:
+
 			char * seq = NULL;
 			char * rcseq = NULL;
 			Parameters parameters;
 			int m_k, m_l, m_m;
 			bool rc;//reverse complement
 			OSketch sk;
+
+			void sketch();
 
 			inline void compute_sketch(char * ptr, const char * seq);
 
