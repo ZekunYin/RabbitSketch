@@ -9,14 +9,9 @@
 namespace Sketch
 {
 
-OMinHash::OMinHash(Parameters parametersNew, char * seqNew):
-	parameters(parametersNew),
+OMinHash::OMinHash(char * seqNew):
 	seq(seqNew)
 {
-	m_k = parameters.kmerSize;
-	m_l = parameters.l;
-	m_m = parameters.m;
-	rc = parameters.rc;
 
 	if(rc){
 		//TODO:get reverse complement to rcseq
@@ -37,7 +32,50 @@ OMinHash::OMinHash(Parameters parametersNew, char * seqNew):
 	sketch();
 }
 
-void OMinHash::sketch(){
+void OMinHash::buildSketch(char * seqNew = NULL)
+{
+	// rebuild sketch using old data
+	if(seqNew == NULL)
+	{
+		if(seq == NULL)
+		{
+			cerr << "WARNING: no data found" << endl;
+			return;
+		}
+
+		if(rc){
+			int rc_len = strlen(seq);
+
+			if(rcseq != NULL){
+				delete [] rcseq;
+				rcseq = NULL;
+			}
+
+			rcseq = new char[rc_len];
+			reverseComplement(seq, rcseq, rc_len);
+		}
+		sketch();
+	} else {
+		seq = seqNew;
+
+		if(rc){
+			int rc_len = strlen(seq);
+
+			if(rcseq != NULL){
+				delete [] rcseq;
+				rcseq = NULL;
+			}
+
+			rcseq = new char[rc_len];
+			reverseComplement(seq, rcseq, rc_len);
+		
+		}
+		sketch();
+
+	}
+}
+void OMinHash::sketch()
+{
 	sk.k = m_k;		
 	sk.l = m_l;		
 	sk.m = m_m;		

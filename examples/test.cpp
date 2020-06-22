@@ -136,8 +136,9 @@ int main(int argc, char* argv[])
 
 
 	time1  = get_sec();
-	Sketch::OMinHash omh1(parameters, seq1);
-	Sketch::OMinHash omh2(parameters, seq2);
+	Sketch::OMinHash omh1(seq1);
+	Sketch::OMinHash omh2;
+	omh2.buildSketch(seq2);
 	time3 = get_sec();
 	double odist = omh1.distance(omh2);
 	time2 = get_sec();

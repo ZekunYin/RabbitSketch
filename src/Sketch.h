@@ -267,11 +267,19 @@ namespace Sketch{
 
 		public:
 			/// Order MinHash constructor
-			OMinHash(Parameters parametersNew, char * seqNew);
+			OMinHash(){};
+			/// Order MinHash constructor for sketching sequences using default parameters
+			OMinHash(char * seqNew);
 			~OMinHash() {if (rcseq != NULL) delete rcseq;};
 
 			/// return sketch result in OSketch type
 			OSketch getSektch(){ return sk;}
+
+			/// build a order minhash Sketch
+			/// seqNew is NULL pointer in default
+			/// if seqNew is NULL pointer, buildSketch() will rebuild sketh using old data.
+			/// This is useful when chaning parameters and build a new sketch
+			void buildSketch(char * seqNew);
 
 			/// return similarity (not jaccard index) between two Order MinHash sketches 
 			double similarity(OMinHash & omh2);
@@ -282,13 +290,39 @@ namespace Sketch{
 				return (double)1.0 - similarity(omh2);
 			}
 
+			/// set kmer size: default 21
+			void setK(int k){ m_k = k;}
+
+			/// set "l": default 2 (normally 2 - 5)
+			void setL(int l){ m_l = l;}
+
+			/// set "m": default 500
+			void setM(int m){ m_m = m;}
+
+			/// choose whether to deal with reverse complement sequences: default false 
+			/// reverse complement is normally used in biological sequences such as DNA or protein
+			void setReverseComplement(bool isRC){rc = isRC;}
+
+			/// return kmer size
+			int getK(){return m_k;}	
+
+			/// return "l" value
+			int getL(){return m_l;}	
+
+			/// return "m" value
+			int getM(){return m_m;}		
+
+			/// return whether to deal with reverse complement sequences
+			bool isReverseComplement(){return rc;}
+
 		private:
 
 			char * seq = NULL;
 			char * rcseq = NULL;
-			Parameters parameters;
-			int m_k, m_l, m_m;
-			bool rc;//reverse complement
+			//Parameters parameters;
+			int m_k = 21, m_l = 2, m_m = 500;
+			//reverse complement
+			bool rc = false;
 			OSketch sk;
 
 			void sketch();
