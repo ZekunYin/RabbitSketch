@@ -91,12 +91,12 @@ void OMinHash::sketch()
 
 inline void OMinHash::compute_sketch(char * ptr, const char * seq){
 	std::string seqStr(seq);
-	omh_pos(seqStr, m_k, m_l, m_m,
+	omh_pos(seqStr, m_k, m_l, m_m, mtSeed,
 			[&ptr, &seq, this](unsigned i, unsigned j, size_t pos) { memcpy(ptr, seq + pos, m_k); ptr += m_k; });
 }
 
 template<typename BT>
-static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, BT block) {
+static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, uint64_t mtSeed, BT block) {
 	if(seq.size() < k) return;
 	const bool weight = l > 0;
 	if(l == 0) l = 1;
@@ -112,7 +112,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	}
 
 	xxhash hash;
-	std::mt19937_64 gen64(32); //TODO: make 32 a parameter
+	std::mt19937_64 gen64(mtSeed); //TODO: make 32 a parameter
 	for(unsigned i = 0; i < m; ++i) {
 		const auto seed = gen64();//prg();
 		for(auto& meri : mers) {

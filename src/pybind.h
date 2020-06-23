@@ -29,7 +29,7 @@ PYBIND11_MODULE(rabbitsketch, m){
 		.def("update", &Sketch::MinHash::update)
 		.def("merge", &Sketch::MinHash::merge)
 		.def("jaccard", &Sketch::MinHash::jaccard)
-		.def("dist", &Sketch::MinHash::dist)
+		.def("distance", &Sketch::MinHash::distance)
 		.def("getTotalLength", &Sketch::MinHash::getTotalLength)
 		.def("printMinHashes", &Sketch::MinHash::printMinHashes)
 		;
@@ -43,10 +43,22 @@ PYBIND11_MODULE(rabbitsketch, m){
 		;
 
 	py::class_<Sketch::OMinHash>(m, "OMinHash")
-		.def(py::init<Sketch::Parameters, char *>())
-		.def("sketch", &Sketch::OMinHash::sketch)
+		.def(py::init<>())
+		.def(py::init<char *>())
+		.def("buildSketch", &Sketch::OMinHash::buildSketch)
 		.def("similarity", &Sketch::OMinHash::similarity)
 		.def("distance", &Sketch::OMinHash::distance)
+		// parameters
+		.def("setK", &Sketch::OMinHash::setK) 
+		.def("setL", &Sketch::OMinHash::setL) 
+		.def("setM", &Sketch::OMinHash::setM) 
+		.def("setSeed", &Sketch::OMinHash::setSeed)
+		.def("setReverseComplement", &Sketch::OMinHash::setReverseComplement)
+		.def("getK", &Sketch::OMinHash::getK)
+		.def("getL", &Sketch::OMinHash::getL)
+		.def("getM", &Sketch::OMinHash::getM)
+		.def("getSeed", &Sketch::OMinHash::getSeed)
+		.def("isReverseComplement", &Sketch::OMinHash::isReverseComplement)
 		;
 }
 

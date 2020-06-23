@@ -291,13 +291,16 @@ namespace Sketch{
 			}
 
 			/// set kmer size: default 21
-			void setK(int k){ m_k = k;}
+			void setK(int k){ m_k = k; }
 
 			/// set "l": default 2 (normally 2 - 5)
-			void setL(int l){ m_l = l;}
+			void setL(int l){ m_l = l; }
 
 			/// set "m": default 500
-			void setM(int m){ m_m = m;}
+			void setM(int m){ m_m = m; }
+
+			/// set seed value: default 32
+			void setSeed(uint64_t seedNew) { mtSeed = seedNew; }
 
 			/// choose whether to deal with reverse complement sequences: default false 
 			/// reverse complement is normally used in biological sequences such as DNA or protein
@@ -312,6 +315,9 @@ namespace Sketch{
 			/// return "m" value
 			int getM(){return m_m;}		
 
+			/// return seed value
+			uint64_t getSeed() { return mtSeed; }
+
 			/// return whether to deal with reverse complement sequences
 			bool isReverseComplement(){return rc;}
 
@@ -324,6 +330,7 @@ namespace Sketch{
 			//reverse complement
 			bool rc = false;
 			OSketch sk;
+			uint64_t mtSeed = 32; //default value
 
 			void sketch();
 

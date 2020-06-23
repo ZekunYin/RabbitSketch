@@ -10,11 +10,11 @@ msh2 = sketch.MinHash(p)
 for name, seq, qual in fastx.Fastx('genome1.fna'):
     msh1.update(seq)
 #    wmsh1.update(seq)
-    omsh1 = sketch.OMinHash(p, seq)
+    omsh1 = sketch.OMinHash(seq)
 for name, seq, qual in fastx.Fastx('genome2.fna'):
     msh2.update(seq)
 #    wmsh2.update(seq)
-    omsh2 = sketch.OMinHash(p, seq)
+    omsh2 = sketch.OMinHash(seq)
 
 jac = msh1.jaccard(msh2)
 #wjac = wmsh1.wJaccard(wmsh2)
