@@ -121,8 +121,8 @@ int main(int argc, char* argv[])
 	cout << "WMinHash sketch time: " << time3 - time1 << endl;
 	
 	time1 = get_sec();
-	Sketch::MinHash * mh1 = new Sketch::MinHash(parameters);
-	Sketch::MinHash * mh2 = new Sketch::MinHash(parameters);
+	Sketch::MinHash * mh1 = new Sketch::MinHash();
+	Sketch::MinHash * mh2 = new Sketch::MinHash();
 	mh1->update(seq1);	
 	mh2->update(seq2);	
 	time3 = get_sec();

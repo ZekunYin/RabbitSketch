@@ -490,11 +490,11 @@ void inline transpose4_epi64(__m256i *row1, __m256i *row2, __m256i *row3, __m256
 #endif
 
 
-MinHash ::MinHash(Parameters parametersNew):parameters(parametersNew)
+MinHash::MinHash()
 {
-	minHashHeap = new MinHashHeap(parameters.use64, parameters.minHashesPerWindow);// parameters.reads ?  parameters.minCov : 1);
+	minHashHeap = new MinHashHeap(use64, sketchSize);// parameters.reads ?  parameters.minCov : 1);
 
-	this->kmerSpace = pow(parameters.alphabetSize, parameters.kmerSize);
+	this->kmerSpace = pow(alphabetSize, kmerSize);
 	//cerr << "kmerSpace init from pow is " << this->kmerSpace << endl;
 	this->totalLength = 0;
 	this->needToList = true;
@@ -506,14 +506,14 @@ void MinHash::update(char * seq)
 	const uint64_t length = strlen(seq);
 	cout << "seq_len using avx512: " << length << endl;
 	totalLength += length;
-	int kmerSize = parameters.kmerSize;
-	uint64_t mins = parameters.minHashesPerWindow;
-	bool noncanonical = parameters.noncanonical;//False.
+	//int kmerSize      = kmerSize;
+	//uint64_t mins     = sketchSize;
+	bool noncanonical = noncanonical;//False.
 
 	// uppercase TODO: alphabets?
 	for ( uint64_t i = 0; i < length; i++ )
 	{
-		if ( ! parameters.preserveCase && seq[i] > 96 && seq[i] < 123 )
+		if ( ! preserveCase && seq[i] > 96 && seq[i] < 123 )
 		{
 			seq[i] -= 32;
 		}
@@ -668,7 +668,7 @@ void MinHash::update(char * seq)
 	//	transpose8_epi64(&vl[0], &vl[1], &vl[2], &vl[3], &vl[4], &vl[5], &vl[6], &vl[7]); 
 
 		//MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, 42, &res[2 * i]);// the seed in Mash is 42; verified by xxm;
-		MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, parameters.seed, res);// the seed in Mash is 42; verified by xxm;
+		MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, seed, res);// the seed in Mash is 42; verified by xxm;
 		//MurmurHash3_x64_128_avx512_8x32(vi, vj, vk, vl, pend_k, kmerSize, 42, res);// the seed in Mash is 42; verified by xxm;
 		//MurmurHash3_x64_128_avx512_8x8(vi, pend_k, kmerSize, 42, res);// the seed in Mash is 42; verified by xxm;
 
@@ -676,7 +676,7 @@ void MinHash::update(char * seq)
 		for(int j = 0; j < 16; j++){
 		//for(int j = 0; j < 32; j++)
 		//for(int j = 0; j < 8; j++)
-			if(parameters.use64)
+			if(use64)
 				hash.hash64 = res[j * 2];
 			else
 				hash.hash32 = (uint32_t)res[j * 2];
@@ -711,9 +711,9 @@ void MinHash::update(char * seq)
 			
 
 		//MurmurHash3_x64_128(kmer_buf, kmerSize, 42, &res[2 * i]);// the getHash just need the lower 64bit of the total 128bit of res[i];
-		MurmurHash3_x64_128(kmer_buf, kmerSize, parameters.seed, res2);// the getHash just need the lower 64bit of the total 128bit of res[i];
+		MurmurHash3_x64_128(kmer_buf, kmerSize, seed, res2);// the getHash just need the lower 64bit of the total 128bit of res[i];
 		hash_u hash;
-		if(parameters.use64)
+		if(use64)
 			hash.hash64 = res2[0];
 		else
 			hash.hash32 = (uint32_t)res2[0];
@@ -758,12 +758,12 @@ void MinHash::update(char * seq)
 
 		transpose4_epi64(&vi[0], &vi[1], &vi[2], &vi[3]);
 
-		MurmurHash3_x64_128_avx2_8x4(vi, pend_k, kmerSize, parameters.seed, res);
+		MurmurHash3_x64_128_avx2_8x4(vi, pend_k, kmerSize, seed, res);
 
 		hash_u hash;
 		for(int j = 0; j < 4; j++)
 		{
-			if(parameters.use64)	
+			if(use64)	
 				hash.hash64 = res[j * 2];
 			else
 				hash.hash32 = (uint32_t)res[j * 2];
@@ -790,9 +790,9 @@ void MinHash::update(char * seq)
 			}
 		}
 
-		MurmurHash3_x64_128(kmer_buf, kmerSize, parameters.seed, res2);
+		MurmurHash3_x64_128(kmer_buf, kmerSize, seed, res2);
 		hash_u hash;
-		if(parameters.use64)
+		if(use64)
 			hash.hash64 = res2[0];
 		else
 			hash.hash32 = (uint32_t)res2[0];
@@ -814,7 +814,7 @@ void MinHash::update(char * seq)
         const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
         bool filter = false;
         
-        hash_u hash = getHash(kmer, kmerSize, parameters.seed, parameters.use64);
+        hash_u hash = getHash(kmer, kmerSize, seed, use64);
         
 		minHashHeap->tryInsert(hash);
     }
@@ -835,7 +835,7 @@ void MinHash::heapToList()
 {
 	HashList & hashlist = reference.hashesSorted;
 	hashlist.clear();
-	hashlist.setUse64(parameters.use64);
+	hashlist.setUse64(use64);
 	minHashHeap -> toHashList(hashlist);
 	minHashHeap -> toCounts(reference.counts);
 	hashlist.sort();
@@ -857,7 +857,7 @@ void MinHash::printMinHashes()
 	}
 
 	for(int i = 0; i < reference.hashesSorted.size(); i++){
-		if(parameters.use64)
+		if(use64)
 			cerr << "hash64 " <<  i << " " << reference.hashesSorted.at(i).hash64 << endl;
 		else
 			cerr << "hash32 " <<  i << " " << reference.hashesSorted.at(i).hash32 << endl;
@@ -893,8 +893,8 @@ double MinHash::jaccard(MinHash * msh)
 	}
 
 	//transport the previous parameter @xxm
-	uint64_t sketchSize = this->parameters.minHashesPerWindow;
-	int kmerSize = this->parameters.kmerSize;
+	//uint64_t sketchSize = this->parameters.minHashesPerWindow;
+	//int kmerSize = this->parameters.kmerSize;
 	//int kmerSpace = this->kmerSpace;
 
 	uint64_t i = 0;
@@ -961,8 +961,8 @@ double MinHash::distance(MinHash * msh)
 	double maxDistance = 1;
 	double maxPValue = 1;
 
-	uint64_t sketchSize = this->parameters.minHashesPerWindow;
-	int kmerSize = this->parameters.kmerSize;
+	//uint64_t sketchSize = this->parameters.minHashesPerWindow;
+	//int kmerSize = this->parameters.kmerSize;
 	//int kmerSpace = this->kmerSpace;
 
 	uint64_t i = 0;

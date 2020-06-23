@@ -39,7 +39,7 @@ namespace Sketch{
 				//applyConceptDrift(false),
 				paraDecayWeight(0.0),
 
-				//for OMinHash
+				//for OMinHash !! now useless
 				l(2),
 				m(500),
 				rc(false)
@@ -131,7 +131,7 @@ namespace Sketch{
 
 
 //	private:
-		//MinHash
+		//MinHash !! now useless
 		int kmerSize;
 		bool alphabet[256];
 		uint32_t alphabetSize;
@@ -188,24 +188,77 @@ namespace Sketch{
 
 		public:
 			/// minhash init with parameters
-			MinHash(Parameters parametersNew);
+			MinHash();
+
 			/// minhash is updatable with multiple sequences
 			void update(char * seq);
+
 			/// merge two minhashes
 			void merge(MinHash& msh);
+
 			/// return the jaccard index
 			double jaccard(MinHash * msh);			
+
 			/// return distance defined in Mash and RabbitMash
 			double distance(MinHash * msh);
+
 			//HashList & getHashList(); //TODO: return to vector instead of HashList
 			void getMinHash(); //return hash values to a vector?
+
 			void printMinHashes();
-			uint64_t getTotalLength(){return totalLength;}//return totalSeqence length.
+
+			/// return totalSeqence length, including multiple updates
+			uint64_t getTotalLength(){return totalLength;}
+
+			// parameters
+
+			/// set kmer size for sketching
+			void setKmerSize(int kmerSizeNew) { kmerSize = kmerSizeNew; }
+
+			/// set alphabet size: default 4 for nucleotide sequences
+			void setAlphabetSize(int alphabetSizeNew) { alphabetSize = alphabetSizeNew; }
+
+			/// set whether to preserve upper or lower case 
+			void setPreserveCase(bool caseNew) { preserveCase = caseNew; }
+
+			/// set whether to user 64bit hashes: default true
+			/// use 32 bit hashes is use64 is false
+			void setUse64(bool use64New) { use64 = use64New; }
+
+			/// set hash seed
+			void setSeed(uint32_t seedNew) { seed = seedNew; }
+
+			/// set sketch size: default 1000
+			void setSketchSize(uint64_t sketchSizeNew) { sketchSize = sketchSizeNew; }
+
+			/// set whether to use reverse complement for each kmer
+			void setNoncanonical(bool noncanonicalNew) { noncanonical = noncanonicalNew; }
+
+			/// return kmerSize
+			int getKmerSize() { return kmerSize; }
+
+			/// return alphabet size
+			uint32_t getAlphabetSize() { return alphabetSize; }
+
+			/// return whether to preserve case
+			bool isPreserveCase() { return preserveCase; }
+
+			/// return whether to use 64bit hash
+			bool isUse64() { return use64; }
+
+			/// return hash seed
+			uint32_t getSeed() {return seed; }
+
+			/// return sketch size
+			uint32_t getSketchSize() {return sketchSize; }
+
+			/// return whether to use reverse complement
+			bool isNoncanonical() { return noncanonical; }
 
 		private:
 			bool needToList = true;
 			double kmerSpace;
-			Parameters parameters;
+			//Parameters parameters;
 			MinHashHeap * minHashHeap;
 			Reference reference;
 			uint64_t totalLength = 0;
@@ -213,6 +266,14 @@ namespace Sketch{
 			double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
 			void heapToList();
 
+			//parameters
+			int kmerSize = 21;
+			uint32_t alphabetSize = 4; //nuc sequences
+			bool preserveCase = false;
+			bool use64 = true;
+			uint32_t seed = 42;
+			uint64_t sketchSize = 1000; //minHashesPerWindow
+			bool noncanonical = false;
 	};
 
 	class WMinHash{
