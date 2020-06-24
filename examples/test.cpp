@@ -87,8 +87,8 @@ int main(int argc, char* argv[])
 
 	time1  = get_sec();
 
-	Sketch::OMinHash omh1;
-	Sketch::OMinHash omh2;
+	Sketch::OrderMinHash omh1;
+	Sketch::OrderMinHash omh2;
 	omh1.buildSketch(seq1);
 	omh2.buildSketch(seq2);
 

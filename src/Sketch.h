@@ -352,62 +352,69 @@ namespace Sketch{
 	};
 
 	/// Sketching and compare sequences or strings using Order MinHash algorithm.
-	class OMinHash{
+	class OrderMinHash{
 
 		public:
-			/// Order MinHash constructor
-			OMinHash(){};
-			/// Order MinHash constructor for sketching sequences using default parameters
-			OMinHash(char * seqNew);
-			~OMinHash() {if (rcseq != NULL) delete rcseq;};
+			/// OrderMinHash constructor
+			OrderMinHash(){};
+			/// OrderMinHash constructor for sketching sequences using default parameters
+			OrderMinHash(char * seqNew);
+			~OrderMinHash() {if (rcseq != NULL) delete rcseq;};
 
-			/// return sketch result in OSketch type
+			/// return sketch result in `OSketch` type
 			OSketch getSektch(){ return sk;}
 
-			/// build a order minhash Sketch
-			/// seqNew is NULL pointer in default
-			/// if seqNew is NULL pointer, buildSketch() will rebuild sketh using old data.
-			/// This is useful when chaning parameters and build a new sketch
+			/** \rst
+			  Build a `OrderMinHash` sketch.
+			  `seqNew` is NULL pointer in default.
+			  If seqNew is NULL pointer, buildSketch() will rebuild sketh using old data.
+			  This is useful when chaning parameters and build a new sketch.
+			 \endrst
+			*/
 			void buildSketch(char * seqNew);
 
-			/// return similarity (not jaccard index) between two Order MinHash sketches 
-			double similarity(OMinHash & omh2);
+			/** 
+			   Return similarity between two `OrderMinHash` sketches. In `OrderMinHash` class, there is no jaccard function provied. Because `OrderMinHash` is a proxy of edit distance instead of jaccard index.
+			*/
+			double similarity(OrderMinHash & omh2);
 
-			/// return distance between tow Order MinHash sketches
-			double distance(OMinHash & omh2)
+			/// Return distance between two `OrderMinHash` sketches
+			double distance(OrderMinHash & omh2)
 			{
 				return (double)1.0 - similarity(omh2);
 			}
 
-			/// set kmer size: default 21
+			/// Set parameter `kmerSize`: default 21.
 			void setK(int k){ m_k = k; }
 
-			/// set "l": default 2 (normally 2 - 5)
+			/// Set parameter `l`: default 2 (normally 2 - 5).
 			void setL(int l){ m_l = l; }
 
-			/// set "m": default 500
+			/// Set parameter `m`: default 500.
 			void setM(int m){ m_m = m; }
 
-			/// set seed value: default 32
+			/// Set seed value for random generator: default 32.
 			void setSeed(uint64_t seedNew) { mtSeed = seedNew; }
 
-			/// choose whether to deal with reverse complement sequences: default false 
-			/// reverse complement is normally used in biological sequences such as DNA or protein
+			/** 
+			  Choose whether to deal with reverse complement sequences: default false.
+			  Reverse complement is normally used in biological sequences such as DNA or protein sequences.
+			*/
 			void setReverseComplement(bool isRC){rc = isRC;}
 
-			/// return kmer size
+			/// Return parameter `kmerSize`.
 			int getK(){return m_k;}	
 
-			/// return "l" value
+			/// Return parameter `l`.
 			int getL(){return m_l;}	
 
-			/// return "m" value
+			/// Return parameter `m`.
 			int getM(){return m_m;}		
 
-			/// return seed value
+			/// Return random generator seed value.
 			uint64_t getSeed() { return mtSeed; }
 
-			/// return whether to deal with reverse complement sequences
+			/// Test whether to deal with reverse complement kmers.
 			bool isReverseComplement(){return rc;}
 
 		private:

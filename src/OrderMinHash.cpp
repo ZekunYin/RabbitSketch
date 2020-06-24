@@ -9,7 +9,7 @@
 namespace Sketch
 {
 
-OMinHash::OMinHash(char * seqNew):
+OrderMinHash::OrderMinHash(char * seqNew):
 	seq(seqNew)
 {
 
@@ -32,7 +32,7 @@ OMinHash::OMinHash(char * seqNew):
 	sketch();
 }
 
-void OMinHash::buildSketch(char * seqNew = NULL)
+void OrderMinHash::buildSketch(char * seqNew = NULL)
 {
 	// rebuild sketch using old data
 	if(seqNew == NULL)
@@ -74,7 +74,7 @@ void OMinHash::buildSketch(char * seqNew = NULL)
 
 	}
 }
-void OMinHash::sketch()
+void OrderMinHash::sketch()
 {
 	sk.k = m_k;		
 	sk.l = m_l;		
@@ -89,7 +89,7 @@ void OMinHash::sketch()
 	}
 }
 
-inline void OMinHash::compute_sketch(char * ptr, const char * seq){
+inline void OrderMinHash::compute_sketch(char * ptr, const char * seq){
 	std::string seqStr(seq);
 	omh_pos(seqStr, m_k, m_l, m_m, mtSeed,
 			[&ptr, &seq, this](unsigned i, unsigned j, size_t pos) { memcpy(ptr, seq + pos, m_k); ptr += m_k; });
@@ -133,7 +133,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	}
 }
 
-double OMinHash::compare_sketches(const OSketch& sk1, const OSketch& sk2, ssize_t m, bool circular) {
+double OrderMinHash::compare_sketches(const OSketch& sk1, const OSketch& sk2, ssize_t m, bool circular) {
 	if(sk1.k != sk2.k || sk1.l != sk2.l) return -1; // Different k or l
 	if(m < 0) m = std::min(sk1.m, sk2.m);
 	if(m > sk1.m || m > sk2.m) return -1;  // Too short
@@ -152,7 +152,7 @@ double OMinHash::compare_sketches(const OSketch& sk1, const OSketch& sk2, ssize_
 	return std::max(fwd_score, bwd_score);
 }
 
-double OMinHash::compare_sketch_pair(const char* p1, const char* p2, unsigned m, unsigned k, unsigned l, bool circular) {
+double OrderMinHash::compare_sketch_pair(const char* p1, const char* p2, unsigned m, unsigned k, unsigned l, bool circular) {
 	const unsigned block = std::max(l, (unsigned)1) * k;
 	unsigned count = 0;
 	if(!circular || l < 2) {
@@ -171,7 +171,7 @@ double OMinHash::compare_sketch_pair(const char* p1, const char* p2, unsigned m,
 	return (double)count / m;
 }
 
-double OMinHash::similarity(OMinHash & omh2){
+double OrderMinHash::similarity(OrderMinHash & omh2){
 	return compare_sketches(this->sk, omh2.getSektch());	
 }
 

@@ -10,10 +10,10 @@ MinHash
 Weighted MinHash
 ----------------
 
-Order MinHash
+OrderMinHash
 -------------
 
-.. doxygenclass:: Sketch::OMinHash
+.. doxygenclass:: Sketch::OrderMinHash
     :members:
 
 HyperLogLog
