@@ -9,7 +9,7 @@
 
 #include "MinHash.h"
 #include "histoSketch.h"
-#include "hll/hyperloglog.h"
+#include "HyperLogLog.h"
 
 
 /// \brief Sketch namespace
@@ -403,6 +403,79 @@ namespace Sketch{
 									   unsigned m, unsigned k, unsigned l, bool circular);
 
 	};
+	
+	class HyperLogLog{
+		
+		public:
+			HyperLogLog(int np):core_(1uL<<np,0),np_(np),is_calculated_(0),estim_(EstimationMethod::ERTL_MLE),jestim_(JointEstimationMethod::ERTL_JOINT_MLE) {};
+			~HyperLogLog(){};
+			void update(const char* seq);
+			HyperLogLog merge(const HyperLogLog &other) const;
+			void printSketch();
+			double distance(const HyperLogLog &h2) const {return jaccard_index(h2);}
+			double jaccard_index(HyperLogLog &h2); 
+			double jaccard_index(const HyperLogLog &h2) const; 
+
+		protected:
+			std::vector<uint8_t> core_;//sketchInfo; 
+			mutable double value_; //cardinality
+			uint32_t np_; // 10-20
+			mutable uint8_t is_calculated_;
+			EstimationMethod                        estim_;
+			JointEstimationMethod                  jestim_;
+			//HashStruct                                 hf_;
+		
+		private:
+			uint32_t p() const {return np_;}//verification
+			uint32_t q() const {return (sizeof(uint64_t) * CHAR_BIT) - np_;}
+			uint64_t m() const {return static_cast<uint64_t>(1) << np_;}
+			size_t size() const {return size_t(m());}
+			bool get_is_ready() const {return is_calculated_;}
+			const auto &core()    const {return core_;}
+			EstimationMethod get_estim()       const {return  estim_;}
+			JointEstimationMethod get_jestim() const {return jestim_;}
+			void set_estim(EstimationMethod val) { estim_ = std::max(val, ERTL_MLE);}
+			void set_jestim(JointEstimationMethod val) { jestim_ = val;}
+			void set_jestim(uint16_t val) {set_jestim(static_cast<JointEstimationMethod>(val));}
+			void set_estim(uint16_t val)  {estim_  = static_cast<EstimationMethod>(val);}
+
+			// Returns cardinality estimate. Sums if not calculated yet.
+			double creport() const {
+				csum();
+				return value_;
+			}
+			double report() noexcept {
+				csum();
+				return creport();
+			}
+
+
+			//private:
+			void add(uint64_t hashval);
+			void addh(const std::string &element);
+			double alpha()          const {return make_alpha(m());}
+			static double small_range_correction_threshold(uint64_t m) {return 2.5 * m;}
+			double union_size(const HyperLogLog &other) const;
+			// Call sum to recalculate if you have changed contents.
+			void csum() const { if(!is_calculated_) sum(); }
+			void sum() const {
+				const auto counts(sum_counts(core_)); // std::array<uint32_t, 64>  // K->C
+				value_ = calculate_estimate(counts, estim_, m(), np_, alpha(), 1e-2);
+				is_calculated_ = 1;
+			}
+			std::array<uint32_t,64> sum_counts(const std::vector<uint8_t> &sketchInfo) const;
+			double calculate_estimate(const std::array<uint32_t,64> &counts, EstimationMethod estim, uint64_t m, uint32_t p, double alpha, double relerr) const; 
+			template<typename T>
+				void compTwoSketch(const std::vector<uint8_t> &sketch1, const std::vector<uint8_t> &sketch2, T &c1, T &c2, T &cu, T &cg1, T &cg2, T &ceq) const;
+			template<typename T>
+				double ertl_ml_estimate(const T& c, unsigned p, unsigned q, double relerr=1e-2) const; 
+			template<typename HllType>
+				std::array<double, 3> ertl_joint(const HllType &h1, const HllType &h2) const; 
+
+
+
+	};
+
 
 }//namespace sketch
 

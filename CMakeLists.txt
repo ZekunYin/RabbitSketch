@@ -31,12 +31,13 @@ if (CXX)
 
 	install(FILES "src/Sketch.h" "src/robin_hood.h" "src/MinHash.h" 
 		          "src/hash.h" "src/bloom_filter.hpp" "src/histoSketch.h"
+				  "src/HyperLogLog.h"
 			DESTINATION include
 		   )
 	
-	install(FILES "src/hll/hyperloglog.h"
-		   DESTINATION include/hll
-		   )
+	#install(FILES "src/hll/hyperloglog.h"
+	#	   DESTINATION include/hll
+	#	   )
 else ()
 	add_subdirectory(pybind11)
 	pybind11_add_module(rabbitsketch ${DIR_SRCS})
