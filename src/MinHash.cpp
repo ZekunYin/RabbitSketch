@@ -504,7 +504,7 @@ MinHash::MinHash()
 void MinHash::update(char * seq)
 {
 	const uint64_t length = strlen(seq);
-	cout << "seq_len using avx512: " << length << endl;
+	//cout << "seq_len using avx512: " << length << endl;
 	totalLength += length;
 	//int kmerSize      = kmerSize;
 	//uint64_t mins     = sketchSize;
@@ -529,7 +529,7 @@ void MinHash::update(char * seq)
 
 #if defined __AVX512F__ && defined __AVX512BW__
 
-	cerr << "using avx512 " << endl;
+	//cerr << "using avx512 " << endl;
 
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
 	int n_kmers = length - kmerSize + 1;
@@ -726,7 +726,7 @@ void MinHash::update(char * seq)
 #else
 	#if defined __AVX2__
 	//implement by avx2 
-	cerr << "using avx2" << endl;
+	//cerr << "using avx2" << endl;
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
 	int n_kmers = length - kmerSize + 1;
 	int n_kmers_body = (n_kmers / 4) * 4;
@@ -805,7 +805,7 @@ void MinHash::update(char * seq)
 
 //implement by no optmization
 //--------------------------------------------------------------------------------------------------------------------
-	cerr << "using no simd" << endl;
+	//cerr << "using no simd" << endl;
     for ( uint64_t i = 0; i < length - kmerSize + 1; i++ )
     {
             
@@ -887,7 +887,7 @@ double MinHash::jaccard(MinHash * msh)
 		needToList = false;
 	}
 	if(msh->needToList){
-		cout << "msh2 need to list addbyxxm " << endl;
+		//cout << "msh2 need to list addbyxxm " << endl;
 		msh->heapToList();
 		msh->needToList = false;
 	}

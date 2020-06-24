@@ -116,7 +116,7 @@ void WMinHash::getWMinHash(){
 
 double WMinHash::wJaccard(WMinHash * wmh)
 {
-	cout << "the needToCompute is: " << needToCompute << endl;
+	//cout << "the needToCompute is: " << needToCompute << endl;
 	if(needToCompute){
 		computeHistoSketch();
 		needToCompute = false;
@@ -128,7 +128,7 @@ double WMinHash::wJaccard(WMinHash * wmh)
 	double intersectElement = 0.0;
 	double unionElement = 0.0;
 	double jaccard = 0.0;
-	cerr << "the parameters.get_histoSketch_sketchSize() is: " << histoSketchSize << endl;
+	//cerr << "the parameters.get_histoSketch_sketchSize() is: " << histoSketchSize << endl;
 	for(int i = 0 ; i < histoSketchSize; i++){
 
 		double curWeightA = abs(histoWeight[i]);
