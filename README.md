@@ -37,8 +37,8 @@ pip3 install . --user
 ```
 or
 ```bash
-#pypi available
-pip3 install rabbitsketch --user
+#pypi available (not up to date)
+#pip3 install rabbitsketch --user
 ```
 **cmake install**
 ```bash
@@ -60,7 +60,7 @@ time python3 test.py #fastx is required
 - [x] Order minhash optimization(sketch and compare)
 - [x] remove gsl dependency
 - [x] wminhash speed problem
-- [ ] reorganize wminhash source
+- [x] reorganize wminhash source
 - [ ] remove unrelated minhash code / clean minhash code
 - [x] add robin-hood-hashing
 - [ ] support multiple types of hashing methods
@@ -71,10 +71,16 @@ time python3 test.py #fastx is required
 - [x] complete pybind.h interface (minhash wmh omh done)
 - [x] redesign parameters and all interfaces including minhash wmh omh and hll
 - [x] add omhismb2019 license to license file
-- [ ] add cpu dispatch
+- [ ] add cpu dispatch (minhash sketch done)
 - [ ] pypi publish(dealing with win32 and osx), dealing with requirements
 - [ ] pybind std::vector (omh result)
-- [ ] revise cmake for make install
+- [x] revise cmake for make install
 - [ ] fix wminhash pybind
 - [ ] remove unnecessary installed head files
 - [x] repo rename
+- [ ] paper appnote 
+- [ ] document tutorial evaluation and reference
+- [ ] pybind hll bind
+- [ ] pybind test wminhash bind
+- [ ] wiminhash using simd??
+- [ ] hll add cpudispatch
