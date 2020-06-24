@@ -25,7 +25,7 @@ PYBIND11_MODULE(rabbitsketch, m){
 	//	;
 
 	py::class_<Sketch::MinHash>(m, "MinHash")
-		.def(py::init<Sketch::Parameters>())
+		.def(py::init<>())
 		.def("update", &Sketch::MinHash::update)
 		.def("merge", &Sketch::MinHash::merge)
 		.def("jaccard", &Sketch::MinHash::jaccard)
@@ -35,7 +35,7 @@ PYBIND11_MODULE(rabbitsketch, m){
 		;
 
 	py::class_<Sketch::WMinHash>(m, "WMinHash")
-		.def(py::init<Sketch::Parameters>())
+		.def(py::init<>())
 		.def("update", &Sketch::WMinHash::update)
 		.def("wJaccard", &Sketch::WMinHash::wJaccard)
 		.def("distance", &Sketch::WMinHash::distance)
