@@ -27,11 +27,11 @@ int main(int argc, char* argv[])
 	parameters.minHashesPerWindow  = 1000;
 
 
-	parameters.set_numBins(pow(parameters.kmerSize, parameters.alphabetSize));
-	parameters.set_minimizerWindowSize(9);
-	parameters.set_histoSketch_sketchSize(60);
-	parameters.set_histoSketch_dimension(194481);
-	parameters.set_paraDecayWeight(0.1);
+//	parameters.set_numBins(pow(parameters.kmerSize, parameters.alphabetSize));
+//	parameters.set_minimizerWindowSize(9);
+//	parameters.set_histoSketch_sketchSize(60);
+//	parameters.set_histoSketch_dimension(194481);
+//	parameters.set_paraDecayWeight(0.1);
 
 
 //	parameters.numBins = pow(parameters.kmerSize, parameters.alphabetSize);
@@ -99,8 +99,10 @@ int main(int argc, char* argv[])
 	double distance;
 	double time1 = get_sec();	
 
-	Sketch::WMinHash * wmh1 = new Sketch::WMinHash(parameters);
-	Sketch::WMinHash * wmh2 = new Sketch::WMinHash(parameters);
+	Sketch::WMinHash * wmh1 = new Sketch::WMinHash();
+	Sketch::WMinHash * wmh2 = new Sketch::WMinHash();
+	wmh1->setHistoSketchSize(60);
+	wmh2->setHistoSketchSize(60);
 	cerr << "start the update seq1" << endl;
 	wmh1->update(seq1);
 	cerr << "start the update seq2" << endl;
@@ -133,6 +135,9 @@ int main(int argc, char* argv[])
 	cout << "MinHash: the distance(1-J) is: " << 1.0 - minhash_dist << endl;
 	cout << "MinHash time: " << time2 - time1  << endl;
 	cout << "MinHash sketch time: " << time3 - time1  << endl;
+
+	cerr << "---------------------------end the minHash-----------------------" << endl;
+	return 0;
 
 
 	time1  = get_sec();

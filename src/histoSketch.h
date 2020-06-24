@@ -44,7 +44,7 @@ double histoSketch_getSample(int i, int j, double freq, double * r, double * c, 
 //void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, int histoSketchLength, bool applyConceptDrift, double * r, double * c, double * b, int sketchSize, int dimension, uint32_t * histoSketch_sketch, double * histoSketch_sketchWeight);
 
 
-void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, int histoSketchLength, bool applyConceptDrift, double decayWeight, double * r, double * c, double * b, int sketchSize, int dimension, uint32_t * histoSketch_sketch, double * histoSketch_sketchWeight);
+void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, bool applyConceptDrift, double decayWeight, double * r, double * c, double * b, int sketchSize, int dimension, uint32_t * histoSketch_sketch, double * histoSketch_sketchWeight);
 
 
 double getWJD(uint32_t *setA, uint32_t *setB, double *weightA, double *weightB, int sketchSize);

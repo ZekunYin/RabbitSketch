@@ -278,33 +278,61 @@ namespace Sketch{
 
 	class WMinHash{
 		public:
-			WMinHash(Parameters parametersNew);
+			//WMinHash(Parameters parametersNew);
+			WMinHash();
 			~WMinHash();
 
 			void update(char * seq);
-
 			double wJaccard(WMinHash * wmh);
 			double distance(WMinHash * wmh);
-			
 			void getWMinHash();
 
+			void setKmerSize(int kmerSizeNew) { kmerSize = kmerSizeNew; }
+			void setAlphabetSize(int alphabetSizeNew) { alphabetSize = alphabetSizeNew; }
+			void setNumBins(int numBinsNew) { numBins = numBinsNew; }
+			void setMinimizerWindowSize(int minimizerWindowSizeNew) { minimizerWindowSize = minimizerWindowSizeNew; }
+			void setHistoSketchSize(int histoSketchSizeNew); //{ histoSketchSize = histoSketchSizeNew; }
+			void setHistoDimension(int histoDimensionNew); //{ histoDimension = histoDimensionNew; }
+			void setParaDecayWeight(double paraDecayWeightNew) { paraDecayWeight = paraDecayWeightNew; }
+			void setApplyConceptDrift(bool applyConceptDriftNew) { applyConceptDrift = applyConceptDriftNew; }
+
+			int getKmerSize() { return kmerSize; }
+			int getAlphabetSize() { return alphabetSize; }
+			int getNumBins() { return numBins; }
+			int getMinimizerWindowSize() { return minimizerWindowSize; }
+			int getHistoSketchSize() { return histoSketchSize; }
+			int getHistoDimension() { return histoDimension; }
+			double getParaDecayWeight() { return paraDecayWeight; }
+			bool isApplyComceptDrift() { return applyConceptDrift; }
+
+
+			
+
 		private:
-			Parameters parameters;
+			//Parameters parameters;
+			int kmerSize = 21;
+			int alphabetSize = 4;
+			int numBins = 194481;
+			int minimizerWindowSize = 9;
+			int histoSketchSize = 50;
+			int histoDimension = 194481;
+			double paraDecayWeight = 0.0;
+			bool applyConceptDrift = false;
+			double decayWeight = 1.0;
+
 			bool needToCompute = true;
 			double * binsArr;
 			double * countMinSketch; 
 			std::vector<uint64_t> sketches;
 			std::vector<Bin> kmerSpectrums;
+			uint32_t * histoSketches;
+			double * histoWeight;
 
 			void computeHistoSketch();
 
 			double * r;
 			double * c;
 			double * b;
-			uint32_t * histoSketch_sketch;
-			double * histoSketch_sketchWeight;
-			bool applyConceptDrift;
-			double decayWeight;
 
 
 
