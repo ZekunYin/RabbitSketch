@@ -789,8 +789,9 @@ void MinHash::update(char * seq)
 				kmer_buf[j] = input8_rev[length - i - kmerSize + j];
 			}
 		}
-
-		MurmurHash3_x64_128(kmer_buf, kmerSize, seed, res2);
+        
+        sketchHashAlgo(kmer_buf, kmerSize, seed, res2, MurmurHash3_x64_128);
+		//MurmurHash3_x64_128(kmer_buf, kmerSize, seed, res2);
 		hash_u hash;
 		if(use64)
 			hash.hash64 = res2[0];

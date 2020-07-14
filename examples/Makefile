@@ -3,8 +3,8 @@ TARGET=minhash
 CXX=g++
 CXXFLAGS=-g -O2 -std=c++17
 
-INCLUDE=../build/include
-LIBS=../build/lib
+INCLUDE=../build
+LIBS=../build
 OBJECTS=test.o 
 
 $(TARGET):$(OBJECTS)
