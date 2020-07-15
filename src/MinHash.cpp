@@ -1,7 +1,7 @@
 #include "MinHash.h"
 #include "Sketch.h"
 #include "MurmurHash3.h"
-#include "hash.h"
+//#include "hash.h"
 
 #include <algorithm>
 #include <iostream>

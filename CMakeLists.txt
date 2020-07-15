@@ -30,7 +30,7 @@ if (CXX)
 	)
 
 	install(FILES "src/Sketch.h" "src/robin_hood.h" "src/MinHash.h" 
-		          "src/hash.h" "src/bloom_filter.hpp" "src/histoSketch.h"
+		          "src/hash.h" "src/bloom_filter.hpp" "src/histoSketch.h" "src/MurmurHash3.h"
 			DESTINATION include
 		   )
 	
