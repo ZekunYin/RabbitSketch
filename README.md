@@ -1,4 +1,4 @@
-# libSketch
+![RabbitSketch](sketch.png)
 
 ## Getting Started
 
@@ -84,3 +84,4 @@ time python3 test.py #fastx is required
 - [ ] pybind test wminhash bind
 - [ ] wiminhash using simd??
 - [ ] hll add cpudispatch
+- [ ] why not dartminhash?
