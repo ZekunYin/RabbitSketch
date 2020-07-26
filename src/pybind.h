@@ -32,6 +32,22 @@ PYBIND11_MODULE(rabbitsketch, m){
 		.def("distance", &Sketch::MinHash::distance)
 		.def("getTotalLength", &Sketch::MinHash::getTotalLength)
 		.def("printMinHashes", &Sketch::MinHash::printMinHashes)
+
+		//parameters
+		.def("setKmerSize", &Sketch::MinHash::setKmerSize)
+		.def("setAlphabetSize", &Sketch::MinHash::setAlphabetSize)
+		.def("setPreserveCase", &Sketch::MinHash::setPreserveCase)
+		.def("setUse64", &Sketch::MinHash::setUse64)
+		.def("setSeed", &Sketch::MinHash::setSeed)
+		.def("setSketchSize", &Sketch::MinHash::setSketchSize)
+		.def("setNoncanonical", &Sketch::MinHash::setNoncanonical)
+		.def("getKmerSize", &Sketch::MinHash::getKmerSize)
+		.def("getAlphabetSize", &Sketch::MinHash::getAlphabetSize)
+		.def("isPreserveCase", &Sketch::MinHash::isPreserveCase)
+		.def("isUse64", &Sketch::MinHash::isUse64)
+		.def("getSeed", &Sketch::MinHash::getSeed)
+		.def("getSketchSize", &Sketch::MinHash::getSketchSize)
+		.def("isNoncanonical", &Sketch::MinHash::isNoncanonical)
 		;
 
 	py::class_<Sketch::WMinHash>(m, "WMinHash")

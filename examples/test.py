@@ -3,6 +3,9 @@ import fastx
 
 msh1 = sketch.MinHash()
 msh2 = sketch.MinHash()
+print('seed:' + str(msh1.getSeed()))
+print('sketchsize:' + str(msh2.getSketchSize()))
+
 #wmsh1 = sketch.WMinHash(p)
 #wmsh2 = sketch.WMinHash(p)
 for name, seq, qual in fastx.Fastx('genome1.fna'):
