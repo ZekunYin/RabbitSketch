@@ -1,7 +1,8 @@
 #include "MinHash.h"
 #include "Sketch.h"
 #include "MurmurHash3.h"
-//#include "hash.h"
+#include "WangHash.h"
+#include "hash.h"
 
 #include <algorithm>
 #include <iostream>
@@ -382,7 +383,8 @@ hash_u getHash(const char * seq, int length, uint32_t seed, bool use64)
 	}
 #else
 	char data[16];
-	MurmurHash3_x64_128(seq, length, seed, data);
+	//MurmurHash3_x64_128(seq, length, seed, data);
+    WangHash_x64(seq, length, data);
 #endif
 
 	hash_u hash;
@@ -414,7 +416,7 @@ bool hashLessThan(hash_u hash1, hash_u hash2, bool use64)
 
 namespace Sketch
 {
-
+/*
 #if defined __AVX512F__ && defined __AVX512CD__
 __m512i inline min512(__m512i v1, __m512i v2){
 	__mmask8 msk_gt, msk_lt;
@@ -488,7 +490,7 @@ void inline transpose4_epi64(__m256i *row1, __m256i *row2, __m256i *row3, __m256
 		#endif
 	#endif
 #endif
-
+*/
 
 MinHash::MinHash()
 {
@@ -504,7 +506,7 @@ MinHash::MinHash()
 void MinHash::update(char * seq)
 {
 	const uint64_t length = strlen(seq);
-	cout << "seq_len using avx512: " << length << endl;
+	//cout << "seq_len using avx512: " << length << endl;
 	totalLength += length;
 	//int kmerSize      = kmerSize;
 	//uint64_t mins     = sketchSize;
@@ -526,7 +528,7 @@ void MinHash::update(char * seq)
     	seqRev = new char[length];
         reverseComplement(seq, seqRev, length);
     }
-
+/*
 #if defined __AVX512F__ && defined __AVX512BW__
 
 	cerr << "using avx512 " << endl;
@@ -789,10 +791,9 @@ void MinHash::update(char * seq)
 				kmer_buf[j] = input8_rev[length - i - kmerSize + j];
 			}
 		}
-        
-        sketchHashAlgo(kmer_buf, kmerSize, seed, res2, MurmurHash3_x64_128);
-		//MurmurHash3_x64_128(kmer_buf, kmerSize, seed, res2);
-		hash_u hash;
+
+        MurmurHash3_x64_128(kmer_buf, kmerSize, seed, res2);
+        hash_u hash;
 		if(use64)
 			hash.hash64 = res2[0];
 		else
@@ -803,7 +804,7 @@ void MinHash::update(char * seq)
 	}
 
 	#else
-
+*/
 //implement by no optmization
 //--------------------------------------------------------------------------------------------------------------------
 	cerr << "using no simd" << endl;
@@ -814,13 +815,13 @@ void MinHash::update(char * seq)
         const char *kmer_rev = seqRev + length - i - kmerSize;
         const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
         bool filter = false;
-        
+
         hash_u hash = getHash(kmer, kmerSize, seed, use64);
         
 		minHashHeap->tryInsert(hash);
     }
-	#endif
-#endif
+//	#endif
+//#endif
     
     
     if ( ! noncanonical )
@@ -888,7 +889,7 @@ double MinHash::jaccard(MinHash * msh)
 		needToList = false;
 	}
 	if(msh->needToList){
-		cout << "msh2 need to list addbyxxm " << endl;
+		//cout << "msh2 need to list addbyxxm " << endl;
 		msh->heapToList();
 		msh->needToList = false;
 	}
