@@ -65,7 +65,7 @@ static constexpr FloatType gen_sigma (FloatType x) {
 	for(FloatType zp(0.), y(1.); z != zp;) {
 		x *= x; zp = z; z += x * y; y += y;
 		if(std::isnan(z)) {
-			std::fprintf(stderr, "[W:%s:%d] Reached nan. Returning the last usable number.\n", __PRETTY_FUNCTION__, __LINE__);
+			std::fprintf(stderr, "[W:%s:%d] Reached nan. Returning the last usable number.\n", __FUNCTION__, __LINE__);
 			return zp;
 		}
 	}

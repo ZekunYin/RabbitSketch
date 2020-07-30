@@ -1,7 +1,7 @@
-#include <zlib.h>
+//#include <zlib.h>
 #include "HyperLogLog.h"
 #include "Sketch.h"
-#include "x86intrin.h"
+//#include "x86intrin.h"
 //#include "immintrin.h"
 
 using namespace Sketch;
@@ -693,7 +693,7 @@ ERTL_IMPROVED_EST: {
 ERTL_MLE_EST: return ertl_ml_estimate(counts, p, 64 - p, relerr);
 #else
 					   case ERTL_MLE: return ertl_ml_estimate(counts, p, 64 - p, relerr);
-					   default: __builtin_unreachable();
+					   default: return 0.0;
 				   }
 #endif
 			}

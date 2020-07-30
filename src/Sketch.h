@@ -278,7 +278,7 @@ namespace Sketch{
 			inline void compute_sketch(char * ptr, const char * seq);
 
 			double compare_sketches(const OSketch& sk1, const OSketch& sk2, 
-											  ssize_t m = -1, bool circular = false);
+											  size_t m = -1, bool circular = false);
 			double compare_sketch_pair(const char* p1, const char* p2,
 									   unsigned m, unsigned k, unsigned l, bool circular);
 
