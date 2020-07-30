@@ -133,7 +133,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	}
 }
 
-double OrderMinHash::compare_sketches(const OSketch& sk1, const OSketch& sk2, size_t m, bool circular) {
+double OrderMinHash::compare_sketches(const OSketch& sk1, const OSketch& sk2, ssize_t m, bool circular) {
 	if(sk1.k != sk2.k || sk1.l != sk2.l) return -1; // Different k or l
 	if(m < 0) m = std::min(sk1.m, sk2.m);
 	if(m > sk1.m || m > sk2.m) return -1;  // Too short

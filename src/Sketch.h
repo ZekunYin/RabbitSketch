@@ -11,6 +11,10 @@
 #include "histoSketch.h"
 #include "HyperLogLog.h"
 
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif  
 
 /// \brief Sketch namespace
 namespace Sketch{
@@ -278,7 +282,7 @@ namespace Sketch{
 			inline void compute_sketch(char * ptr, const char * seq);
 
 			double compare_sketches(const OSketch& sk1, const OSketch& sk2, 
-											  size_t m = -1, bool circular = false);
+											  ssize_t m = -1, bool circular = false);
 			double compare_sketch_pair(const char* p1, const char* p2,
 									   unsigned m, unsigned k, unsigned l, bool circular);
 
