@@ -5,7 +5,8 @@
 #include <queue>
 
 #include "hash.h"
-#include "bloom_filter.hpp"
+//#include "bloom_filter.hpp"
+#include <cmath>
 #include "robin_hood.h"
 
 
@@ -104,7 +105,7 @@ private:
 	
 	uint64_t multiplicitySum;
 	
-    bloom_filter * bloomFilter;
+    //bloom_filter * bloomFilter;
     
     uint64_t kmersTotal;
     uint64_t kmersUsed;

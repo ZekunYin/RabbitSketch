@@ -177,7 +177,7 @@ double OrderMinHash::similarity(OrderMinHash & omh2){
 
 inline uint64_t hash_to_uint(const char * kmer, int k)
 {
-	uint8_t mask = 0x06;
+	uint8_t mask = 0x06; //FIXME: not general only works for DNA sequences, it's just a trick.
 	uint64_t res = 0;
 	for(int i = 0; i < k; i++)
 	{
