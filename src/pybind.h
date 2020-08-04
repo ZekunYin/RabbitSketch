@@ -25,7 +25,11 @@ PYBIND11_MODULE(rabbitsketch, m){
 	//	;
 
 	py::class_<Sketch::MinHash>(m, "MinHash")
-		.def(py::init<>())
+		//.def(py::init<>())
+		//.def(py::init<int>(), py::arg("k"))
+		//.def(py::init<int, int>(), py::arg("k"), py::kwonly(), py::arg("size"))
+		.def(py::init<int, int, uint32_t>(), py::arg("kmer") = 21, py::arg("size")=1000, py::arg("seed")=42)
+		//.def(py::init<int, int, uint32_t>())
 		.def("update", &Sketch::MinHash::update)
 		.def("merge", &Sketch::MinHash::merge)
 		.def("jaccard", &Sketch::MinHash::jaccard)

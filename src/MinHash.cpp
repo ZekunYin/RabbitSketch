@@ -491,16 +491,16 @@ void inline transpose4_epi64(__m256i *row1, __m256i *row2, __m256i *row3, __m256
 #endif
 
 
-MinHash::MinHash()
-{
-	minHashHeap = new MinHashHeap(use64, sketchSize);// parameters.reads ?  parameters.minCov : 1);
-
-	this->kmerSpace = pow(alphabetSize, kmerSize);
-	//cerr << "kmerSpace init from pow is " << this->kmerSpace << endl;
-	this->totalLength = 0;
-	this->needToList = true;
-
-}
+//MinHash::MinHash()
+//{
+//	minHashHeap = new MinHashHeap(use64, sketchSize);// parameters.reads ?  parameters.minCov : 1);
+//
+//	this->kmerSpace = pow(alphabetSize, kmerSize);
+//	//cerr << "kmerSpace init from pow is " << this->kmerSpace << endl;
+//	this->totalLength = 0;
+//	this->needToList = true;
+//
+//}
 
 void MinHash::update(char * seq)
 {

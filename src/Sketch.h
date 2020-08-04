@@ -37,7 +37,18 @@ namespace Sketch{
 
 		public:
 			/// minhash init with parameters
-			MinHash();
+			//MinHash();
+			MinHash(int k = 21, int size = 1000, uint32_t seed = 42):
+				kmerSize(k), sketchSize(size), seed(seed), use64(true)
+			{
+				minHashHeap = new MinHashHeap(use64, sketchSize);
+
+				this->kmerSpace = pow(alphabetSize, kmerSize);
+
+				this->totalLength = 0;
+
+				this->needToList = true;
+			}
 
 			/// minhash is updatable with multiple sequences
 			void update(char * seq);
@@ -61,27 +72,27 @@ namespace Sketch{
 
 			// parameters
 
-			/// set kmer size for sketching
-			void setKmerSize(int kmerSizeNew) { kmerSize = kmerSizeNew; }
+			// set kmer size for sketching
+			//void setKmerSize(int kmerSizeNew) { kmerSize = kmerSizeNew; }
 
-			/// set alphabet size: default 4 for nucleotide sequences
-			void setAlphabetSize(int alphabetSizeNew) { alphabetSize = alphabetSizeNew; }
+			// set alphabet size: default 4 for nucleotide sequences
+			//void setAlphabetSize(int alphabetSizeNew) { alphabetSize = alphabetSizeNew; }
 
-			/// set whether to preserve upper or lower case 
-			void setPreserveCase(bool caseNew) { preserveCase = caseNew; }
+			// set whether to preserve upper or lower case 
+			//void setPreserveCase(bool caseNew) { preserveCase = caseNew; }
 
-			/// set whether to user 64bit hashes: default true
-			/// use 32 bit hashes is use64 is false
-			void setUse64(bool use64New) { use64 = use64New; }
+			// set whether to user 64bit hashes: default true
+			// use 32 bit hashes is use64 is false
+			//void setUse64(bool use64New) { use64 = use64New; }
 
-			/// set hash seed
-			void setSeed(uint32_t seedNew) { seed = seedNew; }
+			// set hash seed
+			//void setSeed(uint32_t seedNew) { seed = seedNew; }
 
-			/// set sketch size: default 1000
-			void setSketchSize(uint64_t sketchSizeNew) { sketchSize = sketchSizeNew; }
+			// set sketch size: default 1000
+			//void setSketchSize(uint64_t sketchSizeNew) { sketchSize = sketchSizeNew; }
 
-			/// set whether to use reverse complement for each kmer
-			void setNoncanonical(bool noncanonicalNew) { noncanonical = noncanonicalNew; }
+			// set whether to use reverse complement for each kmer
+			//void setNoncanonical(bool noncanonicalNew) { noncanonical = noncanonicalNew; }
 
 			/// return kmerSize
 			int getKmerSize() { return kmerSize; }
@@ -122,6 +133,7 @@ namespace Sketch{
 			bool use64 = true;
 			uint32_t seed = 42;
 			uint64_t sketchSize = 1000; //minHashesPerWindow
+			//FIXME: noncanonical is not included in constructor
 			bool noncanonical = false;
 	};
 
