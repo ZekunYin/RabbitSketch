@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 2.8)
 
 project(rabbitsketch)
 
@@ -11,8 +11,10 @@ include_directories(src)
 aux_source_directory(src DIR_SRCS)
 
 #linux only 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -std=c++14 -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -std=c++14 -static-libstdc++")
 
+#set flags for specific files
+#set_source_files_properties(src/MinHash.cpp PROPERTIES COMPILE_FLAGS -mavx2)
 
 
 if (CXX)
