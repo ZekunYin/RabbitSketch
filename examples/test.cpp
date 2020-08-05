@@ -70,7 +70,9 @@ int main(int argc, char* argv[])
 	Sketch::MinHash * mh1 = new Sketch::MinHash();
 	Sketch::MinHash * mh2 = new Sketch::MinHash();
 	mh1->update(seq1);	
+	//std::cout << "mh1 set size: " << mh1->count() << std::endl;
 	mh2->update(seq2);	
+	//std::cout << "mh2 set size: " << mh2->count() << std::endl;
 
 	time3 = get_sec();
 

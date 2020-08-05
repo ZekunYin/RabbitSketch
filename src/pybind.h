@@ -33,9 +33,10 @@ PYBIND11_MODULE(rabbitsketch, m){
 		.def("update", &Sketch::MinHash::update)
 		.def("merge", &Sketch::MinHash::merge)
 		.def("jaccard", &Sketch::MinHash::jaccard)
-		.def("distance", &Sketch::MinHash::distance)
+		.def("mdistance", &Sketch::MinHash::mdistance)
 		.def("getTotalLength", &Sketch::MinHash::getTotalLength)
 		.def("printMinHashes", &Sketch::MinHash::printMinHashes)
+		.def("count", &Sketch::MinHash::count)
 
 		//parameters
 		//.def("setKmerSize", &Sketch::MinHash::setKmerSize)
@@ -46,12 +47,11 @@ PYBIND11_MODULE(rabbitsketch, m){
 		//.def("setSketchSize", &Sketch::MinHash::setSketchSize)
 		//.def("setNoncanonical", &Sketch::MinHash::setNoncanonical)
 		.def("getKmerSize", &Sketch::MinHash::getKmerSize)
-		.def("getAlphabetSize", &Sketch::MinHash::getAlphabetSize)
-		.def("isPreserveCase", &Sketch::MinHash::isPreserveCase)
-		.def("isUse64", &Sketch::MinHash::isUse64)
 		.def("getSeed", &Sketch::MinHash::getSeed)
+		.def("getMaxSketchSize", &Sketch::MinHash::getMaxSketchSize)
 		.def("getSketchSize", &Sketch::MinHash::getSketchSize)
-		.def("isNoncanonical", &Sketch::MinHash::isNoncanonical)
+		.def("isEmpty", &Sketch::MinHash::isEmpty)
+		.def("isReverseComplement", &Sketch::MinHash::isReverseComplement)
 		;
 
 	py::class_<Sketch::WMinHash>(m, "WMinHash")

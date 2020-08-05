@@ -61,8 +61,8 @@ namespace Sketch{
 			/// return mutation distance defined in Mash instead of jaccard distance
 			double mdistance(MinHash * msh);
 
-			//HashList & getHashList(); //TODO: return to vector instead of HashList
-			void getMinHash(); //return hash values to a vector?
+			//
+			//void getMinHash(); //return hash values to a vector?
 
 			//print hash values for debug
 			void printMinHashes();
@@ -70,28 +70,55 @@ namespace Sketch{
 			/// return totalSeqence length, including multiple updates
 			uint64_t getTotalLength(){return totalLength;}
 
+			///Estimate the cardinality count
+			int count(){ return minHashHeap->estimateSetSize();}
 			// parameters
 
 			/// return kmerSize
 			int getKmerSize() { return kmerSize; }
 
-			/// return alphabet size
-			uint32_t getAlphabetSize() { return alphabetSize; }
+			// return alphabet size
+			//uint32_t getAlphabetSize() { return alphabetSize; }
 
-			/// return whether to preserve case
-			bool isPreserveCase() { return preserveCase; }
+			// return whether to preserve case
+			//bool isPreserveCase() { return preserveCase; }
 
-			/// return whether to use 64bit hash
-			bool isUse64() { return use64; }
+			// return whether to use 64bit hash
+			//bool isUse64() { return use64; }
 
 			/// return hash seed
 			uint32_t getSeed() {return seed; }
 
 			/// return sketch size
-			uint32_t getSketchSize() {return sketchSize; }
+			uint32_t getMaxSketchSize() {return sketchSize; }
 
 			/// return whether to use reverse complement
-			bool isNoncanonical() { return noncanonical; }
+			bool isReverseComplement() { return !noncanonical; }
+
+			/// test whether this minhash is empty
+			bool isEmpty() { 
+				if(this->needToList){
+					this->heapToList();
+					this->needToList = false;
+				}
+
+				if(this->reference.hashesSorted.size() <= 0)
+					return true;
+				else
+					return false;
+				
+			}
+
+			/// get sketch size, it should be less than max sketch size
+			int getSketchSize() {
+				if(this->needToList)
+				{
+					this->heapToList();
+					this->needToList = false;
+				}
+				
+				return this->reference.hashesSorted.size();
+			}
 
 		private:
 			bool needToList = true;
