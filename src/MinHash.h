@@ -1,3 +1,8 @@
+/*
+  Most of the functions defined in this file are included from Mash v2.2.
+  Modified by Zekun Yin
+ */
+
 #ifndef __MINHASH_H__
 #define __MINHASH_H__
 
@@ -5,7 +10,6 @@
 #include <queue>
 
 #include "hash.h"
-//#include "bloom_filter.hpp"
 #include <cmath>
 #include "robin_hood.h"
 
@@ -105,8 +109,6 @@ private:
 	
 	uint64_t multiplicitySum;
 	
-    //bloom_filter * bloomFilter;
-    
     uint64_t kmersTotal;
     uint64_t kmersUsed;
 };

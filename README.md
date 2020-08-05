@@ -85,3 +85,7 @@ time python3 test.py #fastx is required
 - [ ] wiminhash using simd??
 - [ ] hll add cpudispatch
 - [ ] why not dartminhash?
+
+### Limitations
+- Only support kmer size smaller than 32 (this is commonly enough for DNA or protein sequences)
+- alphabet is not verified in MinHash for DNA or protein sequences. such as 'N'

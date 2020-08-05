@@ -37,9 +37,8 @@ namespace Sketch{
 
 		public:
 			/// minhash init with parameters
-			//MinHash();
-			MinHash(int k = 21, int size = 1000, uint32_t seed = 42):
-				kmerSize(k), sketchSize(size), seed(seed), use64(true)
+			MinHash(int k = 21, int size = 1000, uint32_t seed = 42, bool rc = true):
+				kmerSize(k), sketchSize(size), seed(seed), use64(true), noncanonical(!rc)
 			{
 				minHashHeap = new MinHashHeap(use64, sketchSize);
 
@@ -59,40 +58,19 @@ namespace Sketch{
 			/// return the jaccard index
 			double jaccard(MinHash * msh);			
 
-			/// return distance defined in Mash and RabbitMash
-			double distance(MinHash * msh);
+			/// return mutation distance defined in Mash instead of jaccard distance
+			double mdistance(MinHash * msh);
 
 			//HashList & getHashList(); //TODO: return to vector instead of HashList
 			void getMinHash(); //return hash values to a vector?
 
+			//print hash values for debug
 			void printMinHashes();
 
 			/// return totalSeqence length, including multiple updates
 			uint64_t getTotalLength(){return totalLength;}
 
 			// parameters
-
-			// set kmer size for sketching
-			//void setKmerSize(int kmerSizeNew) { kmerSize = kmerSizeNew; }
-
-			// set alphabet size: default 4 for nucleotide sequences
-			//void setAlphabetSize(int alphabetSizeNew) { alphabetSize = alphabetSizeNew; }
-
-			// set whether to preserve upper or lower case 
-			//void setPreserveCase(bool caseNew) { preserveCase = caseNew; }
-
-			// set whether to user 64bit hashes: default true
-			// use 32 bit hashes is use64 is false
-			//void setUse64(bool use64New) { use64 = use64New; }
-
-			// set hash seed
-			//void setSeed(uint32_t seedNew) { seed = seedNew; }
-
-			// set sketch size: default 1000
-			//void setSketchSize(uint64_t sketchSizeNew) { sketchSize = sketchSizeNew; }
-
-			// set whether to use reverse complement for each kmer
-			//void setNoncanonical(bool noncanonicalNew) { noncanonical = noncanonicalNew; }
 
 			/// return kmerSize
 			int getKmerSize() { return kmerSize; }
@@ -118,23 +96,23 @@ namespace Sketch{
 		private:
 			bool needToList = true;
 			double kmerSpace;
-			//Parameters parameters;
 			MinHashHeap * minHashHeap;
 			Reference reference;
 			uint64_t totalLength = 0;
-			/// get pValue for distance
+
 			double pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, double kmerSpace, uint64_t sketchSize);
 			void heapToList();
 
 			//parameters
-			int kmerSize = 21;
-			uint32_t alphabetSize = 4; //nuc sequences
+			int kmerSize;
+			uint32_t alphabetSize; //nuc sequences
+			uint32_t seed;
+			uint64_t sketchSize; //minHashesPerWindow
+			bool noncanonical;
+			bool use64; //always true (remove support for hash32)
+
+			//FIXME: perserveCase is not included in constructor
 			bool preserveCase = false;
-			bool use64 = true;
-			uint32_t seed = 42;
-			uint64_t sketchSize = 1000; //minHashesPerWindow
-			//FIXME: noncanonical is not included in constructor
-			bool noncanonical = false;
 	};
 
 	class WMinHash{

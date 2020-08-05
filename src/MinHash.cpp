@@ -230,38 +230,10 @@ MinHashHeap::MinHashHeap(bool use64New, uint64_t cardinalityMaximumNew, uint64_t
 	
 	multiplicitySum = 0;
 	
-	//if ( memoryBoundBytes == 0 )
-	//{
-	//	bloomFilter = 0;
-	//}
-	//else
-	//{
-	//	bloom_parameters bloomParams;
-	//	
-	//	bloomParams.projected_element_count = 1000000000;//(uint64_t)parameters.genomeSize * 10l; // TODO: error rate based on platform and coverage
-	//	bloomParams.false_positive_probability = 0;//parameters.bloomError;
-	//	bloomParams.maximum_size = memoryBoundBytes * 8l;
-	//	bloomParams.compute_optimal_parameters();
-	//	
-	//	kmersTotal = 0;
-	//	kmersUsed = 0;
-	//	
-	//	//if ( i == 0 && verbosity > 0 )
-	//	{
-	//		//cerr << "   Bloom table size (bytes): " << bloomParams.optimal_parameters.table_size / 8 << endl;
-	//	}
-	//	
-	//	bloomFilter = new bloom_filter(bloomParams);
-	//}
 }
 
 MinHashHeap::~MinHashHeap()
-{
-	//if ( bloomFilter != 0 )
-	//{
-	//	delete bloomFilter;
-	//}
-}
+{}
 
 void MinHashHeap::computeStats()
 {
@@ -282,11 +254,6 @@ void MinHashHeap::clear()
 	hashesPending.clear();
 	hashesQueuePending.clear();
 	
-	//if ( bloomFilter != 0 )
-	//{
-	//	bloomFilter->clear();
-	//}
-	
 	multiplicitySum = 0;
 }
 
@@ -300,25 +267,7 @@ void MinHashHeap::tryInsert(hash_u hash)
 	{
 		if ( hashes.count(hash) == 0 )
 		{
-			//if ( bloomFilter != 0 )
-			//{
-            //    const unsigned char * data = use64 ? (const unsigned char *)&hash.hash64 : (const unsigned char *)&hash.hash32;
-            //	size_t length = use64 ? 8 : 4;
-            //	
-            //    if ( bloomFilter->contains(data, length) )
-            //    {
-			//		hashes.insert(hash, 2);
-			//		hashesQueue.push(hash);
-			//		multiplicitySum += 2;
-	        //        kmersUsed++;
-            //    }
-            //	else
-            //	{
-	        //        bloomFilter->insert(data, length);
-	        //        kmersTotal++;
-	        //    }
-			//}
-			//else if ( multiplicityMinimum == 1 || hashesPending.count(hash) == multiplicityMinimum - 1 )
+
 			if ( multiplicityMinimum == 1 || hashesPending.count(hash) == multiplicityMinimum - 1 )
 			{
 				hashes.insert(hash, multiplicityMinimum);
@@ -482,11 +431,7 @@ void inline transpose4_epi64(__m256i *row1, __m256i *row2, __m256i *row3, __m256
 }
 
 	#else
-		#ifdef __SSE4_1__
-		// implement by sse
-		#else
-		//implement without optimization
-		#endif
+	//non vectorization 
 	#endif
 #endif
 
@@ -505,20 +450,18 @@ void inline transpose4_epi64(__m256i *row1, __m256i *row2, __m256i *row3, __m256
 void MinHash::update(char * seq)
 {
 	const uint64_t length = strlen(seq);
-	//cout << "seq_len using avx512: " << length << endl;
 	totalLength += length;
-	//int kmerSize      = kmerSize;
-	//uint64_t mins     = sketchSize;
-	bool noncanonical = noncanonical;//False.
 
-	// uppercase TODO: alphabets?
-	for ( uint64_t i = 0; i < length; i++ )
-	{
-		if ( ! preserveCase && seq[i] > 96 && seq[i] < 123 )
+	// to uppercase 
+	// note: kmers sequences with different cases will lead to different hashes
+	if( ! preserveCase )
+		for ( uint64_t i = 0; i < length; i++ )
 		{
-			seq[i] -= 32;
+			if ( seq[i] > 96 && seq[i] < 123 )
+			{
+				seq[i] -= 32;
+			}
 		}
-	}
 
    char * seqRev;
     
@@ -530,23 +473,15 @@ void MinHash::update(char * seq)
 
 #if defined __AVX512F__ && defined __AVX512BW__
 
-	//cerr << "using avx512 " << endl;
-
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
 	int n_kmers = length - kmerSize + 1;
 	int n_kmers_body = (n_kmers / 16) * 16;
-	//int n_kmers_body = (n_kmers / 32) * 32;
-	//int n_kmers_body = (n_kmers / 8) * 8;
 	
 	const uint8_t* input8 = (const uint8_t *)seq;
 	const uint8_t* input8_rev = (const uint8_t *)seqRev;
-	//uint64_t* res = (uint64_t* )_mm_malloc(n_kmers * 2 * sizeof(uint64_t), 64);
 	uint64_t res[16 * 2];
-	//uint64_t res[32 * 2];
-	//uint64_t res[8 * 2];
 	uint64_t res2[2];
 	uint8_t kmer_buf[kmerSize];
-//	uint64_t result[16];
 	
 	__m512i v0, v1;
 	__m512i vi[8];
@@ -555,8 +490,6 @@ void MinHash::update(char * seq)
 	__m512i vi_reverse[8];
 	__m512i vj_forword[8];
 	__m512i vj_reverse[8];
-//	__m512i vk[8];
-//	__m512i vl[8];
 	__m512i vzero = _mm512_setzero_si512();
 
 	__mmask64 mask_load = 0xffffffffffffffff;
@@ -665,30 +598,21 @@ void MinHash::update(char * seq)
 
 		transpose8_epi64(&vi[0], &vi[1], &vi[2], &vi[3], &vi[4], &vi[5], &vi[6], &vi[7]); 
 		transpose8_epi64(&vj[0], &vj[1], &vj[2], &vj[3], &vj[4], &vj[5], &vj[6], &vj[7]); 
-	//	transpose8_epi64(&vk[0], &vk[1], &vk[2], &vk[3], &vk[4], &vk[5], &vk[6], &vk[7]); 
-	//	transpose8_epi64(&vl[0], &vl[1], &vl[2], &vl[3], &vl[4], &vl[5], &vl[6], &vl[7]); 
 
-		//MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, 42, &res[2 * i]);// the seed in Mash is 42; verified by xxm;
 		MurmurHash3_x64_128_avx512_8x16(vi, vj, pend_k, kmerSize, seed, res);// the seed in Mash is 42; verified by xxm;
-		//MurmurHash3_x64_128_avx512_8x32(vi, vj, vk, vl, pend_k, kmerSize, 42, res);// the seed in Mash is 42; verified by xxm;
-		//MurmurHash3_x64_128_avx512_8x8(vi, pend_k, kmerSize, 42, res);// the seed in Mash is 42; verified by xxm;
 
 		hash_u hash;
 		for(int j = 0; j < 16; j++){
-		//for(int j = 0; j < 32; j++)
-		//for(int j = 0; j < 8; j++)
 			if(use64)
 				hash.hash64 = res[j * 2];
 			else
 				hash.hash32 = (uint32_t)res[j * 2];
-
-			//cout << hash.hash64 << endl;
 			minHashHeap->tryInsert(hash);
 		}
 	}
 
+	//tail
 	for(int i = n_kmers_body; i < n_kmers; i++){
-	//	bool noRev = (memcmp(input8 + i, input8_rev + length - i - kmerSize, kmerSize) <= 0) || noncanonical;
 		bool noRev = true;
 		if(!noncanonical && (memcmp(input8 + i, input8_rev + length - i - kmerSize, kmerSize) >= 0)){
 			noRev = false;
@@ -709,9 +633,7 @@ void MinHash::update(char * seq)
 				kmer_buf[j] = input8_rev[length - i - kmerSize + j];
 			}
 		}
-			
 
-		//MurmurHash3_x64_128(kmer_buf, kmerSize, 42, &res[2 * i]);// the getHash just need the lower 64bit of the total 128bit of res[i];
 		MurmurHash3_x64_128(kmer_buf, kmerSize, seed, res2);// the getHash just need the lower 64bit of the total 128bit of res[i];
 		hash_u hash;
 		if(use64)
@@ -726,8 +648,7 @@ void MinHash::update(char * seq)
 
 #else
 	#if defined __AVX2__
-	//implement by avx2 
-	//cerr << "using avx2" << endl;
+
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
 	int n_kmers = length - kmerSize + 1;
 	int n_kmers_body = (n_kmers / 4) * 4;
@@ -804,9 +725,7 @@ void MinHash::update(char * seq)
 
 	#else
 
-//implement by no optmization
-//--------------------------------------------------------------------------------------------------------------------
-	//cerr << "using no simd" << endl;
+	//implement by no optmization
     for ( uint64_t i = 0; i < length - kmerSize + 1; i++ )
     {
             
@@ -893,11 +812,6 @@ double MinHash::jaccard(MinHash * msh)
 		msh->needToList = false;
 	}
 
-	//transport the previous parameter @xxm
-	//uint64_t sketchSize = this->parameters.minHashesPerWindow;
-	//int kmerSize = this->parameters.kmerSize;
-	//int kmerSpace = this->kmerSpace;
-
 	uint64_t i = 0;
 	uint64_t j = 0;
 	uint64_t common = 0;
@@ -956,66 +870,13 @@ double MinHash::jaccard(MinHash * msh)
 
 }
 
-double MinHash::distance(MinHash * msh)
+double MinHash::mdistance(MinHash * msh)
 {
 	double distance;
 	double maxDistance = 1;
 	double maxPValue = 1;
 
-	//uint64_t sketchSize = this->parameters.minHashesPerWindow;
-	//int kmerSize = this->parameters.kmerSize;
-	//int kmerSpace = this->kmerSpace;
-
-	uint64_t i = 0;
-	uint64_t j = 0;
-	uint64_t common = 0;
-	uint64_t denom = 0;
-	const HashList & hashesSortedRef = this->reference.hashesSorted;
-	const HashList & hashesSortedQry = msh->reference.hashesSorted;
-
-	while ( denom < sketchSize && i < hashesSortedRef.size() && j < hashesSortedQry.size() )
-	{
-		if ( hashLessThan(hashesSortedRef.at(i), hashesSortedQry.at(j), hashesSortedRef.get64()) )
-		{
-			i++;
-		}
-		else if ( hashLessThan(hashesSortedQry.at(j), hashesSortedRef.at(i), hashesSortedRef.get64()) )
-		{
-			j++;
-		}
-		else
-		{
-			i++;
-			j++;
-			common++;
-		}
-
-		denom++;
-	}
-
-	if ( denom < sketchSize )
-	{
-		// complete the union operation if possible
-
-		if ( i < hashesSortedRef.size() )
-		{
-			denom += hashesSortedRef.size() - i;
-		}
-
-		if ( j < hashesSortedQry.size() )
-		{
-			denom += hashesSortedQry.size() - j;
-		}
-
-		if ( denom > sketchSize )
-		{
-			denom = sketchSize;
-		}
-	}
-
-
-
-	double jaccard_ = double(common) / denom;
+	double jaccard_ = this->jaccard(msh);
 	distance = -log(2 * jaccard_ / (1. + jaccard_)) / kmerSize;
 
 	if ( distance > 1 )
@@ -1066,6 +927,8 @@ double MinHash::pValue(uint64_t x, uint64_t lengthRef, uint64_t lengthQuery, dou
 	//#endif
 }
 */
+
+//FIXME: it only works for DNA sequences
 void reverseComplement(const char * src, char * dest, int length)
 {
 	char table[4] = {'T','G','A','C'};

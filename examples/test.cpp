@@ -75,6 +75,7 @@ int main(int argc, char* argv[])
 	time3 = get_sec();
 
 	double minhash_jac = mh1->jaccard(mh2);	
+	//double minhash_jac = mh1->mdistance(mh2);	
 
 	time2 = get_sec();
 
