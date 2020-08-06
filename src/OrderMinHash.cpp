@@ -11,6 +11,8 @@
 
 #include <sys/time.h>
 
+#include <immintrin.h>
+
 double get_sec(){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
@@ -122,7 +124,15 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	double t1 = get_sec();
 	for(size_t i = 0; i < seq.size() - k + 1; ++i) {
 		auto occ = occurrences[seq.substr(i, k)]++;
-		mers.emplace_back(i, occ, (uint64_t)0, hash_to_uint(&seq.data()[i], k));
+		//mers.emplace_back(i, occ, (uint64_t)0, hash_to_uint(&seq.data()[i], k));
+		mers.emplace_back(i, occ, (uint64_t)0, 0);
+	}
+	uint64_t * intHash = new uint64_t[seq.size() -k + 1];
+	uint64_t * occ     = new uint64_t[seq.size() -k + 1];
+	for(int i = 0; i < seq.size() -k + 1; i++)
+	{
+		intHash[i] = hash_to_uint(&seq.data()[i], k);
+		occ[i]     = mers[i].occ;
 	}
 	double t2 = get_sec();
 	std::cout << "occ time: " << t2 - t1 << std::endl;
@@ -136,15 +146,51 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> pqueue(cmp);
 	std::vector<mer_info> lmers;
 	lmers.reserve(l);
+	int lanes = 8;// vector lanes
+	uint64_t buffer[lanes];
 
 	for(unsigned i = 0; i < m; ++i) {
 		const auto seed = gen64();//prg();
-		for( int id = 0; id < mers.size(); id++)
+		size_t pend_size = (mers.size() / lanes) * lanes;
+		//body
+		for( int id = 0; id < pend_size; id+=lanes)
 		{
-			uint64_t kmer_int = mers[id].int_hash;
-		    kmer_int += mers[id].occ * weight;
-			mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
+			//uint64_t kmer_int = mers[id].int_hash;
+			#pragma ivdep
+			#pragma unroll(4)
+			for(int vid = 0; vid < lanes; vid++)	
+			{
+				uint64_t kmer_int = intHash[id + vid];
+		 	    kmer_int += occ[id + vid] * weight;
+				buffer[vid] ^= seed; 
+    			buffer[vid] ^= buffer[vid] >> 33;
+    			buffer[vid] *= 0xff51afd7ed558ccd;
+    			buffer[vid] ^= buffer[vid] >> 33;
+    			buffer[vid] *= 0xc4ceb9fe1a85ec53;
+    			buffer[vid] ^= buffer[vid] >> 33;
+
+			}
 			//meri.hash = hash.digest();
+			for(int vid = 0; vid < lanes; vid++)	
+			{
+				mers[id + vid].hash = buffer[vid];
+				if(pqueue.empty())
+					pqueue.push(mers[id + vid]);
+				else if(mers[id + vid].hash < pqueue.top().hash || pqueue.size() < l)
+				{
+					pqueue.push(mers[id + vid]);
+					if(pqueue.size() > l) pqueue.pop();
+				}
+			}
+		}
+
+		//tail
+		for( int id = pend_size; id < pend_size; id++)
+		{
+
+			uint64_t kmer_int = intHash[id];
+		    kmer_int += occ[id] * weight;
+			mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
 			if(pqueue.empty())
 				pqueue.push(mers[id]);
 			else if(mers[id].hash < pqueue.top().hash || pqueue.size() < l)
@@ -152,6 +198,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 				pqueue.push(mers[id]);
 				if(pqueue.size() > l) pqueue.pop();
 			}
+
 		}
 
 		lmers.clear();
