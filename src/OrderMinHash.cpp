@@ -6,6 +6,14 @@
 
 #include <algorithm>
 #include "robin_hood.h"
+
+#include <sys/time.h>
+
+double get_sec(){
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000;
+}
 namespace Sketch
 {
 
@@ -98,7 +106,7 @@ inline void OrderMinHash::compute_sketch(char * ptr, const char * seq){
 template<typename BT>
 static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, uint64_t mtSeed, BT block) {
 	if(seq.size() < k) return;
-	const bool weight = l > 0;
+	const uint64_t weight = l > 0 ? 1 : 0;
 	if(l == 0) l = 1;
 
 	std::vector<mer_info> mers;
@@ -106,22 +114,33 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	size_t *pos = new size_t[l];
 
 	//  Create list of k-mers with occurrence numbers
+	double t1 = get_sec();
 	for(size_t i = 0; i < seq.size() - k + 1; ++i) {
 		auto occ = occurrences[seq.substr(i, k)]++;
-		mers.emplace_back(i, occ, (uint64_t)0);
+		mers.emplace_back(i, occ, (uint64_t)0, hash_to_uint(&seq.data()[i], k));
 	}
-
+	double t2 = get_sec();
+	std::cout << "occ time: " << t2 - t1 << std::endl;
+	std::cout << "omh mers size:" << mers.size() << std::endl;
+	std::cout << "seq size: " << seq.size() << std::endl;
+	std::cout << "seq -k +1: " << seq.size() - k + 1 << std::endl;
 	xxhash hash;
 	std::mt19937_64 gen64(mtSeed); //TODO: make 32 a parameter
+	t1 = get_sec();
 	for(unsigned i = 0; i < m; ++i) {
 		const auto seed = gen64();//prg();
-		for(auto& meri : mers) {
+		//for(auto& meri : mers) 
+		//#pragma ivdep
+		for( int id = 0; id < mers.size(); id++)
+		{
 			//hash.reset(seed);
 			//hash.update(&seq.data()[meri.pos], k);//update kmer (chars)
 			//
 			//if(weight) hash.update(&meri.occ, sizeof(meri.occ));//update occurance to hash
-			uint64_t kmer_int = hash_to_uint(&seq.data()[meri.pos], k);
-			meri.hash = mc::murmur3_fmix(kmer_int, seed);
+			//uint64_t kmer_int = hash_to_uint(&seq.data()[id], k);
+			uint64_t kmer_int = mers[id].int_hash;
+		    kmer_int += mers[id].occ * weight;
+			mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
 			//meri.hash = hash.digest();
 		}
 
@@ -131,6 +150,8 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 		for(unsigned j = 0; j < l; ++j)
 			block(i, j, mers[j].pos);
 	}
+	t2 = get_sec();
+	std::cout << "omh main sketch time: " << t2 - t1 << std::endl;
 }
 
 double OrderMinHash::compare_sketches(const OSketch& sk1, const OSketch& sk2, ssize_t m, bool circular) {

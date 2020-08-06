@@ -12,11 +12,13 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 struct mer_info {
 	size_t pos;
 	uint64_t hash;
+	uint64_t int_hash;
 	unsigned occ;
-	mer_info(size_t p, unsigned o, uint64_t h)
+	mer_info(size_t p, unsigned o, uint64_t h, uint64_t oh)
 		: pos(p)
 		  , hash(h)
 		  , occ(o)
+		  , int_hash(oh)
 	{ }
 };
 
