@@ -103,12 +103,13 @@ void OrderMinHash::sketch()
 
 inline void OrderMinHash::compute_sketch(char * ptr, const char * seq){
 	std::string seqStr(seq);
-	omh_pos(seqStr, m_k, m_l, m_m, mtSeed,
-			[&ptr, &seq, this](unsigned i, unsigned j, size_t pos) { memcpy(ptr, seq + pos, m_k); ptr += m_k; });
+	omh_pos(seqStr, m_k, m_l, m_m, mtSeed, ptr);
+
+//			[&ptr, &seq, this](unsigned i, unsigned j, size_t pos) { memcpy(ptr, seq + pos, m_k); ptr += m_k; });
 }
 
-template<typename BT>
-static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, uint64_t mtSeed, BT block) {
+//template<typename BT>
+static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, uint64_t mtSeed, char * ptr) {
 	if(seq.size() < k) return;
 	const uint64_t weight = l > 0 ? 1 : 0;
 	if(l == 0) l = 1;
@@ -162,8 +163,12 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 		std::sort(lmers.begin(), lmers.end(), [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
 		assert(lmers.size() == l);
 
+		//	block(i, j, lmers[j].pos);
 		for(unsigned j = 0; j < l; ++j)
-			block(i, j, lmers[j].pos);
+		{
+			memcpy(ptr, &seq.data()[lmers[j].pos], k);
+			ptr += k;
+		}
 	}
 	t2 = get_sec();
 	std::cout << "omh main sketch time: " << t2 - t1 << std::endl;

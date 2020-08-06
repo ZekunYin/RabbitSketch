@@ -6,8 +6,8 @@
 
 namespace Sketch{
 
-template<typename BT>
-static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, uint64_t mtSeed, BT block);
+//template<typename BT>
+static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, uint64_t mtSeed, char * ptr);
 
 struct mer_info {
 	size_t pos;
