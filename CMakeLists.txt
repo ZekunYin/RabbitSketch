@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(rabbitsketch)
 
 option(CXX "build pure c++ library instead of python bind interface" OFF)
-#SET(CMAKE_CXX_COMPILER /usr/bin/g++)
+#SET(CMAKE_CXX_COMPILER icpc) 
 #SET(CMAKE_C_COMPILER /usr/bin/gcc)
 
 include_directories(src)
@@ -12,7 +12,7 @@ aux_source_directory(src DIR_SRCS)
 
 aux_source_directory(examples DIR_SRCS)
 #linux only 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -std=c++14 -static-libstdc++ -march=native -lz")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -std=c++14 -static-libstdc++ -mavx2 -lz")
 
 #set flags for specific files
 #set_source_files_properties(src/MinHash.cpp PROPERTIES COMPILE_FLAGS -mavx2)

@@ -46,20 +46,20 @@ int main(int argc, char* argv[])
 	double distance;
 	double time1 = get_sec();	
 
-	Sketch::WMinHash * wmh1 = new Sketch::WMinHash();
-	Sketch::WMinHash * wmh2 = new Sketch::WMinHash();
-	wmh1->setHistoSketchSize(60);
-	wmh2->setHistoSketchSize(60);
-	wmh1->update(seq1);
-	wmh2->update(seq2);
+	//Sketch::WMinHash * wmh1 = new Sketch::WMinHash();
+	//Sketch::WMinHash * wmh2 = new Sketch::WMinHash();
+	//wmh1->setHistoSketchSize(60);
+	//wmh2->setHistoSketchSize(60);
+	//wmh1->update(seq1);
+	//wmh2->update(seq2);
 
 	double time3 = get_sec();
 
-	distance = wmh1->distance(wmh2);
+	//distance = wmh1->distance(wmh2);
 
 	double time2 = get_sec();
-	cout << "Algorithm\t" << "distance\t" << "totaltime\t" << "sketchtime\t" << endl;
-	cout << "WMinHash\t"  << distance << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
+	//cout << "Algorithm\t" << "distance\t" << "totaltime\t" << "sketchtime\t" << endl;
+	//cout << "WMinHash\t"  << distance << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
 	//cout << "WMinHash: the distance(1-WJ) is: " << distance << endl;
 	//cout << "WMinHash time: " << time2 - time1  << endl;
 	//cout << "WMinHash sketch time: " << time3 - time1 << endl;
@@ -67,21 +67,21 @@ int main(int argc, char* argv[])
 	
 	time1 = get_sec();
 
-	Sketch::MinHash * mh1 = new Sketch::MinHash();
-	Sketch::MinHash * mh2 = new Sketch::MinHash();
-	mh1->update(seq1);	
-	//std::cout << "mh1 set size: " << mh1->count() << std::endl;
-	mh2->update(seq2);	
-	//std::cout << "mh2 set size: " << mh2->count() << std::endl;
+	//Sketch::MinHash * mh1 = new Sketch::MinHash();
+	//Sketch::MinHash * mh2 = new Sketch::MinHash();
+	//mh1->update(seq1);	
+	////std::cout << "mh1 set size: " << mh1->count() << std::endl;
+	//mh2->update(seq2);	
+	////std::cout << "mh2 set size: " << mh2->count() << std::endl;
 
 	time3 = get_sec();
 
-	double minhash_jac = mh1->jaccard(mh2);	
+	//double minhash_jac = mh1->jaccard(mh2);	
 	//double minhash_jac = mh1->mdistance(mh2);	
 
 	time2 = get_sec();
 
-	cout << "MinHash\t"  << 1.0 - minhash_jac << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
+	//cout << "MinHash\t"  << 1.0 - minhash_jac << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
 	//cout << "MinHash: the distance(1-J) is: " << 1.0 - minhash_dist << endl;
 	//cout << "MinHash time: " << time2 - time1  << endl;
 	//cout << "MinHash sketch time: " << time3 - time1  << endl;
@@ -108,22 +108,22 @@ int main(int argc, char* argv[])
 	//cout << "=======================================================" << endl;
 
 
-	time1  = get_sec();
+	///time1  = get_sec();
 
-    static const size_t BITS = 20; //24
-	Sketch::HyperLogLog t(BITS);
-	Sketch::HyperLogLog t1(BITS);
+    ///static const size_t BITS = 20; //24
+	///Sketch::HyperLogLog t(BITS);
+	///Sketch::HyperLogLog t1(BITS);
 
-    t.update(seq1);
-    t1.update(seq2);
+    ///t.update(seq1);
+    ///t1.update(seq2);
 
-	time3 = get_sec();
+	///time3 = get_sec();
 
-    double dist = t1.distance(t);
+    ///double dist = t1.distance(t);
 
-	time2  = get_sec();
+	///time2  = get_sec();
 
-	cout << "HLL\t"  << 1.0 - dist  << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
+	///cout << "HLL\t"  << 1.0 - dist  << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
     //cout << "HLL distance(1-J) = " <<  1.0 - dist << endl;
 	//cout << "HLL time: " << time2 -  time1 << endl;
 	//cout << "HLL sketch time: " << time3 -  time1 << endl;

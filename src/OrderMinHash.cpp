@@ -18,8 +18,17 @@ double get_sec(){
 	gettimeofday(&tv, NULL);
 	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000;
 }
-
-
+#ifdef __AVX512F__
+static void inspect(__m512i va)
+{
+	uint64_t a[8];
+	_mm512_storeu_si512(a, va);
+	cout << "[ ";
+	for(int i = 0; i<8;i++)
+		cout << a[i] << " ";
+	cout << "]" << endl;
+}
+#endif
 namespace Sketch
 {
 
@@ -105,8 +114,10 @@ void OrderMinHash::sketch()
 
 inline void OrderMinHash::compute_sketch(char * ptr, const char * seq){
 	std::string seqStr(seq);
+	double t1 = get_sec();
 	omh_pos(seqStr, m_k, m_l, m_m, mtSeed, ptr);
-
+	double t2 = get_sec();
+	cout << "total sketch time: " << t2 - t1 << endl;
 //			[&ptr, &seq, this](unsigned i, unsigned j, size_t pos) { memcpy(ptr, seq + pos, m_k); ptr += m_k; });
 }
 
@@ -146,22 +157,123 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> pqueue(cmp);
 	std::vector<mer_info> lmers;
 	lmers.reserve(l);
-	int lanes = 8;// vector lanes
+	int lanes = 8*4;// vector lanes unroll(4)
 	uint64_t buffer[lanes];
+
+#ifdef __AVX512F__
+	__m512i va[4];
+	__m512i vb[4];
+	__m512i vtmp[4];
+	__m512i vocc[4];
+	__m512i vweight = _mm512_set1_epi64(weight);
+	__m512i vzero   = _mm512_set1_epi64(0);
+	__m512i vconst0 = _mm512_set1_epi64(0xff51afd7ed558ccd);
+	__m512i vconst1 = _mm512_set1_epi64(0xc4ceb9fe1a85ec53);
+	__mmask8 weight_msk = l > 0 ? 0xFF : 0x00;
+#endif
 
 	for(unsigned i = 0; i < m; ++i) {
 		const auto seed = gen64();//prg();
+
+#ifdef __AVX512F__
+		__m512i vseed = _mm512_set1_epi64(seed);
+#endif
+
 		size_t pend_size = (mers.size() / lanes) * lanes;
 		//body
 		for( int id = 0; id < pend_size; id+=lanes)
 		{
 			//uint64_t kmer_int = mers[id].int_hash;
+#ifdef __AVX512F__ 
+		va[0] = _mm512_loadu_si512((void *)&intHash[id + 0 * 8]);
+		va[1] = _mm512_loadu_si512((void *)&intHash[id + 1 * 8]);
+		va[2] = _mm512_loadu_si512((void *)&intHash[id + 2 * 8]);
+		va[3] = _mm512_loadu_si512((void *)&intHash[id + 3 * 8]);
+
+		//vocc[0] = _mm512_mask_loadu_epi64(vzero, weight_msk, (void *)&occ[id + 0 * 8]);
+		//vocc[1] = _mm512_mask_loadu_epi64(vzero, weight_msk, (void *)&occ[id + 1 * 8]);
+		//vocc[2] = _mm512_mask_loadu_epi64(vzero, weight_msk, (void *)&occ[id + 2 * 8]);
+		//vocc[3] = _mm512_mask_loadu_epi64(vzero, weight_msk, (void *)&occ[id + 3 * 8]);
+
+
+		vocc[0] = _mm512_loadu_si512((void *)&occ[id + 0 * 8]);
+		vocc[1] = _mm512_loadu_si512((void *)&occ[id + 1 * 8]);
+		vocc[2] = _mm512_loadu_si512((void *)&occ[id + 2 * 8]);
+		vocc[3] = _mm512_loadu_si512((void *)&occ[id + 3 * 8]);
+
+		vb[0] = _mm512_mask_add_epi64(va[0], weight_msk, va[0], vocc[0]);
+		vb[1] = _mm512_mask_add_epi64(va[1], weight_msk, va[1], vocc[1]);
+		vb[2] = _mm512_mask_add_epi64(va[2], weight_msk, va[2], vocc[2]);
+		vb[3] = _mm512_mask_add_epi64(va[3], weight_msk, va[3], vocc[3]);
+
+		//vtmp[0] = _mm512_mullo_epi64(vocc[0], vweight);
+		//vtmp[1] = _mm512_mullo_epi64(vocc[1], vweight);
+		//vtmp[2] = _mm512_mullo_epi64(vocc[2], vweight);
+		//vtmp[3] = _mm512_mullo_epi64(vocc[3], vweight);
+
+		//vb[0] = _mm512_add_epi64(va[0], vocc[0]);
+		//vb[1] = _mm512_add_epi64(va[1], vocc[1]);
+		//vb[2] = _mm512_add_epi64(va[2], vocc[2]);
+		//vb[3] = _mm512_add_epi64(va[3], vocc[3]);
+	
+
+		va[0] = _mm512_xor_epi64(vb[0], vseed);
+		va[1] = _mm512_xor_epi64(vb[1], vseed);
+		va[2] = _mm512_xor_epi64(vb[2], vseed);
+		va[3] = _mm512_xor_epi64(vb[3], vseed);
+
+		vtmp[0] = _mm512_srli_epi64(va[0], 33);
+		vtmp[1] = _mm512_srli_epi64(va[1], 33);
+		vtmp[2] = _mm512_srli_epi64(va[2], 33);
+		vtmp[3] = _mm512_srli_epi64(va[3], 33);
+
+		vb[0] = _mm512_xor_epi64(va[0], vtmp[0]);
+		vb[1] = _mm512_xor_epi64(va[1], vtmp[1]);
+		vb[2] = _mm512_xor_epi64(va[2], vtmp[2]);
+		vb[3] = _mm512_xor_epi64(va[3], vtmp[3]);
+
+		va[0] = _mm512_mullo_epi64(vb[0], vconst0);
+		va[1] = _mm512_mullo_epi64(vb[1], vconst0);
+		va[2] = _mm512_mullo_epi64(vb[2], vconst0);
+		va[3] = _mm512_mullo_epi64(vb[3], vconst0);
+
+		vtmp[0] = _mm512_srli_epi64(va[0], 33);
+		vtmp[1] = _mm512_srli_epi64(va[1], 33);
+		vtmp[2] = _mm512_srli_epi64(va[2], 33);
+		vtmp[3] = _mm512_srli_epi64(va[3], 33);
+
+		vb[0] = _mm512_xor_epi64(va[0], vtmp[0]);
+		vb[1] = _mm512_xor_epi64(va[1], vtmp[1]);
+		vb[2] = _mm512_xor_epi64(va[2], vtmp[2]);
+		vb[3] = _mm512_xor_epi64(va[3], vtmp[3]);
+
+		va[0] = _mm512_mullo_epi64(vb[0], vconst1);
+		va[1] = _mm512_mullo_epi64(vb[1], vconst1);
+		va[2] = _mm512_mullo_epi64(vb[2], vconst1);
+		va[3] = _mm512_mullo_epi64(vb[3], vconst1);
+
+		vtmp[0] = _mm512_srli_epi64(va[0], 33);
+		vtmp[1] = _mm512_srli_epi64(va[1], 33);
+		vtmp[2] = _mm512_srli_epi64(va[2], 33);
+		vtmp[3] = _mm512_srli_epi64(va[3], 33);
+
+		vb[0] = _mm512_xor_epi64(va[0], vtmp[0]);
+		vb[1] = _mm512_xor_epi64(va[1], vtmp[1]);
+		vb[2] = _mm512_xor_epi64(va[2], vtmp[2]);
+		vb[3] = _mm512_xor_epi64(va[3], vtmp[3]);
+
+		_mm512_storeu_si512(buffer + 0 * 8, vb[0]);
+		_mm512_storeu_si512(buffer + 1 * 8, vb[1]);
+		_mm512_storeu_si512(buffer + 2 * 8, vb[2]);
+		_mm512_storeu_si512(buffer + 3 * 8, vb[3]);
+#else
 			#pragma ivdep
 			#pragma unroll(4)
 			for(int vid = 0; vid < lanes; vid++)	
 			{
 				uint64_t kmer_int = intHash[id + vid];
 		 	    kmer_int += occ[id + vid] * weight;
+				buffer[vid] = kmer_int;
 				buffer[vid] ^= seed; 
     			buffer[vid] ^= buffer[vid] >> 33;
     			buffer[vid] *= 0xff51afd7ed558ccd;
@@ -170,10 +282,12 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
     			buffer[vid] ^= buffer[vid] >> 33;
 
 			}
+#endif
 			//meri.hash = hash.digest();
 			for(int vid = 0; vid < lanes; vid++)	
 			{
 				mers[id + vid].hash = buffer[vid];
+				//if(i == 0) cout << mers[id+vid].hash << endl; 
 				if(pqueue.empty())
 					pqueue.push(mers[id + vid]);
 				else if(mers[id + vid].hash < pqueue.top().hash || pqueue.size() < l)
@@ -183,7 +297,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 				}
 			}
 		}
-
+		//exit(0);
 		//tail
 		for( int id = pend_size; id < pend_size; id++)
 		{
