@@ -5,6 +5,8 @@
 #include "hash_int.h"
 
 #include <algorithm>
+#include <queue>
+
 #include "robin_hood.h"
 
 #include <sys/time.h>
@@ -14,6 +16,8 @@ double get_sec(){
 	gettimeofday(&tv, NULL);
 	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000;
 }
+
+
 namespace Sketch
 {
 
@@ -127,10 +131,12 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	xxhash hash;
 	std::mt19937_64 gen64(mtSeed); //TODO: make 32 a parameter
 	t1 = get_sec();
+	auto cmp = [](Sketch::mer_info & a, Sketch::mer_info & b){return a.hash < b.hash;};
+	std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> pqueue(cmp);
+
 	for(unsigned i = 0; i < m; ++i) {
 		const auto seed = gen64();//prg();
 		//for(auto& meri : mers) 
-		//#pragma ivdep
 		for( int id = 0; id < mers.size(); id++)
 		{
 			//hash.reset(seed);
@@ -142,13 +148,28 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 		    kmer_int += mers[id].occ * weight;
 			mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
 			//meri.hash = hash.digest();
+			if(pqueue.empty())
+				pqueue.push(mers[id]);
+			else if(mers[id].hash < pqueue.top().hash || pqueue.size() < l)
+			{
+				pqueue.push(mers[id]);
+				if(pqueue.size() > l) pqueue.pop();
+			}
 		}
 
-		//top-k
-		std::partial_sort(mers.begin(), mers.begin() + l, mers.end(), [&](const mer_info& x, const mer_info& y) { return x.hash < y.hash; });
-		std::sort(mers.begin(), mers.begin() + l, [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
+
+		vector<mer_info> lmers;
+		while(!pqueue.empty())
+		{
+			lmers.push_back(pqueue.top());
+			//std::cout << "round: " << i << " hash: " << pqueue.top().hash << endl;
+			pqueue.pop();
+		}
+		std::sort(lmers.begin(), lmers.end(), [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
+		assert(lmers.size() == l);
+
 		for(unsigned j = 0; j < l; ++j)
-			block(i, j, mers[j].pos);
+			block(i, j, lmers[j].pos);
 	}
 	t2 = get_sec();
 	std::cout << "omh main sketch time: " << t2 - t1 << std::endl;
