@@ -133,17 +133,13 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	t1 = get_sec();
 	auto cmp = [](Sketch::mer_info & a, Sketch::mer_info & b){return a.hash < b.hash;};
 	std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> pqueue(cmp);
+	std::vector<mer_info> lmers;
+	lmers.reserve(l);
 
 	for(unsigned i = 0; i < m; ++i) {
 		const auto seed = gen64();//prg();
-		//for(auto& meri : mers) 
 		for( int id = 0; id < mers.size(); id++)
 		{
-			//hash.reset(seed);
-			//hash.update(&seq.data()[meri.pos], k);//update kmer (chars)
-			//
-			//if(weight) hash.update(&meri.occ, sizeof(meri.occ));//update occurance to hash
-			//uint64_t kmer_int = hash_to_uint(&seq.data()[id], k);
 			uint64_t kmer_int = mers[id].int_hash;
 		    kmer_int += mers[id].occ * weight;
 			mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
@@ -157,12 +153,10 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 			}
 		}
 
-
-		vector<mer_info> lmers;
+		lmers.clear();
 		while(!pqueue.empty())
 		{
 			lmers.push_back(pqueue.top());
-			//std::cout << "round: " << i << " hash: " << pqueue.top().hash << endl;
 			pqueue.pop();
 		}
 		std::sort(lmers.begin(), lmers.end(), [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });

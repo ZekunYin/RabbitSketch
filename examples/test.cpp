@@ -8,7 +8,7 @@ using namespace std;
 
 KSEQ_INIT(gzFile, gzread)
 
-double get_sec(){
+static double get_sec(){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (double)tv.tv_sec + (double)tv.tv_usec / 1000000;
