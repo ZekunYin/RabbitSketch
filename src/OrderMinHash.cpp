@@ -160,23 +160,53 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	std::vector<mer_info> lmers;
 	lmers.reserve(l);
 
+	#define lanes 16 
+
+	uint64_t hashBuffer[lanes];
 	//main sketch loop
 	for(unsigned i = 0; i < m; ++i) {
 		const auto seed = gen64();//prg();
 		mer_info one_mer;
-		for( int id = 0; id < mers.size(); id++)
+		int pend_size = (mers.size() / lanes) * lanes;
+
+		//body
+		for( int id = 0; id < pend_size; id+=lanes)
 		{
 
+			for(int vid = 0; vid < lanes; vid++)
+			{
+			uint64_t kmer_int = intHash[id + vid];
+		    kmer_int += occ[id + vid] * weight;
+			//mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
+			hashBuffer[vid] = mc::murmur3_fmix(kmer_int, seed);
+			}
+			for(int vid = 0; vid < lanes; vid++)
+			{
+			//one_mer.pos = id + vid;
+			//one_mer.occ = occ[id + vid];
+			//one_mer.hash = hashBuffer[vid];
+
+			if( pqueue.size() < l || hashBuffer[vid] < pqueue.top().hash)
+			{
+				pqueue.emplace(id+vid, occ[id + vid], hashBuffer[vid], 0);
+				//pqueue.push(one_mer);
+				if(pqueue.size() > l) pqueue.pop();
+			}
+			}
+
+		}
+		//tail
+		for( int id = pend_size; id < mers.size(); id++)
+		{
 			uint64_t kmer_int = intHash[id];
 		    kmer_int += occ[id] * weight;
-			//mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
-			one_mer.pos = id;
-			one_mer.occ = occ[id];
-			one_mer.hash = mc::murmur3_fmix(kmer_int, seed);
-
-			if( pqueue.size() < l || one_mer.hash < pqueue.top().hash)
+			//one_mer.pos = id;
+			//one_mer.occ = occ[id];
+			uint64_t kmer_hash = mc::murmur3_fmix(kmer_int, seed);
+			if( pqueue.size() < l || kmer_hash < pqueue.top().hash)
 			{
-				pqueue.push(one_mer);
+				//pqueue.push(one_mer);
+				pqueue.emplace(id, occ[id], kmer_hash, 0);
 				if(pqueue.size() > l) pqueue.pop();
 			}
 
