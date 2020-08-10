@@ -14,6 +14,7 @@ struct mer_info {
 	uint64_t hash;
 	uint64_t int_hash;
 	unsigned occ;
+	mer_info(){}
 	mer_info(size_t p, unsigned o, uint64_t h, uint64_t oh)
 		: pos(p)
 		  , hash(h)

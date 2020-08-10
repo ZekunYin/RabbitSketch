@@ -159,6 +159,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	lmers.reserve(l);
 	int lanes = 8*4;// vector lanes unroll(4)
 	uint64_t buffer[lanes];
+	mer_info * minmers = new mer_info[l];
 
 #ifdef __AVX512F__
 	__m512i va[4];
@@ -174,7 +175,10 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 
 	for(unsigned i = 0; i < m; ++i) {
 		const auto seed = gen64();//prg();
+		for(int id = 0; id < l; id++)
+			minmers[id].hash = UINT64_MAX;
 
+/*
 #ifdef __AVX512F__
 		__m512i vseed = _mm512_set1_epi64(seed);
 #endif
@@ -184,7 +188,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 		for( int id = 0; id < pend_size; id+=lanes)
 		{
 			//uint64_t kmer_int = mers[id].int_hash;
-#ifdef __AVX512F__ 
+#ifdef __NOAVX512F__ 
 		va[0] = _mm512_loadu_si512((void *)&intHash[id + 0 * 8]);
 		va[1] = _mm512_loadu_si512((void *)&intHash[id + 1 * 8]);
 		va[2] = _mm512_loadu_si512((void *)&intHash[id + 2 * 8]);
@@ -286,28 +290,68 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 			//meri.hash = hash.digest();
 			for(int vid = 0; vid < lanes; vid++)	
 			{
+				//for(int index = 0; index < l; index ++)
+				//{
+				//	cout << minmers[index].hash << " ";
+				//}
+				//cout << endl;
+				//cout << "insert hash: " << buffer[vid] << endl;
+
 				mers[id + vid].hash = buffer[vid];
+				//insert mers to minmers
+				//if(mers[id+vid].hash < minmers[l - 1].hash)
+				//{
+				//	int break_id = 0;
+				//	for(int insert_id = l-2; insert_id >= 0; insert_id--)
+				//	{
+				//		if(mers[id + vid].hash >= minmers[insert_id].hash) 
+				//		{
+				//			break_id = insert_id + 1;
+				//			break;
+				//		}	
+				//	}
+				//	//cout << "break id: " << break_id << endl;
+				//	memcpy(minmers + break_id + 1, minmers + break_id, (l - break_id - 1) * sizeof(mer_info) );
+				//	minmers[break_id] = mers[id + vid];
+				//}
 				//if(i == 0) cout << mers[id+vid].hash << endl; 
-				if(pqueue.empty())
-					pqueue.push(mers[id + vid]);
-				else if(mers[id + vid].hash < pqueue.top().hash || pqueue.size() < l)
+				//if(pqueue.empty())
+				//	pqueue.push(mers[id + vid]);
+				//else 
+				if( pqueue.size() < l || mers[id + vid].hash < pqueue.top().hash)
 				{
 					pqueue.push(mers[id + vid]);
 					if(pqueue.size() > l) pqueue.pop();
 				}
 			}
 		}
+		*/
 		//exit(0);
 		//tail
-		for( int id = pend_size; id < pend_size; id++)
+		for( int id = 0; id < mers.size(); id++)
 		{
 
 			uint64_t kmer_int = intHash[id];
 		    kmer_int += occ[id] * weight;
 			mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
-			if(pqueue.empty())
-				pqueue.push(mers[id]);
-			else if(mers[id].hash < pqueue.top().hash || pqueue.size() < l)
+			//if(mers[id].hash < minmers[l - 1].hash)
+			//{
+			//	int break_id = 0;
+			//	for(int insert_id = l-2; insert_id >= 0; insert_id--)
+			//	{
+			//		if(mers[id].hash >= minmers[insert_id].hash) 
+			//		{
+			//			break_id = insert_id + 1;
+			//			break;
+			//		}	
+			//	}
+			//	memcpy(minmers + break_id + 1, minmers + break_id, (l - break_id - 1) * sizeof(mer_info) );
+			//	minmers[break_id] = mers[id];
+			//}
+			//if(pqueue.empty())
+			//	pqueue.push(mers[id]);
+			//else 
+			if( pqueue.size() < l || mers[id].hash < pqueue.top().hash)
 			{
 				pqueue.push(mers[id]);
 				if(pqueue.size() > l) pqueue.pop();
@@ -321,13 +365,14 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 			lmers.push_back(pqueue.top());
 			pqueue.pop();
 		}
-		std::sort(lmers.begin(), lmers.end(), [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
-		assert(lmers.size() == l);
+		//std::sort(lmers.begin(), lmers.end(), [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
+		std::sort(minmers, minmers + l, [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
+		//assert(lmers.size() == l);
 
 		//	block(i, j, lmers[j].pos);
 		for(unsigned j = 0; j < l; ++j)
 		{
-			memcpy(ptr, &seq.data()[lmers[j].pos], k);
+			memcpy(ptr, &seq.data()[minmers[j].pos], k);
 			ptr += k;
 		}
 	}
