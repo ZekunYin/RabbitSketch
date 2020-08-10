@@ -156,42 +156,88 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	std::mt19937_64 gen64(mtSeed); //TODO: make 32 a parameter
 	t1 = get_sec();
 	auto cmp = [](Sketch::mer_info & a, Sketch::mer_info & b){return a.hash < b.hash;};
-	std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> pqueue(cmp);
+	//std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> pqueue(cmp);
+	vector<std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> > pqueues;
+	uint64_t * mseed = new uint64_t[m];
+	for(int i = 0; i < m; i++)
+	{
+		pqueues.emplace_back(cmp);
+		mseed[i] = gen64();
+	}	
+
 	std::vector<mer_info> lmers;
 	lmers.reserve(l);
 
-	#define lanes 16 
-
+	#define lanes 8
+	int pend_size = (mers.size() / lanes) * lanes;
 	uint64_t hashBuffer[lanes];
+
 	//main sketch loop
 	for(unsigned i = 0; i < m; ++i) {
-		const auto seed = gen64();//prg();
-		mer_info one_mer;
-		int pend_size = (mers.size() / lanes) * lanes;
+		//const auto seed = gen64();//prg();
 
+		std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> & pqueue = pqueues[i];
 		//body
 		for( int id = 0; id < pend_size; id+=lanes)
 		{
 
-			for(int vid = 0; vid < lanes; vid++)
+			for(int vid = 0; vid < lanes; ++vid)
 			{
 			uint64_t kmer_int = intHash[id + vid];
 		    kmer_int += occ[id + vid] * weight;
 			//mers[id].hash = mc::murmur3_fmix(kmer_int, seed);
-			hashBuffer[vid] = mc::murmur3_fmix(kmer_int, seed);
+			hashBuffer[vid] = mc::murmur3_fmix(kmer_int, mseed[i]);
 			}
-			for(int vid = 0; vid < lanes; vid++)
-			{
-			//one_mer.pos = id + vid;
-			//one_mer.occ = occ[id + vid];
-			//one_mer.hash = hashBuffer[vid];
+			
+			//for(int vid = 0; vid < lanes; ++vid)
+			//{
+			//if( pqueue.size() < l || hashBuffer[vid] < pqueue.top().hash)
+			//{
+			//	pqueue.emplace(id+vid, occ[id + vid], hashBuffer[vid], 0);
+			//	//pqueue.push(one_mer);
+			//	if(pqueue.size() > l) pqueue.pop();
+			//}
+			//}
 
-			if( pqueue.size() < l || hashBuffer[vid] < pqueue.top().hash)
+			if( pqueue.size() < l || hashBuffer[0] < pqueue.top().hash)
 			{
-				pqueue.emplace(id+vid, occ[id + vid], hashBuffer[vid], 0);
-				//pqueue.push(one_mer);
+				pqueue.emplace(id+0, occ[id + 0], hashBuffer[0], 0);
 				if(pqueue.size() > l) pqueue.pop();
 			}
+			if( pqueue.size() < l || hashBuffer[1] < pqueue.top().hash)
+			{
+				pqueue.emplace(id+1, occ[id + 1], hashBuffer[1], 0);
+				if(pqueue.size() > l) pqueue.pop();
+			}
+			if( pqueue.size() < l || hashBuffer[2] < pqueue.top().hash)
+			{
+				pqueue.emplace(id+2, occ[id + 2], hashBuffer[2], 0);
+				if(pqueue.size() > l) pqueue.pop();
+			}
+			if( pqueue.size() < l || hashBuffer[3] < pqueue.top().hash)
+			{
+				pqueue.emplace(id+3, occ[id + 3], hashBuffer[3], 0);
+				if(pqueue.size() > l) pqueue.pop();
+			}
+			if( pqueue.size() < l || hashBuffer[4] < pqueue.top().hash)
+			{
+				pqueue.emplace(id+4, occ[id + 4], hashBuffer[4], 0);
+				if(pqueue.size() > l) pqueue.pop();
+			}
+			if( pqueue.size() < l || hashBuffer[5] < pqueue.top().hash)
+			{
+				pqueue.emplace(id+5, occ[id + 5], hashBuffer[5], 0);
+				if(pqueue.size() > l) pqueue.pop();
+			}
+			if( pqueue.size() < l || hashBuffer[6] < pqueue.top().hash)
+			{
+				pqueue.emplace(id+6, occ[id + 6], hashBuffer[6], 0);
+				if(pqueue.size() > l) pqueue.pop();
+			}
+			if( pqueue.size() < l || hashBuffer[7] < pqueue.top().hash)
+			{
+				pqueue.emplace(id+7, occ[id + 7], hashBuffer[7], 0);
+				if(pqueue.size() > l) pqueue.pop();
 			}
 
 		}
@@ -202,7 +248,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 		    kmer_int += occ[id] * weight;
 			//one_mer.pos = id;
 			//one_mer.occ = occ[id];
-			uint64_t kmer_hash = mc::murmur3_fmix(kmer_int, seed);
+			uint64_t kmer_hash = mc::murmur3_fmix(kmer_int, mseed[i]);
 			if( pqueue.size() < l || kmer_hash < pqueue.top().hash)
 			{
 				//pqueue.push(one_mer);
@@ -211,12 +257,14 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 			}
 
 		}
+	}
 
+	for(unsigned i = 0; i < m; ++i) {
 		lmers.clear();
-		while(!pqueue.empty())
+		while(!pqueues[i].empty())
 		{
-			lmers.push_back(pqueue.top());
-			pqueue.pop();
+			lmers.push_back(pqueues[i].top());
+			pqueues[i].pop();
 		}
 		std::sort(lmers.begin(), lmers.end(), [&](const mer_info& x, const mer_info& y) { return x.pos < y.pos; });
 		assert(lmers.size() == l);
