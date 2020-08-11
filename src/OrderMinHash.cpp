@@ -151,10 +151,7 @@ void OrderMinHash::sketch()
 
 inline void OrderMinHash::compute_sketch(char * ptr, const char * seq){
 	std::string seqStr(seq);
-	double t1 = get_sec();
 	omh_pos(seqStr, m_k, m_l, m_m, mtSeed, ptr);
-	double t2 = get_sec();
-	cout << "total sketch time: " << t2 - t1 << endl;
 //			[&ptr, &seq, this](unsigned i, unsigned j, size_t pos) { memcpy(ptr, seq + pos, m_k); ptr += m_k; });
 }
 
@@ -169,7 +166,7 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 	robin_hood::unordered_map<uint64_t, unsigned> occurrences;
 	uint64_t * intHash = new uint64_t[seq.size() -k + 1];
 	uint64_t * occ     = new uint64_t[seq.size() -k + 1];
-	double t1 = get_sec();
+	//double t1 = get_sec();
 	for(int i = 0; i < seq.size() -k + 1; i++)
 	{
 		intHash[i] = hash_to_uint(&seq.data()[i], k);
@@ -183,15 +180,15 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 		mers.emplace_back(i, tmpocc, (uint64_t)0, 0);
 		occ[i]     = mers[i].occ;
 	}
-	double t2 = get_sec();
+	//double t2 = get_sec();
 
-	std::cout << "occ time: " << t2 - t1 << std::endl;
-	std::cout << "omh mers size:" << mers.size() << std::endl;
-	std::cout << "seq size: " << seq.size() << std::endl;
-	std::cout << "seq -k +1: " << seq.size() - k + 1 << std::endl;
+	//std::cout << "occ time: " << t2 - t1 << std::endl;
+	//std::cout << "omh mers size:" << mers.size() << std::endl;
+	//std::cout << "seq size: " << seq.size() << std::endl;
+	//std::cout << "seq -k +1: " << seq.size() - k + 1 << std::endl;
 
 	std::mt19937_64 gen64(mtSeed); //TODO: make 32 a parameter
-	t1 = get_sec();
+	//t1 = get_sec();
 	auto cmp = [](Sketch::mer_info & a, Sketch::mer_info & b){return a.hash < b.hash;};
 	//std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> pqueue(cmp);
 	vector<std::priority_queue<mer_info, std::vector<mer_info>, decltype(cmp)> > pqueues;
@@ -413,12 +410,13 @@ static void omh_pos(const std::string& seq, unsigned k, unsigned l, unsigned m, 
 			ptr += k;
 		}
 	}
-	t2 = get_sec();
-	std::cout << "omh main sketch time: " << t2 - t1 << std::endl;
+	//t2 = get_sec();
+	//std::cout << "omh main sketch time: " << t2 - t1 << std::endl;
 
 	delete[] intHash;
 	delete[] occ;
 	delete[] mseed;
+	return;
 }
 
 double OrderMinHash::compare_sketches(const OSketch& sk1, const OSketch& sk2, ssize_t m, bool circular) {
