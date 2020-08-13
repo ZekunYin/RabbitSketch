@@ -55,7 +55,8 @@ PYBIND11_MODULE(rabbitsketch, m){
 		;
 
 	py::class_<Sketch::WMinHash>(m, "WMinHash")
-		.def(py::init<>())
+		//.def(py::init<>())
+		.def(py::init<int, int, int, double>(), py::arg("kmer")=21, py::arg("size")=50, py::arg("windowSize")=9, py::arg("paraDWeight")=0.0)
 		.def("update", &Sketch::WMinHash::update)
 		.def("wJaccard", &Sketch::WMinHash::wJaccard)
 		.def("distance", &Sketch::WMinHash::distance)
