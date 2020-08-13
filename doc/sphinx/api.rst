@@ -10,6 +10,9 @@ MinHash
 Weighted MinHash
 ----------------
 
+.. doxygenclass:: Sketch::WMinHash
+    :members:
+
 OrderMinHash
 -------------
 
