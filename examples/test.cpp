@@ -46,10 +46,12 @@ int main(int argc, char* argv[])
 	double distance;
 	double time1 = get_sec();	
 
+	//Sketch::WMinHash * wmh1 = new Sketch::WMinHash(21, 50, 9, 0.0);
+	//Sketch::WMinHash * wmh2 = new Sketch::WMinHash(21, 50, 9, 0.0);
 	Sketch::WMinHash * wmh1 = new Sketch::WMinHash();
 	Sketch::WMinHash * wmh2 = new Sketch::WMinHash();
-	wmh1->setHistoSketchSize(60);
-	wmh2->setHistoSketchSize(60);
+	//wmh1->setHistoSketchSize(500);
+	//wmh2->setHistoSketchSize(500);
 	wmh1->update(seq1);
 	wmh2->update(seq2);
 

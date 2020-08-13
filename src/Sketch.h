@@ -144,47 +144,110 @@ namespace Sketch{
 
 	class WMinHash{
 		public:
-			//WMinHash(Parameters parametersNew);
-			WMinHash();
+			WMinHash(int k = 21, int size = 50, int windowSize = 9, double paraDWeight = 0.0):
+				kmerSize(k), histoSketchSize(size), minimizerWindowSize(windowSize), paraDecayWeight(paraDWeight)
+			{	
+				//numBins = pow(kmerSize, alphabetSize); //need to be confirmed
+				//histoDimension = pow(kmerSize, alphabetSize); //need to be confirmed
+				numBins = pow(kmerSize, 4); //consult from HULK
+				histoDimension = numBins; //need to be confirmed
+			
+				binsArr = (double *)malloc(numBins * sizeof(double));
+				memset(binsArr, 0, numBins*sizeof(double));//init binsArr
+			
+				int g = ceil(2 / EPSILON);
+				int d = ceil(log(1 - DELTA) / log(0.5));
+				countMinSketch = (double *)malloc(d * g *sizeof(double));
+				memset(countMinSketch, 0, d*g*sizeof(double));//init countMinSketch 
+				
+				//the r, c, b and getCWS need to be outClass
+				r = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+				c = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+				b = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+				getCWS(r, c, b, histoSketchSize, histoDimension);
+			
+				////for getCWS test debug
+			//	FILE * fp;
+			//	fp = fopen("cws.txt", "w");
+			//	for(int i = 0; i < histoSketchSize*histoDimension; i++){
+			//		fprintf(fp, "%ld\t%lf\t%lf\t%lf\n", i, r[i], c[i], b[i]);
+			//	}
+			
+				histoSketches = (uint32_t *) malloc (histoSketchSize * sizeof(uint32_t));
+				histoWeight = (double *) malloc (histoSketchSize * sizeof(double));
+				
+				//add the applyConceptDrift and decayWeight.
+				if(paraDecayWeight < 0.0 || paraDecayWeight > 1.0){
+					cerr << "the paraDecayWeight must between 0.0 and 1.0 " << endl;
+					exit(1);
+				}
+				else{
+					applyConceptDrift = true;
+				}
+				if(paraDecayWeight == 1.0){
+					applyConceptDrift = false;
+				}
+				decayWeight = 1.0;
+				if(applyConceptDrift){
+					decayWeight = exp(-paraDecayWeight);
+				}
+			
+				needToCompute = true;
+			
+			}
+			
+
 			~WMinHash();
 
+			/// weightedMinHash is updatable with multiple sequences
 			void update(char * seq);
+
+			/// return the jaccard index
 			double wJaccard(WMinHash * wmh);
+
+			/// return the distance which is negative correlation with jaccard index
 			double distance(WMinHash * wmh);
+
+			/// print hash value fo debug
 			void getWMinHash();
 
-			void setKmerSize(int kmerSizeNew) { kmerSize = kmerSizeNew; }
-			void setAlphabetSize(int alphabetSizeNew) { alphabetSize = alphabetSizeNew; }
-			void setNumBins(int numBinsNew) { numBins = numBinsNew; }
-			void setMinimizerWindowSize(int minimizerWindowSizeNew) { minimizerWindowSize = minimizerWindowSizeNew; }
-			void setHistoSketchSize(int histoSketchSizeNew); //{ histoSketchSize = histoSketchSizeNew; }
-			void setHistoDimension(int histoDimensionNew); //{ histoDimension = histoDimensionNew; }
-			void setParaDecayWeight(double paraDecayWeightNew) { paraDecayWeight = paraDecayWeightNew; }
-			void setApplyConceptDrift(bool applyConceptDriftNew) { applyConceptDrift = applyConceptDriftNew; }
+			//void setKmerSize(int kmerSizeNew) { kmerSize = kmerSizeNew; }
+			//void setAlphabetSize(int alphabetSizeNew) { alphabetSize = alphabetSizeNew; }
+			//void setNumBins(int numBinsNew) { numBins = numBinsNew; }
+			//void setMinimizerWindowSize(int minimizerWindowSizeNew) { minimizerWindowSize = minimizerWindowSizeNew; }
+			//void setHistoSketchSize(int histoSketchSizeNew); //{ histoSketchSize = histoSketchSizeNew; }
+			//void setHistoDimension(int histoDimensionNew); //{ histoDimension = histoDimensionNew; }
+			//void setParaDecayWeight(double paraDecayWeightNew) { paraDecayWeight = paraDecayWeightNew; }
+			//void setApplyConceptDrift(bool applyConceptDriftNew) { applyConceptDrift = applyConceptDriftNew; }
 
+			/// return kmerSize
 			int getKmerSize() { return kmerSize; }
-			int getAlphabetSize() { return alphabetSize; }
-			int getNumBins() { return numBins; }
+
+			/// return the minimizer window size
 			int getMinimizerWindowSize() { return minimizerWindowSize; }
-			int getHistoSketchSize() { return histoSketchSize; }
-			int getHistoDimension() { return histoDimension; }
-			double getParaDecayWeight() { return paraDecayWeight; }
-			bool isApplyComceptDrift() { return applyConceptDrift; }
+
+			//int getAlphabetSize() { return alphabetSize; }
+			//int getNumBins() { return numBins; }
+			//int getMinimizerWindowSize() { return minimizerWindowSize; }
+			//int getHistoSketchSize() { return histoSketchSize; }
+			//int getHistoDimension() { return histoDimension; }
+			//double getParaDecayWeight() { return paraDecayWeight; }
+			//bool isApplyComceptDrift() { return applyConceptDrift; }
 
 
 			
 
 		private:
 			//Parameters parameters;
-			int kmerSize = 21;
+			int kmerSize;
 			int alphabetSize = 4;
-			int numBins = 194481;
-			int minimizerWindowSize = 9;
-			int histoSketchSize = 50;
-			int histoDimension = 194481;
-			double paraDecayWeight = 0.0;
-			bool applyConceptDrift = false;
-			double decayWeight = 1.0;
+			int numBins;
+			int minimizerWindowSize;
+			int histoSketchSize;
+			int histoDimension;
+			double paraDecayWeight;
+			bool applyConceptDrift;
+			double decayWeight;
 
 			bool needToCompute = true;
 			double * binsArr;

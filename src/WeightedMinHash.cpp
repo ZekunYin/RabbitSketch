@@ -6,55 +6,6 @@ namespace Sketch{
 
 //start the WMinHash@xxm
 //WMinHash::WMinHash(Parameters parametersNew)//:parameters(parametersNew)
-WMinHash::WMinHash()
-{	
-	//parameters = parametersNew;
-
-	numBins = pow(kmerSize, alphabetSize); //need to be confirmed
-	//histoDimension = pow(kmerSize, alphabetSize); //need to be confirmed
-
-	//binsArr = (double *) malloc (parameters.get_numBins() * sizeof(double));
-	binsArr = (double *)malloc(numBins * sizeof(double));
-	for(int i = 0; i < numBins; i++){
-		binsArr[i] = 0.0;
-	}
-
-	int g = ceil(2 / EPSILON);
-	int d = ceil(log(1 - DELTA) / log(0.5));
-	countMinSketch = (double *)malloc(d * g *sizeof(double));
-	for(int i = 0; i < d * g; i++){
-		countMinSketch[i] = 0.0;
-	}
-	
-	//the r, c, b and getCWS need to be outClass
-	r = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	c = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	b = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	getCWS(r, c, b, histoSketchSize, histoDimension);
-	
-
-	histoSketches = (uint32_t *) malloc (histoSketchSize * sizeof(uint32_t));
-	histoWeight = (double *) malloc (histoSketchSize * sizeof(double));
-	
-	//add the applyConceptDrift and decayWeight.
-	if(paraDecayWeight < 0.0 || paraDecayWeight > 1.0){
-		cerr << "the paraDecayWeight must between 0.0 and 1.0 " << endl;
-		exit(1);
-	}
-	else{
-		applyConceptDrift = true;
-	}
-	if(paraDecayWeight == 1.0){
-		applyConceptDrift = false;
-	}
-	decayWeight = 1.0;
-	if(applyConceptDrift){
-		decayWeight = exp(-paraDecayWeight);
-	}
-
-	needToCompute = true;
-
-}
 
 void WMinHash::update(char * seq)
 {
@@ -166,31 +117,31 @@ double WMinHash::distance(WMinHash * wmh){
 	return 1 - wJaccard(wmh);
 }
 
-void WMinHash::setHistoSketchSize(int histoSketchSizeNew){
-	histoSketchSize = histoSketchSizeNew;
+//void WMinHash::setHistoSketchSize(int histoSketchSizeNew){
+//	histoSketchSize = histoSketchSizeNew;
+//
+//	r = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+//	c = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+//	b = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+//	getCWS(r, c, b, histoSketchSize, histoDimension);
+//	
+//
+//	histoSketches = (uint32_t *) malloc (histoSketchSize * sizeof(uint32_t));
+//	histoWeight = (double *) malloc (histoSketchSize * sizeof(double));
+//}
 
-	r = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	c = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	b = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	getCWS(r, c, b, histoSketchSize, histoDimension);
-	
-
-	histoSketches = (uint32_t *) malloc (histoSketchSize * sizeof(uint32_t));
-	histoWeight = (double *) malloc (histoSketchSize * sizeof(double));
-}
-
-void WMinHash::setHistoDimension(int histoDimensionNew){
-	histoDimension = histoDimensionNew;
-	
-	r = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	c = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	b = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-	getCWS(r, c, b, histoSketchSize, histoDimension);
-	
-
-	histoSketches = (uint32_t *) malloc (histoSketchSize * sizeof(uint32_t));
-	histoWeight = (double *) malloc (histoSketchSize * sizeof(double));
-}
+//void WMinHash::setHistoDimension(int histoDimensionNew){
+//	histoDimension = histoDimensionNew;
+//	
+//	r = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+//	c = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+//	b = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+//	getCWS(r, c, b, histoSketchSize, histoDimension);
+//	
+//
+//	histoSketches = (uint32_t *) malloc (histoSketchSize * sizeof(uint32_t));
+//	histoWeight = (double *) malloc (histoSketchSize * sizeof(double));
+//}
 
 
 WMinHash::~WMinHash()
