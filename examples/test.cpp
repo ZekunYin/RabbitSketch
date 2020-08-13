@@ -67,21 +67,21 @@ int main(int argc, char* argv[])
 	
 	time1 = get_sec();
 
-	//Sketch::MinHash * mh1 = new Sketch::MinHash();
-	//Sketch::MinHash * mh2 = new Sketch::MinHash();
-	//mh1->update(seq1);	
-	////std::cout << "mh1 set size: " << mh1->count() << std::endl;
-	//mh2->update(seq2);	
-	////std::cout << "mh2 set size: " << mh2->count() << std::endl;
+	Sketch::MinHash * mh1 = new Sketch::MinHash();
+	Sketch::MinHash * mh2 = new Sketch::MinHash();
+	mh1->update(seq1);	
+	//std::cout << "mh1 set size: " << mh1->count() << std::endl;
+	mh2->update(seq2);	
+	//std::cout << "mh2 set size: " << mh2->count() << std::endl;
 
 	time3 = get_sec();
 
-	//double minhash_jac = mh1->jaccard(mh2);	
+	double minhash_jac = mh1->jaccard(mh2);	
 	//double minhash_jac = mh1->mdistance(mh2);	
 
 	time2 = get_sec();
 
-	//cout << "MinHash\t"  << 1.0 - minhash_jac << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
+	cout << "MinHash\t"  << 1.0 - minhash_jac << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
 	//cout << "MinHash: the distance(1-J) is: " << 1.0 - minhash_dist << endl;
 	//cout << "MinHash time: " << time2 - time1  << endl;
 	//cout << "MinHash sketch time: " << time3 - time1  << endl;
