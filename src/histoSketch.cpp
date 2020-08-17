@@ -327,7 +327,7 @@ double histoSketch_getSample(int i, int j, double freq, double * r, double * c, 
 //	cerr << "the b[j * dimension + i] is: " << b[j * dimension + i] << endl;
 //	cerr << "the c[j * dimension + i] is: " << c[j * dimension + i] << endl;
 //	cerr << "the r[j * dimension + i] is: " << r[j * dimension + i] << endl;
-	double yka = exp(log(freq) - b[j * dimension + i]);
+	double yka = exp(log(freq) - c[j * dimension +i]*b[j * dimension + i]);
 //	cerr << "after exp for yak is: " << yka <<  endl;
 	//double result = c[j][i] / (yka * exp(r[j][i]));
 	double result = c[j * dimension + i] / (yka * exp(r[j * dimension + i]));
@@ -340,6 +340,7 @@ double histoSketch_getSample(int i, int j, double freq, double * r, double * c, 
 void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, bool applyConceptDrift, double decayWeight, double * r, double * c, double * b, int sketchSize, int dimension, uint32_t * histoSketch_sketch, double * histoSketch_sketchWeight){
 	
 	double estiFreq = countMinAdd(bin, value, applyConceptDrift, decayWeight, countMinSketch);
+	//cout << "the frequency(value) and estiFreq is: " << value << '\t' << estiFreq << endl;
 
 //	printf("the point of r is: %p\n",r);
 //	printf("the point of c is: %p\n",c);

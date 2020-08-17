@@ -144,7 +144,7 @@ namespace Sketch{
 
 	class WMinHash{
 		public:
-			WMinHash(int k = 21, int size = 50, int windowSize = 9, double paraDWeight = 0.0):
+			WMinHash(int k = 21, int size = 50, int windowSize = 20, double paraDWeight = 0.0):
 				kmerSize(k), histoSketchSize(size), minimizerWindowSize(windowSize), paraDecayWeight(paraDWeight)
 			{	
 				//numBins = pow(kmerSize, alphabetSize); //need to be confirmed
