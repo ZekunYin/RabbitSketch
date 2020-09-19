@@ -1,8 +1,9 @@
 PURPOSE
 
 RabbitSketch is an efficient highly optimized sketching library
-which can take full advantage of modern hardware. RabbitSketch can
-be used as a fast sequence distance estimator for genome analysis.
+which is designed for genome seuqnce analysis. RabbitSketch can take 
+full advantage of modern hardware. RabbitSketch can also be used 
+as a fast general-purpose distance estimator for common strings. 
 RabbitSketch provides both python and C++ interfaces. It is implemented 
 in C++ and is distributed with:
 
@@ -13,10 +14,6 @@ KSeq
 MurmurHash3
   code.google.com/p/smhasher/wiki/MurmurHash3
   Public domain
-
-Open Bloom Filter
-  https://code.google.com/p/bloom/source/browse/trunk/bloom_filter.hpp
-  Common Public License
 
 Mash
   https://github.com/marbl/Mash

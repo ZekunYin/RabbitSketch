@@ -1,6 +1,12 @@
 Introduction
 ============
 
+Data sketching is a powerful technique for processing large scale dataset. It was first used in data mining, and recent years data sektching has also proven effective in biological seqeunces analysis [1]_ [2]_. 
+RabbitSketch library provides flexible and easy to use interfaces of four most popular sketching methods including MinHash, WeightedMinHash, OrderMinHash and HyperLogLog. Both python and C++ are supported. Furthermore, RabbitSketch library features the Vector Processing Units (VPUs) in modern CPUs for better efficiency. RabbitSketch will help you build you own sequence analysis procedures, see :ref:`tutorial`.
+
+MinHash
+-------
+
 For sequences to be compared with :code:`mash`, they must first be `sketched`,
 which creates vastly reduced representations of them. This will happen
 automatically if :code:`mash dist` is given raw sequences. However, if multiple
@@ -107,3 +113,7 @@ allows simple pairwise comparisons with :code:`mash dist`, and allows sketching
 of multiple files to be parallelized.
 
 .. _Jellyfish: http://www.cbcb.umd.edu/software/jellyfish/
+
+.. [1] Mash: fast genome and metagenome distance estimation using MinHash. Ondov BD, Treangen TJ, Melsted P, Mallonee AB, Bergman NH, Koren S, Phillippy AM. Genome Biol. 2016 Jun 20;17(1):132. doi: 10.1186/s13059-016-0997-x.
+
+.. [2] Mash Screen: high-throughput sequence containment estimation for genome discovery. Ondov BD, Starrett GJ, Sappington A, Kostic A, Koren S, Buck CB, Phillippy AM. Genome Biol. 2019 Nov 5;20(1):232. doi: 10.1186/s13059-019-1841-x.

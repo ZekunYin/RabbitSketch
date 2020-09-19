@@ -4,9 +4,9 @@
 #include <zlib.h>
 #include "kseq.h"
 
-KSEQ_INIT(gzFile, gzread)
 using namespace std;
-using namespace Sketch;
+
+KSEQ_INIT(gzFile, gzread)
 
 double get_sec(){
 	struct timeval tv;
@@ -17,28 +17,6 @@ double get_sec(){
 
 int main(int argc, char* argv[])
 {
-	int k = 21;
-	Sketch::Parameters parameters;
-	
-    parameters.alphabetSize = 4;
-    parameters.kmerSize = k;
-	parameters.use64 = pow(parameters.alphabetSize, parameters.kmerSize) > pow(2, 32);
-	parameters.seed = 42;
-	parameters.minHashesPerWindow  = 1000;
-
-
-	parameters.set_numBins(pow(parameters.kmerSize, parameters.alphabetSize));
-	parameters.set_minimizerWindowSize(9);
-	parameters.set_histoSketch_sketchSize(60);
-	parameters.set_histoSketch_dimension(194481);
-	parameters.set_paraDecayWeight(0.1);
-
-
-//	parameters.numBins = pow(parameters.kmerSize, parameters.alphabetSize);
-//	parameters.minimizerWindowSize = 9;
-//	parameters.histoSketch_sketchSize = 500;
-//	parameters.histoSketch_dimension = 194481;
-//	parameters.paraDecayWeight = 0.1;
 
 	gzFile fp1;
 	gzFile fp2;
@@ -59,38 +37,7 @@ int main(int argc, char* argv[])
 
 	ks1 = kseq_init(fp1);
 	ks2 = kseq_init(fp2);
-/*	
-	int nums = 100;
-	if(argc >=4)
-		nums = stoi(argv[3]);
-	int count = 0;
 
-	std::vector<HyperLogLog*> vect_hll;
-    static const size_t BITS = 10; //24
-	
-	//readfile & sketch
-	while( kseq_read(ks) >= 0 ){
-		if(argc >= 4 && count+1 > nums )
-			break;
-		
-		HyperLogLog * test = new HyperLogLog(BITS);
-		test->update(ks->seq.s);
-		vect_hll.push_back(test);
-	
-		count++;
-	}
-	
-	//distance
-	for(int i=0; i<vect_hll.size(); ++i) {
-		fprintf(stdout, "current is %d \n",i);
-		for(int j=i; j<vect_hll.size(); ++j){
-			double dist = vect_hll[i]->distance(*vect_hll[j]);
-			double esti = (vect_hll[i]->merge(*vect_hll[j])).creport();
-			fprintf(stdout,"Seq[%d] and seq[%d] distance(J): %lf , estimation = %lf \n", i, j, dist, esti);
-			//fprintf(stdout,"Distance between sketch[%d] and sketch[%d]: %lf \n", i, j, dist);
-		}
-	}
-*/
 	int l1 = kseq_read(ks1);
 	int l2 = kseq_read(ks2);
 	char * seq1 = ks1->seq.s;
@@ -99,68 +46,89 @@ int main(int argc, char* argv[])
 	double distance;
 	double time1 = get_sec();	
 
-	Sketch::WMinHash * wmh1 = new Sketch::WMinHash(parameters);
-	Sketch::WMinHash * wmh2 = new Sketch::WMinHash(parameters);
-	cerr << "start the update seq1" << endl;
+	//Sketch::WMinHash * wmh1 = new Sketch::WMinHash(21, 50, 9, 0.0);
+	//Sketch::WMinHash * wmh2 = new Sketch::WMinHash(21, 50, 9, 0.0);
+	Sketch::WMinHash * wmh1 = new Sketch::WMinHash();
+	Sketch::WMinHash * wmh2 = new Sketch::WMinHash();
+	//wmh1->setHistoSketchSize(500);
+	//wmh2->setHistoSketchSize(500);
 	wmh1->update(seq1);
-	cerr << "start the update seq2" << endl;
 	wmh2->update(seq2);
-	cerr << "before getWMinHash" << endl;
-//	wmh1->getWMinHash();
-//	wmh2->getWMinHash();
-	cerr << "before distance " << endl;
-	
-
 
 	double time3 = get_sec();
 
 	distance = wmh1->distance(wmh2);
+
 	double time2 = get_sec();
-	cout << "WMinHash: the distance(1-WJ) is: " << distance << endl;
-	cout << "WMinHash time: " << time2 - time1  << endl;
-	cout << "WMinHash sketch time: " << time3 - time1 << endl;
+	cout << "Algorithm\t" << "distance\t" << "totaltime\t" << "sketchtime\t" << endl;
+	cout << "WMinHash\t"  << distance << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
+	//cout << "WMinHash: the distance(1-WJ) is: " << distance << endl;
+	//cout << "WMinHash time: " << time2 - time1  << endl;
+	//cout << "WMinHash sketch time: " << time3 - time1 << endl;
+	//cout << "=======================================================" << endl;
 	
 	time1 = get_sec();
+
 	Sketch::MinHash * mh1 = new Sketch::MinHash();
 	Sketch::MinHash * mh2 = new Sketch::MinHash();
 	mh1->update(seq1);	
+	//std::cout << "mh1 set size: " << mh1->count() << std::endl;
 	mh2->update(seq2);	
+	//std::cout << "mh2 set size: " << mh2->count() << std::endl;
+
 	time3 = get_sec();
 
-	double minhash_dist = mh1->jaccard(mh2);	
+	double minhash_jac = mh1->jaccard(mh2);	
+	//double minhash_jac = mh1->mdistance(mh2);	
 
 	time2 = get_sec();
-	cout << "MinHash: the distance(1-J) is: " << 1.0 - minhash_dist << endl;
-	cout << "MinHash time: " << time2 - time1  << endl;
-	cout << "MinHash sketch time: " << time3 - time1  << endl;
+
+	cout << "MinHash\t"  << 1.0 - minhash_jac << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
+	//cout << "MinHash: the distance(1-J) is: " << 1.0 - minhash_dist << endl;
+	//cout << "MinHash time: " << time2 - time1  << endl;
+	//cout << "MinHash sketch time: " << time3 - time1  << endl;
+	//cout << "=======================================================" << endl;
 
 
 	time1  = get_sec();
-	Sketch::OMinHash omh1(seq1);
-	Sketch::OMinHash omh2;
+
+	Sketch::OrderMinHash omh1;
+	Sketch::OrderMinHash omh2;
+	omh1.buildSketch(seq1);
 	omh2.buildSketch(seq2);
+
 	time3 = get_sec();
+
 	double odist = omh1.distance(omh2);
+
 	time2 = get_sec();
-	cout << "OMinHash: the distance(1-J) is: " << odist << endl;
-	cout << "OMinHash time: " << time2 -  time1 << endl;
-	cout << "OMinHash sketch: " << time3 -  time1 << endl;
+
+	cout << "OMinHash\t"  << odist  << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
+	//cout << "OMinHash: the distance(1-J) is: " << odist << endl;
+	//cout << "OMinHash time: " << time2 -  time1 << endl;
+	//cout << "OMinHash sketch: " << time3 -  time1 << endl;
+	//cout << "=======================================================" << endl;
 
 
 	time1  = get_sec();
+
     static const size_t BITS = 20; //24
-	HyperLogLog t(BITS);
-	HyperLogLog t1(BITS);
+	Sketch::HyperLogLog t(BITS);
+	Sketch::HyperLogLog t1(BITS);
 
     t.update(seq1);
     t1.update(seq2);
+
 	time3 = get_sec();
 
     double dist = t1.distance(t);
+
 	time2  = get_sec();
-    cout << "HLL distance(1-J) = " <<  1.0 - dist << endl;
-	cout << "HLL time: " << time2 -  time1 << endl;
-	cout << "HLL sketch time: " << time3 -  time1 << endl;
+
+	cout << "HLL\t"  << 1.0 - dist  << "\t" << time2 - time1 << "\t" << time3 - time1 << endl;
+    //cout << "HLL distance(1-J) = " <<  1.0 - dist << endl;
+	//cout << "HLL time: " << time2 -  time1 << endl;
+	//cout << "HLL sketch time: " << time3 -  time1 << endl;
 
 	kseq_destroy(ks1);
 	kseq_destroy(ks2);

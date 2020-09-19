@@ -62,7 +62,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='rabbitsketch',
-    version='0.0.2',
+    version='0.0.3',
     author='Zekun Yin',
     author_email='zekun.yin@mail.sdu.edu.cn',
     description='a python package for sequence sketching',

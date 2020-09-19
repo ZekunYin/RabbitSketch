@@ -1,3 +1,8 @@
+/*
+  Most of the functions defined in this file are included from Mash v2.2.
+  Modified by Zekun Yin
+ */
+
 #ifndef __MINHASH_H__
 #define __MINHASH_H__
 
@@ -5,7 +10,7 @@
 #include <queue>
 
 #include "hash.h"
-#include "bloom_filter.hpp"
+#include <cmath>
 #include "robin_hood.h"
 
 
@@ -45,12 +50,13 @@ public:
     void push_back32(hash32_t hash) {hashes32.push_back(hash);}
     void push_back64(hash64_t hash) {hashes64.push_back(hash);}
     bool get64() const {return use64;}
+
+    std::vector<hash32_t> hashes32;
+    std::vector<hash64_t> hashes64;
     
 private:
     
     bool use64;
-    std::vector<hash32_t> hashes32;
-    std::vector<hash64_t> hashes64;
 };
 
 
@@ -104,8 +110,6 @@ private:
 	
 	uint64_t multiplicitySum;
 	
-    bloom_filter * bloomFilter;
-    
     uint64_t kmersTotal;
     uint64_t kmersUsed;
 };
