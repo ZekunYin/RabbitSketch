@@ -4,6 +4,7 @@ project(rabbitsketch)
 
 option(CXX "build pure c++ library instead of python bind interface" OFF)
 #SET(CMAKE_CXX_COMPILER /usr/bin/g++)
+#SET(CMAKE_CXX_COMPILER icpc)
 #SET(CMAKE_C_COMPILER /usr/bin/gcc)
 
 include_directories(src)
@@ -32,12 +33,8 @@ if (CXX)
 	)
 
 	install(FILES "src/Sketch.h" "src/robin_hood.h" "src/MinHash.h" 
-<<<<<<< HEAD
-		          "src/hash.h" "src/bloom_filter.hpp" "src/histoSketch.h" "src/MurmurHash3.h" "src/WangHash.h"
-=======
-		          "src/hash.h" "src/histoSketch.h"
+		          "src/hash.h" "src/histoSketch.h" "src/MurmurHash3.h" "src/WangHash.h"
 				  "src/HyperLogLog.h"
->>>>>>> bfde01b8fe34a7885583a1abcc9b325dacfa8b23
 			DESTINATION include
 		   )
 	

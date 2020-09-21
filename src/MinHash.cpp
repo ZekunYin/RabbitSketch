@@ -356,9 +356,15 @@ hash_u getHash(const char * seq, int length, uint32_t seed, bool use64)
 		MurmurHash3_x86_32(seq + 16, length - 16, seed, data + 4);
 	}
 #else
+    /* MurmurHash3_x64_128
 	char data[16];
-	//MurmurHash3_x64_128(seq, length, seed, data);
+	MurmurHash3_x64_128(seq, length, seed, data);
+    */
+
+    char data[8];
     WangHash_x64(seq, length, data);
+    //uint64_t res = *((hash64_t *)data);
+    //printf("The res is: %llu\n", res);
 #endif
 
 	hash_u hash;
@@ -476,10 +482,7 @@ void inline transpose4_epi64(__m256i *row1, __m256i *row2, __m256i *row3, __m256
 void MinHash::update(char * seq)
 {
 	const uint64_t length = strlen(seq);
-<<<<<<< HEAD
-	//cout << "seq_len using avx512: " << length << endl;
-=======
->>>>>>> bfde01b8fe34a7885583a1abcc9b325dacfa8b23
+    //cout << "The length is: " << length << endl;
 	totalLength += length;
 
 	// to uppercase 
@@ -500,9 +503,32 @@ void MinHash::update(char * seq)
     	seqRev = new char[length];
         reverseComplement(seq, seqRev, length);
     }
-/*
+
 #if defined __AVX512F__ && defined __AVX512BW__
 
+    // WangHash_x64_AVX512_x8
+    int kmerNums = length - kmerSize + 1; 
+    uint64_t *res = (uint64_t *)malloc(sizeof(uint64_t) * kmerNums); //NOTED: init on the stack.
+    memset(res, 0, sizeof(uint64_t) * kmerNums);
+    //uint64_t res[kmerNums]; //stack overflow
+    
+    WangHash_x64_AVX512_x8(seq, seqRev, length, kmerSize, res);  
+    //for(int i = 0; i < kmerNums; i++)
+    //    printf("The res is: %llu\n", res[i]);
+
+	hash_u hash;
+	for(int i = 0; i < kmerNums; ++i){ 
+		if(use64)
+			hash.hash64 = res[i];
+		else
+			hash.hash32 = (uint32_t)res[i];
+		minHashHeap->tryInsert(hash);
+	}
+
+    free(res);
+    // WangHash_x64_AVX512_x8
+/*    
+    //Murmurhash3_AVX1512
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
 	int n_kmers = length - kmerSize + 1;
 	int n_kmers_body = (n_kmers / 16) * 16;
@@ -674,6 +700,7 @@ void MinHash::update(char * seq)
 		minHashHeap->tryInsert(hash);
 
 	}
+    //Murmurhash3_AVX512
 //============================================================================================================================================================
 
 #else
@@ -754,15 +781,8 @@ void MinHash::update(char * seq)
 	}
 
 	#else
-<<<<<<< HEAD
-*/
-//implement by no optmization
-//--------------------------------------------------------------------------------------------------------------------
-	cerr << "using no simd" << endl;
-=======
 
 	//implement by no optmization
->>>>>>> bfde01b8fe34a7885583a1abcc9b325dacfa8b23
     for ( uint64_t i = 0; i < length - kmerSize + 1; i++ )
     {
             
@@ -770,13 +790,14 @@ void MinHash::update(char * seq)
         const char *kmer_rev = seqRev + length - i - kmerSize;
         const char * kmer = (noncanonical || memcmp(kmer_fwd, kmer_rev, kmerSize) <= 0) ? kmer_fwd : kmer_rev;
         bool filter = false;
-
+        
         hash_u hash = getHash(kmer, kmerSize, seed, use64);
         
 		minHashHeap->tryInsert(hash);
     }
 //	#endif
-//#endif
+    */
+#endif
     
     
     if ( ! noncanonical )
@@ -1040,8 +1061,6 @@ void reverseComplement(const char * src, char * dest, int length)
 }
 
 }
-<<<<<<< HEAD
-=======
 
 uint64_t u64_intersect_scalar_stop(const uint64_t *list1, uint64_t size1, const uint64_t *list2, uint64_t size2, uint64_t size3,
         uint64_t *i_a, uint64_t *i_b){
@@ -1738,4 +1757,3 @@ uint64_t u64_intersection_vector_sse(const uint64_t *list1, uint64_t size1, cons
 #endif
 #endif
 #endif
->>>>>>> bfde01b8fe34a7885583a1abcc9b325dacfa8b23
