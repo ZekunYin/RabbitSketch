@@ -356,11 +356,10 @@ hash_u getHash(const char * seq, int length, uint32_t seed, bool use64)
 		MurmurHash3_x86_32(seq + 16, length - 16, seed, data + 4);
 	}
 #else
-    /* MurmurHash3_x64_128
+    /* //MurmurHash3_x64_128
 	char data[16];
 	MurmurHash3_x64_128(seq, length, seed, data);
-    */
-
+    */ //MurmurHash3_x64_128
     char data[8];
     WangHash_x64(seq, length, data);
     //uint64_t res = *((hash64_t *)data);
@@ -510,9 +509,9 @@ void MinHash::update(char * seq)
     int kmerNums = length - kmerSize + 1; 
     uint64_t *res = (uint64_t *)malloc(sizeof(uint64_t) * kmerNums); //NOTED: init on the stack.
     memset(res, 0, sizeof(uint64_t) * kmerNums);
-    //uint64_t res[kmerNums]; //stack overflow
     
     WangHash_x64_AVX512_x8(seq, seqRev, length, kmerSize, res);  
+    //WangHash_x64_AVX512_x8plus(seq, seqRev, length, kmerSize, res);  
     //for(int i = 0; i < kmerNums; i++)
     //    printf("The res is: %llu\n", res[i]);
 
@@ -527,7 +526,7 @@ void MinHash::update(char * seq)
 
     free(res);
     // WangHash_x64_AVX512_x8
-/*    
+/*
     //Murmurhash3_AVX1512
 	int pend_k = ((kmerSize - 1) / 16 + 1) * 16;
 	int n_kmers = length - kmerSize + 1;
