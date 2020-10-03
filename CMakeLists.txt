@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(rabbitsketch)
 
-option(CXX "build pure c++ library instead of python bind interface" OFF)
+option(CXXAPI "build pure c++ library instead of python bind interface" OFF)
 #SET(CMAKE_CXX_COMPILER /usr/bin/g++)
 #SET(CMAKE_C_COMPILER /usr/bin/gcc)
 
@@ -17,7 +17,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -std=c++14 -static-libstdc++ -mar
 #set_source_files_properties(src/MinHash.cpp PROPERTIES COMPILE_FLAGS -mavx2)
 
 
-if (CXX)
+if (CXXAPI)
 	add_compile_options(-DNOPYTHON)
 	add_library("${PROJECT_NAME}" SHARED ${DIR_SRCS})
 	add_library("${PROJECT_NAME}_static" STATIC ${DIR_SRCS})
