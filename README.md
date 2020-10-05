@@ -8,10 +8,10 @@ A Linux system on a recent x86_64 CPU is required.
 
 
 ```bash
-cd libsketch
+cd RabbitSketch
 mkdir build
 cd build
-cmake -DCXX=ON .. -DCMAKE_INSTALL_PREFIX=.
+cmake -DCXXAPI=ON .. -DCMAKE_INSTALL_PREFIX=.
 make
 make install
 export LD_LIBRARY_PATH=`pwd`/lib:$LD_LIBRARY_PATH
@@ -32,7 +32,7 @@ We will get the value of jaccard and distance.
 ### PYTHON bind
 **pip install:**
 ```bash
-cd libsketch
+cd RabbitSketch
 pip3 install . --user
 ```
 or
@@ -42,7 +42,7 @@ or
 ```
 **cmake install**
 ```bash
-cd libsketch
+cd RabbitSketch
 mkdir build
 cd build
 cmake .. #default with pybind support
