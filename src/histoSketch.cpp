@@ -269,12 +269,12 @@ double countMinAdd(uint64_t element, double increment, bool applyScaling, double
 	int g = ceil(2 / EPSILON);//math.h
 	int d = ceil(log(1 - DELTA) / log(0.5));//math.h
 
-	if(applyScaling){
-		//TODO
-		//cout << "do the countMinScale" << endl;
-		countMinScale(countMinSketch, decayWeight);
-		//countMinSketch.scale();
-	}
+//	if(applyScaling){
+//		//TODO
+//		//cout << "do the countMinScale" << endl;
+//		countMinScale(countMinSketch, decayWeight);
+//		//countMinSketch.scale();
+//	}
 
 	//double currentMinimum = HUGE_VALL;//use c++11: huge long double value
 	double currentMinimum = 10000.0;//use c++11: huge long double value
@@ -356,13 +356,13 @@ void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, 
 
 		//get the current minimum in the histosketchSlot, accounting for concept drift if requrested
 		double curMin;
-		if(applyConceptDrift){
-			//TODO
-			curMin = histoSketch_sketchWeight[i] /decayWeight;
-		}
-		else{
+	//	if(applyConceptDrift){
+	//		//TODO
+	//		curMin = histoSketch_sketchWeight[i] /decayWeight;
+	//	}
+	//	else{
 			curMin = histoSketch_sketchWeight[i];
-		}
+	//	}
 
 		if(aka < curMin){
 			histoSketch_sketch[i] = (uint32_t)bin;

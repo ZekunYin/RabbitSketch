@@ -21,6 +21,16 @@ namespace Sketch{
 
 	typedef uint64_t hash_t;
 
+	struct WMHParameters
+	{
+		int kmerSize;
+		int sketchSize;
+		int windowSize;
+		double * r; 
+		double * c; 
+		double * b; 
+	};
+
 	struct Reference
 	{
 		// no sequence for now
@@ -144,8 +154,9 @@ namespace Sketch{
 
 	class WMinHash{
 		public:
-			WMinHash(int k = 21, int size = 50, int windowSize = 20, double paraDWeight = 0.0):
-				kmerSize(k), histoSketchSize(size), minimizerWindowSize(windowSize), paraDecayWeight(paraDWeight)
+			//WMinHash(int k = 21, int size = 50, int windowSize = 20, double paraDWeight = 0.0):
+			WMinHash(WMHParameters parameters, double paraDWeight = 0.0):
+				kmerSize(parameters.kmerSize), histoSketchSize(parameters.sketchSize), minimizerWindowSize(parameters.windowSize), paraDecayWeight(paraDWeight)
 			{	
 				//numBins = pow(kmerSize, alphabetSize); //need to be confirmed
 				//histoDimension = pow(kmerSize, alphabetSize); //need to be confirmed
@@ -159,12 +170,16 @@ namespace Sketch{
 				int d = ceil(log(1 - DELTA) / log(0.5));
 				countMinSketch = (double *)malloc(d * g *sizeof(double));
 				memset(countMinSketch, 0, d*g*sizeof(double));//init countMinSketch 
+
+				r = parameters.r;
+				c = parameters.c;
+				b = parameters.b;
 				
-				//the r, c, b and getCWS need to be outClass
-				r = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-				c = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-				b = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
-				getCWS(r, c, b, histoSketchSize, histoDimension);
+			//	//the r, c, b and getCWS need to be outClass
+			//	r = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+			//	c = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+			//	b = (double *)malloc(histoSketchSize * histoDimension * sizeof(double));
+			//	getCWS(r, c, b, histoSketchSize, histoDimension);
 			
 				////for getCWS test debug
 			//	FILE * fp;
@@ -238,7 +253,7 @@ namespace Sketch{
 			
 
 		private:
-			//Parameters parameters;
+			WMHParameters parameters;
 			int kmerSize;
 			int alphabetSize = 4;
 			int numBins;

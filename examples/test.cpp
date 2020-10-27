@@ -14,6 +14,19 @@ double get_sec(){
 	return (double)tv.tv_sec + (double)tv.tv_usec / 1000000;
 }
 
+void getCWS(double *r, double *c, double *b, int sketchSize, int dimension){
+//	cerr << "successful malloc r, c, b in getCWS" << endl;
+	const int DISTRIBUTION_SEED = 1;
+    default_random_engine generator(DISTRIBUTION_SEED);
+    gamma_distribution<double> gamma(2.0,1.0);
+    uniform_real_distribution<double> uniform(0.0,1.0);
+
+    for (int i = 0; i < sketchSize * dimension; ++i){
+        r[i] = gamma(generator);
+        c[i] = log(gamma(generator));
+        b[i] = uniform(generator) * r[i];
+    }
+}	
 
 int main(int argc, char* argv[])
 {
@@ -45,11 +58,19 @@ int main(int argc, char* argv[])
 
 	double distance;
 	double time1 = get_sec();	
+	Sketch::WMHParameters parameter;
+	parameter.kmerSize = 21;
+	parameter.sketchSize = 50;
+	parameter.windowSize = 20;
+	parameter.r = (double *)malloc(parameter.sketchSize * pow(parameter.kmerSize, 4) * sizeof(double));
+	parameter.c = (double *)malloc(parameter.sketchSize * pow(parameter.kmerSize, 4) * sizeof(double));
+	parameter.b = (double *)malloc(parameter.sketchSize * pow(parameter.kmerSize, 4) * sizeof(double));
+	getCWS(parameter.r, parameter.c, parameter.b, parameter.sketchSize, pow(parameter.kmerSize, 4));
 
 	//Sketch::WMinHash * wmh1 = new Sketch::WMinHash(21, 50, 9, 0.0);
 	//Sketch::WMinHash * wmh2 = new Sketch::WMinHash(21, 50, 9, 0.0);
-	Sketch::WMinHash * wmh1 = new Sketch::WMinHash();
-	Sketch::WMinHash * wmh2 = new Sketch::WMinHash();
+	Sketch::WMinHash * wmh1 = new Sketch::WMinHash(parameter);
+	Sketch::WMinHash * wmh2 = new Sketch::WMinHash(parameter);
 	//wmh1->setHistoSketchSize(500);
 	//wmh2->setHistoSketchSize(500);
 	wmh1->update(seq1);
