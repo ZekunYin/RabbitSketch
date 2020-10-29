@@ -107,6 +107,7 @@ double WMinHash::wJaccard(WMinHash * wmh)
 	
 	}
 	jaccard = intersectElement / unionElement;
+	printf("the intersect and union is: %lf and %lf \n", intersectElement, unionElement);
 
 	return jaccard;
 
