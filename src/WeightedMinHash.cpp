@@ -9,15 +9,6 @@ namespace Sketch{
 
 void WMinHash::update(char * seq)
 {
-	//int k = parameters.kmerSize;
-	//int w = parameters.get_minimizerWindowSize();
-	//int numBins = parameters.get_numBins();
-	//int histoSketch_sketchSize = parameters.get_histoSketch_sketchSize();
-	//int histoSketch_dimension = parameters.get_histoSketch_dimension();
-	//cerr << "in the update the histoSketch_sketchSize is: " << parameters.get_histoSketch_sketchSize() << endl;
-
-	//findMinimizers(k, w, seq, sketches);
-	//kmerSpectrumAddHash(sketches, binsArr, parameters.get_numBins());
 	findMinimizers(kmerSize, minimizerWindowSize, seq, sketches);
 	kmerSpectrumAddHash(sketches, binsArr, numBins);
 //	for(int i = 0; i < numBins; i++){
@@ -33,15 +24,9 @@ void WMinHash::update(char * seq)
 void WMinHash::computeHistoSketch()
 {
 	kmerSpectrumDump(binsArr, numBins, kmerSpectrums);
-	//cerr << "finish the kmerSpectrumDump " << endl;
-	//int hsSketchSize = parameters.get_histoSketch_sketchSize();
-	//int hsDimension = parameters.get_histoSketch_dimension();
-	//cerr << "the hsSketchSize is " << hsSketchSize << endl;
-	//cerr << "the hsDimension is " << hsDimension << endl;
 
 	for(int i = 0; i < kmerSpectrums.size(); i++){
 	//cerr << "finish the " << i << " iterator to addElement" << endl;
-		//histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, parameters.get_histoSketch_sketchSize(), applyConceptDrift, decayWeight, r, c, b, parameters.get_histoSketch_sketchSize(), parameters.get_histoSketch_dimension(), histoSketch_sketch, histoSketch_sketchWeight);
 		histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, applyConceptDrift, decayWeight, r, c, b, histoSketchSize, histoDimension, histoSketches, histoWeight);
 	}
 	//cerr << "finish the histoSketchAddElement " << endl;
@@ -149,9 +134,6 @@ WMinHash::~WMinHash()
 {
 	free(binsArr);
 	free(countMinSketch);
-	free(r);
-	free(c);
-	free(b);
 	free(histoSketches);
 	free(histoWeight);
 

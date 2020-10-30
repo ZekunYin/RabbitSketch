@@ -2,6 +2,7 @@
 #include "robin_hood.h"
 #include <math.h>
 #include <random>
+#include <float.h>
 //#include <cmath>
 
 
@@ -277,7 +278,7 @@ double countMinAdd(uint64_t element, double increment, bool applyScaling, double
 //	}
 
 	//double currentMinimum = HUGE_VALL;//use c++11: huge long double value
-	double currentMinimum = 10000.0;//use c++11: huge long double value
+	double currentMinimum = DBL_MAX;//float.h
 	//cout << currentMinimum << endl;
 	
 	for(int i = 0; i < d; i++){
@@ -312,21 +313,6 @@ double histoSketch_getSample(int i, int j, double freq, double * r, double * c, 
 		exit(1);
 	}
 
-//	printf("the point of r is: %p\n",r);
-//	printf("the point of c is: %p\n",c);
-//	printf("the point of b is: %p\n",b);
-//
-//	cerr << "the sketchSize in histoSketch_getSample is: " << sketchSize << endl;
-//	cerr << "the dimension in histoSketch_getSample is: " << dimension << endl;
-
-	//double yka = exp(log(freq) - b[j][i]);
-//	printf("the b is: %lf\n", b[j * dimension + i]);
-//	cerr << "the index i in histoSketch_getSample is: " << i << endl;
-//	cerr << "the index j in histoSketch_getSample is: " << j << endl;
-//	cerr << "the freq in histoSketch_getSample is: " << freq << endl;
-//	cerr << "the b[j * dimension + i] is: " << b[j * dimension + i] << endl;
-//	cerr << "the c[j * dimension + i] is: " << c[j * dimension + i] << endl;
-//	cerr << "the r[j * dimension + i] is: " << r[j * dimension + i] << endl;
 	double yka = exp(log(freq) - c[j * dimension +i]*b[j * dimension + i]);
 //	cerr << "after exp for yak is: " << yka <<  endl;
 	//double result = c[j][i] / (yka * exp(r[j][i]));
@@ -342,15 +328,9 @@ void histoSketchAddElement(uint64_t bin, double value, double * countMinSketch, 
 	double estiFreq = countMinAdd(bin, value, applyConceptDrift, decayWeight, countMinSketch);
 	//cout << "the frequency(value) and estiFreq is: " << value << '\t' << estiFreq << endl;
 
-//	printf("the point of r is: %p\n",r);
-//	printf("the point of c is: %p\n",c);
-//	printf("the point of b is: %p\n",b);
-
 	for(int i = 0; i < sketchSize; i++){
 		//get the CWS value(A_Ka) for the incoming element
-//		cerr << "start the histoSketch_getSample to get aka in histoSketchAddElement " << endl;
 		double aka = histoSketch_getSample((int)bin, i, estiFreq, r, c, b, sketchSize, dimension);	
-//		cerr << "finish the histoSketch_getSample to get aka in histoSketchAddElement " << endl;
 //		printf("the aka is: %lf\n", aka);
 //		exit(1);
 
@@ -414,10 +394,3 @@ double getWJD(uint32_t *setA, uint32_t *setB, double *weightA, double *weightB, 
 
 
 
-
-
-
-
-
-
-		

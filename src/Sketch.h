@@ -6,6 +6,7 @@
 #include <string>
 //#include <string.h>
 #include <stdint.h>
+#include <float.h>
 
 #include "MinHash.h"
 #include "histoSketch.h"
@@ -15,6 +16,7 @@
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #endif  
+
 
 /// \brief Sketch namespace
 namespace Sketch{
@@ -190,6 +192,10 @@ namespace Sketch{
 			
 				histoSketches = (uint32_t *) malloc (histoSketchSize * sizeof(uint32_t));
 				histoWeight = (double *) malloc (histoSketchSize * sizeof(double));
+				for(int i = 0; i < histoSketchSize; i++){
+					histoWeight[i] = DBL_MAX;
+				}
+				//memset(histoWeight, 0, histoSketchSize * sizeof(double));
 				
 				//add the applyConceptDrift and decayWeight.
 				if(paraDecayWeight < 0.0 || paraDecayWeight > 1.0){
