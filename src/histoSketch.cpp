@@ -3,6 +3,7 @@
 #include <math.h>
 #include <random>
 #include <float.h>
+#include "fmath.hpp"
 //#include <cmath>
 
 
@@ -313,10 +314,11 @@ double histoSketch_getSample(int i, int j, double freq, double * r, double * c, 
 		exit(1);
 	}
 
-	double yka = exp(log(freq) - c[j * dimension +i]*b[j * dimension + i]);
+	//double yka = exp(log(freq) - c[j * dimension +i]*b[j * dimension + i]);
+	double yka = fmath::expd(fmath::log(freq) - c[j * dimension +i]*b[j * dimension + i]);
 //	cerr << "after exp for yak is: " << yka <<  endl;
 	//double result = c[j][i] / (yka * exp(r[j][i]));
-	double result = c[j * dimension + i] / (yka * exp(r[j * dimension + i]));
+	double result = c[j * dimension + i] / (yka * fmath::expd(r[j * dimension + i]));
 //	cerr << "after exp for result is: " << result << endl;
 	return result;
 }
