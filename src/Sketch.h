@@ -109,10 +109,10 @@ namespace Sketch{
 
 			/// test whether this minhash is empty
 			bool isEmpty() { 
-				if(this->needToList){
-					this->heapToList();
-					this->needToList = false;
-				}
+				//if(this->needToList){
+				//	this->heapToList();
+				//	this->needToList = false;
+				//}
 
 				if(this->reference.hashesSorted.size() <= 0)
 					return true;
@@ -123,11 +123,11 @@ namespace Sketch{
 
 			/// get sketch size, it should be less than max sketch size
 			int getSketchSize() {
-				if(this->needToList)
-				{
-					this->heapToList();
-					this->needToList = false;
-				}
+				//if(this->needToList)
+				//{
+				//	this->heapToList();
+				//	this->needToList = false;
+				//}
 				
 				return this->reference.hashesSorted.size();
 			}

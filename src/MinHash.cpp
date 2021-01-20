@@ -772,7 +772,8 @@ void MinHash::update(char * seq)
     }
 
 
-	needToList = true;
+	//needToList = true;
+	heapToList();
 }
 
 void MinHash::heapToList()
@@ -795,10 +796,11 @@ void MinHash::printMinHashes()
 	//	minHashHeap -> toHashList(hashlist);
 	//	minHashHeap -> toCounts(reference.counts);
 	//	hashlist.sort();
-	if(needToList){
-		heapToList();
-		needToList = false;
-	}
+	
+	//if(needToList){
+	//	heapToList();
+	//	needToList = false;
+	//}
 
 	for(int i = 0; i < reference.hashesSorted.size(); i++){
 		if(use64)
@@ -819,22 +821,23 @@ void MinHash::merge(MinHash& msh)
 		//cerr << "insert to heap" << mshList.at(i).hash64 << endl;
 		minHashHeap -> tryInsert(mshList.at(i));
 	}
-	needToList = true;
+	//needToList = true;
+	heapToList();
 		
 	return;	
 }
 
 double MinHash::jaccard(MinHash * msh)
 {
-	if(needToList){
-		heapToList();
-		needToList = false;
-	}
-	if(msh->needToList){
-		//cout << "msh2 need to list addbyxxm " << endl;
-		msh->heapToList();
-		msh->needToList = false;
-	}
+	//if(needToList){
+	//	heapToList();
+	//	needToList = false;
+	//}
+	//if(msh->needToList){
+	//	//cout << "msh2 need to list addbyxxm " << endl;
+	//	msh->heapToList();
+	//	msh->needToList = false;
+	//}
 
 	uint64_t i = 0;
 	uint64_t j = 0;
