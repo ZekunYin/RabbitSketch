@@ -779,11 +779,20 @@ void MinHash::update(char * seq)
 void MinHash::heapToList()
 {
 	HashList & hashlist = reference.hashesSorted;
-	hashlist.clear();
+	//hashlist.clear();
 	hashlist.setUse64(use64);
-	minHashHeap -> toHashList(hashlist);
-	minHashHeap -> toCounts(reference.counts);
+	HashList tmpHashlist;
+	tmpHashlist.setUse64(use64);
+	minHashHeap -> toHashList(tmpHashlist);
+	//minHashHeap -> toCounts(reference.counts);
+	if(use64)
+		hashlist.hashes64.insert(hashlist.hashes64.end(), tmpHashlist.hashes64.begin(), tmpHashlist.hashes64.end());
+	else
+		hashlist.hashes32.insert(hashlist.hashes32.end(), tmpHashlist.hashes32.begin(), tmpHashlist.hashes32.end());
 	hashlist.sort();
+	hashlist.resize(hashlist.size() < sketchSize ? hashlist.size() : sketchSize);
+	minHashHeap -> clear();
+	tmpHashlist.clear();
 
 }
 
@@ -814,15 +823,24 @@ void MinHash::printMinHashes()
 
 void MinHash::merge(MinHash& msh)
 {
-	msh.heapToList();
+	//msh.heapToList();
 	HashList & mshList = msh.reference.hashesSorted;	
-	for(int i = 0; i < mshList.size(); i++)
-	{
-		//cerr << "insert to heap" << mshList.at(i).hash64 << endl;
-		minHashHeap -> tryInsert(mshList.at(i));
-	}
+	if(use64)
+		reference.hashesSorted.hashes64.insert(reference.hashesSorted.hashes64.end(), msh.reference.hashesSorted.hashes64.begin(), msh.reference.hashesSorted.hashes64.end());
+	else
+		reference.hashesSorted.hashes32.insert(reference.hashesSorted.hashes32.end(), msh.reference.hashesSorted.hashes32.begin(), msh.reference.hashesSorted.hashes32.end());
+	reference.hashesSorted.sort();
+	reference.hashesSorted.resize(reference.hashesSorted.size() < sketchSize ? reference.hashesSorted.size() : sketchSize);
+		
+
+	
+	//for(int i = 0; i < mshList.size(); i++)
+	//{
+	//	//cerr << "insert to heap" << mshList.at(i).hash64 << endl;
+	//	minHashHeap -> tryInsert(mshList.at(i));
+	//}
 	//needToList = true;
-	heapToList();
+	//heapToList();
 		
 	return;	
 }
