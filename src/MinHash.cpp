@@ -11,6 +11,7 @@
 #include <cstring>
 #include <stdint.h>
 #include <math.h>
+#include <unordered_set>
 
 #ifndef NOPYTHON
 #include "pybind.h"
@@ -790,7 +791,34 @@ void MinHash::heapToList()
 	else
 		hashlist.hashes32.insert(hashlist.hashes32.end(), tmpHashlist.hashes32.begin(), tmpHashlist.hashes32.end());
 	hashlist.sort();
-	hashlist.resize(hashlist.size() < sketchSize ? hashlist.size() : sketchSize);
+	if(use64){
+		unordered_set<uint64_t> mergedSet;
+		for(int i = 0; i < hashlist.size(); i++){
+			mergedSet.insert(hashlist.hashes64[i]);
+			if(mergedSet.size() >= sketchSize) break;
+		}
+		hashlist.clear();
+		for(auto i = mergedSet.begin(); i != mergedSet.end(); ++i){
+			hashlist.hashes64.push_back(*i);
+		}
+		mergedSet.clear();
+	}
+	else{
+		unordered_set<uint32_t> mergedSet;
+		for(int i = 0; i < hashlist.size(); i++){
+			mergedSet.insert(hashlist.hashes32[i]);
+			if(mergedSet.size() >= sketchSize) break;
+		}
+		hashlist.clear();
+		for(auto i = mergedSet.begin(); i != mergedSet.end(); ++i){
+			hashlist.hashes32.push_back(*i);
+		}
+		mergedSet.clear();
+	}
+
+	hashlist.sort();
+
+	//hashlist.resize(hashlist.size() < sketchSize ? hashlist.size() : sketchSize);
 	minHashHeap -> clear();
 	tmpHashlist.clear();
 
@@ -830,7 +858,34 @@ void MinHash::merge(MinHash& msh)
 	else
 		reference.hashesSorted.hashes32.insert(reference.hashesSorted.hashes32.end(), msh.reference.hashesSorted.hashes32.begin(), msh.reference.hashesSorted.hashes32.end());
 	reference.hashesSorted.sort();
-	reference.hashesSorted.resize(reference.hashesSorted.size() < sketchSize ? reference.hashesSorted.size() : sketchSize);
+	if(use64){
+		unordered_set<uint64_t> mergedSet;
+		for(int i = 0; i < reference.hashesSorted.hashes64.size(); i++){
+			mergedSet.insert(reference.hashesSorted.hashes64[i]);
+			if(mergedSet.size() >= sketchSize) break;
+		}
+		reference.hashesSorted.clear();
+		for(auto i = mergedSet.begin(); i != mergedSet.end(); i++){
+			reference.hashesSorted.hashes64.push_back(*i);
+		}
+		mergedSet.clear();
+	}
+	else{
+		unordered_set<uint32_t> mergedSet;
+		for(int i = 0; i < reference.hashesSorted.hashes32.size(); i++){
+			mergedSet.insert(reference.hashesSorted.hashes32[i]);
+			if(mergedSet.size() >= sketchSize) break;
+		}
+		reference.hashesSorted.clear();
+		for(auto i = mergedSet.begin(); i != mergedSet.end(); i++){
+			reference.hashesSorted.hashes32.push_back(*i);
+		}
+		mergedSet.clear();
+	}
+
+	reference.hashesSorted.sort();
+
+	//reference.hashesSorted.resize(reference.hashesSorted.size() < sketchSize ? reference.hashesSorted.size() : sketchSize);
 		
 
 	
@@ -863,10 +918,17 @@ double MinHash::jaccard(MinHash * msh)
 	uint64_t denom = 0;
 	const HashList & hashesSortedRef = this->reference.hashesSorted;
 	const HashList & hashesSortedQry = msh->reference.hashesSorted;
-	//cout << "the size of hashesSortedRef is: " << this->reference.hashesSorted.size() << endl;
-	//cout << "the size of hashesSortedQry is: " << msh->reference.hashesSorted.size() << endl;
+//	cout << "the size of hashesSortedRef is: " << this->reference.hashesSorted.size() << endl;
+//	cout << "the size of hashesSortedQry is: " << msh->reference.hashesSorted.size() << endl;
+//	for(int index = 0; index < reference.hashesSorted.size(); index++){
+//		if(use64)
+//			cout << index << " " << reference.hashesSorted.at(index).hash64 << " " << msh->reference.hashesSorted.at(index).hash64 << endl;
+//		else
+//			cout << index << " " << reference.hashesSorted.at(index).hash32 << " " << msh->reference.hashesSorted.at(index).hash32 << endl;
+//	}
 
 #if defined __AVX512F__ && defined __AVX512CD__
+//	cerr << "the avx512 ===========================================" << endl;
     //if(parameters.use64)
     if(hashesSortedRef.get64())
     {
@@ -891,6 +953,7 @@ double MinHash::jaccard(MinHash * msh)
     }
 #else
 #ifdef __AVX2__
+//	cerr << "the avx2 ===========================================" << endl;
     // implement by avx2
     
     if(hashesSortedRef.get64())
@@ -908,6 +971,7 @@ double MinHash::jaccard(MinHash * msh)
 #else
 #ifdef __SSE4_1__
     // implement by sse
+//	cerr << "the sse ===========================================" << endl;
 
     if(hashesSortedRef.get64())
     {
@@ -923,6 +987,8 @@ double MinHash::jaccard(MinHash * msh)
     }
 #else
     //implement without optimization	
+//	cerr << "the naive ===========================================" << endl;
+
     while ( denom < sketchSize && i < hashesSortedRef.size() && j < hashesSortedQry.size() )
     {
         if ( hashLessThan(hashesSortedRef.at(i), hashesSortedQry.at(j), hashesSortedRef.get64()) )
@@ -967,8 +1033,8 @@ double MinHash::jaccard(MinHash * msh)
 		}
 	}
 
-	//	cout << "the common is: " << common << endl;
-	//	cout << "the denom is: " << denom << endl;
+		cout << "the common is: " << common << endl;
+		cout << "the denom is: " << denom << endl;
 
 	double jaccard = double(common) / denom;
 	return jaccard;
