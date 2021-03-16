@@ -1033,8 +1033,8 @@ double MinHash::jaccard(MinHash * msh)
 		}
 	}
 
-		cout << "the common is: " << common << endl;
-		cout << "the denom is: " << denom << endl;
+	//	cout << "the common is: " << common << endl;
+	//	cout << "the denom is: " << denom << endl;
 
 	double jaccard = double(common) / denom;
 	return jaccard;
