@@ -397,7 +397,7 @@ namespace Sketch{
 			void update(const char* seq);
 			HyperLogLog merge(const HyperLogLog &other) const;
 			void printSketch();
-			double distance(const HyperLogLog &h2) const {return jaccard_index(h2);}
+			double distance(const HyperLogLog &h2) const {return 1.0 - jaccard_index(h2);}
 			double jaccard_index(HyperLogLog &h2); 
 			double jaccard_index(const HyperLogLog &h2) const; 
 
