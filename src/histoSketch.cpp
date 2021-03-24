@@ -80,14 +80,16 @@ void findMinimizers(int k, int w, string s, vector <uint64_t> &minimizerSketch)
 	}
 
 	int len = s.length();
-	cerr << "the length of the sequence is: " << len << endl;
+	//cerr << "the length of the sequence is: " << len << endl;
 	if(len < 1){
 		std::cerr << "sequence length must be > 0 " << std::endl;
-		exit(1);
+		//exit(1);
+		return;
 	}
 	if(len < (w + k - 1)){
 		std::cerr << "sequence length must be >= w + k -1" << std::endl;
-		exit(1);
+		//exit(1);
+		return;
 	}
 //	vector <uint64_t> minimizerSketch;
 

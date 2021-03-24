@@ -17,27 +17,32 @@ void WMinHash::update(char * seq)
 //		}
 //	}
 	sketches.clear();
-	needToCompute = true;
+	sketches.shrink_to_fit();
+//	needToCompute = true;
 
 }
 
 void WMinHash::computeHistoSketch()
 {
 	kmerSpectrumDump(binsArr, numBins, kmerSpectrums);
+	free(binsArr);
 
 	for(int i = 0; i < kmerSpectrums.size(); i++){
 	//cerr << "finish the " << i << " iterator to addElement" << endl;
 		histoSketchAddElement((uint64_t)kmerSpectrums[i].BinID, kmerSpectrums[i].Frequency, countMinSketch, applyConceptDrift, decayWeight, r, c, b, histoSketchSize, histoDimension, histoSketches, histoWeight);
 	}
+	free(countMinSketch);
+	kmerSpectrums.clear();
+	kmerSpectrums.shrink_to_fit();
 	//cerr << "finish the histoSketchAddElement " << endl;
 
 }
 
 void WMinHash::getWMinHash(){
-	if(needToCompute){
-		computeHistoSketch();
-		needToCompute = false;
-	}
+//	if(needToCompute){
+//		computeHistoSketch();
+//		needToCompute = false;
+//	}
 	cout << "the sketch is: " << endl;
 	for(int i = 0; i < histoSketchSize; i++){
 		printf("%d\n", histoSketches[i]);
@@ -53,14 +58,14 @@ void WMinHash::getWMinHash(){
 double WMinHash::wJaccard(WMinHash * wmh)
 {
 	//cout << "the needToCompute is: " << needToCompute << endl;
-	if(needToCompute){
-		computeHistoSketch();
-		needToCompute = false;
-	}
-	if(wmh->needToCompute){
-		wmh->computeHistoSketch();
-		wmh->needToCompute = false;
-	}
+//	if(needToCompute){
+//		computeHistoSketch();
+//		needToCompute = false;
+//	}
+//	if(wmh->needToCompute){
+//		wmh->computeHistoSketch();
+//		wmh->needToCompute = false;
+//	}
 	double intersectElement = 0.0;
 	double unionElement = 0.0;
 	double jaccard = 0.0;
@@ -92,7 +97,7 @@ double WMinHash::wJaccard(WMinHash * wmh)
 	
 	}
 	jaccard = intersectElement / unionElement;
-	printf("the intersect and union is: %lf and %lf \n", intersectElement, unionElement);
+//	printf("the intersect and union is: %lf and %lf \n", intersectElement, unionElement);
 
 	return jaccard;
 

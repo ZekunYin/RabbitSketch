@@ -71,7 +71,7 @@ namespace Sketch{
 			double jaccard(MinHash * msh);			
 
 			/// return mutation distance defined in Mash instead of jaccard distance
-			double mdistance(MinHash * msh);
+			double distance(MinHash * msh);
 
 			//
 			//void getMinHash(); //return hash values to a vector?
@@ -223,6 +223,8 @@ namespace Sketch{
 			/// weightedMinHash is updatable with multiple sequences
 			void update(char * seq);
 
+			void computeHistoSketch();
+
 			/// return the jaccard index
 			double wJaccard(WMinHash * wmh);
 
@@ -278,7 +280,6 @@ namespace Sketch{
 			uint32_t * histoSketches;
 			double * histoWeight;
 
-			void computeHistoSketch();
 
 			double * r;
 			double * c;

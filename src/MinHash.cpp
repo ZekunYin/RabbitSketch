@@ -1042,13 +1042,14 @@ double MinHash::jaccard(MinHash * msh)
 
 }
 
-double MinHash::mdistance(MinHash * msh)
+double MinHash::distance(MinHash * msh)
 {
 	double distance;
 	double maxDistance = 1;
 	double maxPValue = 1;
 
 	double jaccard_ = this->jaccard(msh);
+	if(jaccard_ == 1.0)	return 0;
 	distance = -log(2 * jaccard_ / (1. + jaccard_)) / kmerSize;
 
 	if ( distance > 1 )
