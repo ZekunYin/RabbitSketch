@@ -395,7 +395,7 @@ namespace Sketch{
 		public:
 			HyperLogLog(int np):core_(1uL<<np,0),np_(np),is_calculated_(0),estim_(EstimationMethod::ERTL_MLE),jestim_(JointEstimationMethod::ERTL_JOINT_MLE) {};
 			~HyperLogLog(){};
-			void update(const char* seq);
+			void update(char* seq);
 			HyperLogLog merge(const HyperLogLog &other) const;
 			void printSketch();
 			double distance(const HyperLogLog &h2) const {return 1.0 - jaccard_index(h2);}

@@ -1,6 +1,7 @@
 //#include <zlib.h>
 #include "HyperLogLog.h"
 #include "Sketch.h"
+#include  "MurmurHash3.h"
 //#include "x86intrin.h"
 //#include "immintrin.h"
 
@@ -400,9 +401,14 @@ void HyperLogLog::compTwoSketch(const std::vector<uint8_t> &sketch1, const std::
 
 
 // TODO: using SIMD to accelerate
-void HyperLogLog::update(const char* seq) {
+void HyperLogLog::update(char* seq) {
 	//reverse&complenment
 	const uint64_t LENGTH = strlen(seq);
+	for(uint64_t i = 0; i < LENGTH; i++){
+		if(seq[i] > 96 && seq[i] < 123){
+			seq[i] -= 32;
+		}
+	}
 	char* seqRev;
 	seqRev = new char[LENGTH];
 	char table[4] = {'T','G','A','C'};
@@ -416,6 +422,7 @@ void HyperLogLog::update(const char* seq) {
 	//sequence -> kmer
 	//fprintf(stderr, "seqRev = %s \n", seqRev);
 	const int KMERLEN = 32;
+	if(LENGTH < KMERLEN) return;
 	for(uint64_t i=0; i<LENGTH-KMERLEN; ++i) {
 		//char kmer[KMERLEN+1];
 		char kmer_fwd[KMERLEN+1];
@@ -433,6 +440,7 @@ void HyperLogLog::update(const char* seq) {
 		}
 
 	}
+	delete [] seqRev;
 }
 
 HyperLogLog HyperLogLog::merge(const HyperLogLog &other) const {
@@ -454,7 +462,13 @@ HyperLogLog HyperLogLog::merge(const HyperLogLog &other) const {
 //	add(element);
 //}
 inline void HyperLogLog::addh(const std::string &element) {
-	add(std::hash<std::string>{}(element));
+	//add(std::hash<std::string>{}(element));
+	uint64_t res[2];
+	int len = element.length();
+	const uint32_t seed = 42;
+	MurmurHash3_x64_128(element.c_str(), len, seed, res);
+	add(res[0]);
+	
 }
 
 //TODO: different hash function

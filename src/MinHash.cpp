@@ -64,10 +64,12 @@ void HashList::clear()
     if ( use64 )
     {
         hashes64.clear();
+		hashes64.shrink_to_fit();
     }
     else
     {
         hashes32.clear();
+		hashes32.shrink_to_fit();
     }
 }
 
@@ -109,17 +111,19 @@ void HashPriorityQueue::clear()
 {
     if ( use64 )
     {
-        while ( queue64.size() )
-        {
-            queue64.pop();
-        }
+		std::priority_queue<hash64_t>().swap(queue64);
+        //while ( queue64.size() )
+        //{
+        //    queue64.pop();
+        //}
     }
     else
     {
-        while ( queue32.size() )
-        {
-            queue32.pop();
-        }
+		std::priority_queue<hash32_t>().swap(queue32);
+        //while ( queue32.size() )
+        //{
+        //    queue32.pop();
+        //}
     }
 }
 
