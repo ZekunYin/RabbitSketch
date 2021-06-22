@@ -63,13 +63,11 @@ void HashList::clear()
 {
     if ( use64 )
     {
-        hashes64.clear();
-		hashes64.shrink_to_fit();
+		std::vector<hash64_t>().swap(hashes64);
     }
     else
     {
-        hashes32.clear();
-		hashes32.shrink_to_fit();
+		std::vector<hash32_t>().swap(hashes32);
     }
 }
 
@@ -781,6 +779,12 @@ void MinHash::update(char * seq)
 	heapToList();
 }
 
+/* addbyxxm
+ * (1)	The merge or the heapToList from heap to update list(where hash values store) need to promise the elements in the list are unique(no repeat element in list).
+ *		The jaccard calculation will be wrong answer if there are repeat element in the hashesSorted list.
+ * (2)	The memory free of intermediate variables is necessary for lower memory footprint especially for large data sets and large sketchSize.
+ * 		The imtermediate variables include: tmp HashesLists, MinHashHeap objects, tmp Sets, etc.
+ */
 void MinHash::heapToList()
 {
 	HashList & hashlist = reference.hashesSorted;
@@ -805,7 +809,10 @@ void MinHash::heapToList()
 		for(auto i = mergedSet.begin(); i != mergedSet.end(); ++i){
 			hashlist.hashes64.push_back(*i);
 		}
-		mergedSet.clear();
+		//clear mergedSet and free memory
+		unordered_set<uint64_t>().swap(mergedSet);
+
+
 	}
 	else{
 		unordered_set<uint32_t> mergedSet;
@@ -817,7 +824,8 @@ void MinHash::heapToList()
 		for(auto i = mergedSet.begin(); i != mergedSet.end(); ++i){
 			hashlist.hashes32.push_back(*i);
 		}
-		mergedSet.clear();
+		//clear mergedSet and free memory
+		unordered_set<uint32_t>().swap(mergedSet);
 	}
 
 	hashlist.sort();
@@ -830,19 +838,6 @@ void MinHash::heapToList()
 
 void MinHash::printMinHashes()
 {
-	//setMinHashesForReference(reference, minHashHeap);
-	//	HashList & hashlist = reference.hashesSorted;
-	//	hashlist.clear();
-	//	hashlist.setUse64(parameters.use64);
-	//	minHashHeap -> toHashList(hashlist);
-	//	minHashHeap -> toCounts(reference.counts);
-	//	hashlist.sort();
-	
-	//if(needToList){
-	//	heapToList();
-	//	needToList = false;
-	//}
-
 	for(int i = 0; i < reference.hashesSorted.size(); i++){
 		if(use64)
 			cerr << "hash64 " <<  i << " " << reference.hashesSorted.at(i).hash64 << endl;
@@ -853,6 +848,12 @@ void MinHash::printMinHashes()
 }
 
 
+/* addbyxxm
+ * (1)	The merge or the heapToList from heap to update list(where hash values store) need to promise the elements in the list are unique(no repeat element in list).
+ *		The jaccard calculation will be wrong answer if there are repeat element in the hashesSorted list.
+ * (2)	The memory free of intermediate variables is necessary for lower memory footprint especially for large data sets and large sketchSize.
+ * 		The imtermediate variables include: tmp HashesLists, MinHashHeap objects, tmp Sets, etc.
+ */
 void MinHash::merge(MinHash& msh)
 {
 	//msh.heapToList();
@@ -872,7 +873,8 @@ void MinHash::merge(MinHash& msh)
 		for(auto i = mergedSet.begin(); i != mergedSet.end(); i++){
 			reference.hashesSorted.hashes64.push_back(*i);
 		}
-		mergedSet.clear();
+		//clear mergedSet and free memory
+		unordered_set<uint64_t>().swap(mergedSet);
 	}
 	else{
 		unordered_set<uint32_t> mergedSet;
@@ -884,37 +886,17 @@ void MinHash::merge(MinHash& msh)
 		for(auto i = mergedSet.begin(); i != mergedSet.end(); i++){
 			reference.hashesSorted.hashes32.push_back(*i);
 		}
-		mergedSet.clear();
+		//clear mergedSet and free memory
+		unordered_set<uint32_t>().swap(mergedSet);
 	}
 
 	reference.hashesSorted.sort();
-
-	//reference.hashesSorted.resize(reference.hashesSorted.size() < sketchSize ? reference.hashesSorted.size() : sketchSize);
-		
-
-	
-	//for(int i = 0; i < mshList.size(); i++)
-	//{
-	//	//cerr << "insert to heap" << mshList.at(i).hash64 << endl;
-	//	minHashHeap -> tryInsert(mshList.at(i));
-	//}
-	//needToList = true;
-	//heapToList();
 		
 	return;	
 }
 
 double MinHash::jaccard(MinHash * msh)
 {
-	//if(needToList){
-	//	heapToList();
-	//	needToList = false;
-	//}
-	//if(msh->needToList){
-	//	//cout << "msh2 need to list addbyxxm " << endl;
-	//	msh->heapToList();
-	//	msh->needToList = false;
-	//}
 
 	uint64_t i = 0;
 	uint64_t j = 0;

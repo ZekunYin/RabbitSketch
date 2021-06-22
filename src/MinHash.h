@@ -11,6 +11,7 @@
 
 #include "hash.h"
 #include <cmath>
+#include<unordered_map>
 #include "robin_hood.h"
 
 
@@ -67,7 +68,11 @@ public:
     HashSet(bool use64New) : use64(use64New) {}
     
     int size() const {return use64 ? hashes64.size() : hashes32.size();}
-    void clear() {use64 ? hashes64.clear() : hashes32.clear();}
+    //void clear() {use64 ? hashes64.clear() : hashes32.clear();}
+    void clear() {
+			use64 ? hashes64.clear() : hashes32.clear();
+			use64 ? hashes64.reserve(0) : hashes32.reserve(0);
+    }
     uint32_t count(hash_u hash) const;
     void erase(hash_u hash);
     void insert(hash_u hash, uint32_t count = 1);
