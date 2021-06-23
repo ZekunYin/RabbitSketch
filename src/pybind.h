@@ -33,7 +33,7 @@ PYBIND11_MODULE(rabbitsketch, m){
 		.def("update", &Sketch::MinHash::update)
 		.def("merge", &Sketch::MinHash::merge)
 		.def("jaccard", &Sketch::MinHash::jaccard)
-		.def("mdistance", &Sketch::MinHash::mdistance)
+		.def("distance", &Sketch::MinHash::distance)
 		.def("getTotalLength", &Sketch::MinHash::getTotalLength)
 		.def("printMinHashes", &Sketch::MinHash::printMinHashes)
 		.def("count", &Sketch::MinHash::count)
@@ -54,14 +54,14 @@ PYBIND11_MODULE(rabbitsketch, m){
 		.def("isReverseComplement", &Sketch::MinHash::isReverseComplement)
 		;
 
-	py::class_<Sketch::WMinHash>(m, "WMinHash")
-		//.def(py::init<>())
-		.def(py::init<int, int, int, double>(), py::arg("kmer")=21, py::arg("size")=50, py::arg("windowSize")=9, py::arg("paraDWeight")=0.0)
-		.def("update", &Sketch::WMinHash::update)
-		.def("wJaccard", &Sketch::WMinHash::wJaccard)
-		.def("distance", &Sketch::WMinHash::distance)
-		.def("getWMinHash", &Sketch::WMinHash::getWMinHash)
-		;
+//	py::class_<Sketch::WMinHash>(m, "WMinHash")
+//		//.def(py::init<>())
+//		.def(py::init<int, int, int, double>(), py::arg("kmer")=21, py::arg("size")=50, py::arg("windowSize")=9, py::arg("paraDWeight")=0.0)
+//		.def("update", &Sketch::WMinHash::update)
+//		.def("wJaccard", &Sketch::WMinHash::wJaccard)
+//		.def("distance", &Sketch::WMinHash::distance)
+//		.def("getWMinHash", &Sketch::WMinHash::getWMinHash)
+//		;
 
 	py::class_<Sketch::OrderMinHash>(m, "OrderMinHash")
 		.def(py::init<>())
