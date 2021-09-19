@@ -60,6 +60,10 @@ namespace Sketch{
 
 				this->needToList = true;
 			}
+			/* for the containment of sequences(genomes).
+			 * the size of minHashHeap(as sketchSize) is proportatd with the sequence(genome) length.
+			 * addbyxxm 2021/9/18
+			 */
 
 			/// minhash is updatable with multiple sequences
 			void update(char * seq);
@@ -69,12 +73,11 @@ namespace Sketch{
 
 			/// return the jaccard index
 			double jaccard(MinHash * msh);			
+			
+			double containJaccard(MinHash * msh);
 
 			/// return mutation distance defined in Mash instead of jaccard distance
 			double distance(MinHash * msh);
-
-			//
-			//void getMinHash(); //return hash values to a vector?
 
 			//print hash values for debug
 			void printMinHashes();
