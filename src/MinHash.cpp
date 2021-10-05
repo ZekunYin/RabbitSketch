@@ -872,6 +872,41 @@ double MinHash::containJaccard(MinHash * msh)
 	const HashList & hashesSortedRef = this->reference.hashesSorted;
 	const HashList & hashesSortedQry = msh->reference.hashesSorted;
 	uint64_t denom = std::min(hashesSortedRef.size(), hashesSortedQry.size());
+	uint64_t sumSketchSize = hashesSortedRef.size() + hashesSortedQry.size();
+#if defined __AVX512F__ && defined __AVX512CD__
+//	cerr << "the avx512 ===========================================" << endl;
+    if(hashesSortedRef.get64())
+    {
+        common = u64_intersect_vector_avx512((uint64_t*)hashesSortedRef.hashes64.data(), hashesSortedRef.size(), (uint64_t*)hashesSortedQry.hashes64.data(), hashesSortedQry.size(), sumSketchSize, &i, &j);
+    }
+    else
+		{
+        common = u32_intersect_vector_avx512((uint32_t*)hashesSortedRef.hashes32.data(), hashesSortedRef.size(), (uint32_t*)hashesSortedQry.hashes32.data(), hashesSortedQry.size(), sumSketchSize, &i, &j);
+    }
+#else
+#ifdef __AVX2__
+//	cerr << "the avx2 ===========================================" << endl;
+    if(hashesSortedRef.get64())
+    {
+        common = u64_intersect_vector_avx2((uint64_t*)hashesSortedRef.hashes64.data(), hashesSortedRef.size(), (uint64_t*)hashesSortedQry.hashes64.data(), hashesSortedQry.size(), sumSketchSize, &i, &j);
+    }
+    else
+		{
+        common = u32_intersect_vector_avx2((uint32_t*)hashesSortedRef.hashes32.data(), hashesSortedRef.size(), (uint32_t*)hashesSortedQry.hashes32.data(), hashesSortedQry.size(), sumSketchSize, &i, &j);
+    }
+#else
+#ifdef __SSE4_1__
+//	cerr << "the sse ===========================================" << endl;
+    if(hashesSortedRef.get64())
+    {
+        common = u64_intersection_vector_sse((uint64_t*)hashesSortedRef.hashes64.data(), hashesSortedRef.size(), (uint64_t*)hashesSortedQry.hashes64.data(), hashesSortedQry.size(), sumSketchSize, &i, &j);
+    }
+    else
+		{
+        common = u32_intersection_vector_sse((uint32_t*)hashesSortedRef.hashes32.data(), hashesSortedRef.size(), (uint32_t*)hashesSortedQry.hashes32.data(), hashesSortedQry.size(), sumSketchSize, &i, &j);
+    }
+#else
+//	cerr << "the without SIMD ===========================================" << endl;
 
   while ( i < hashesSortedRef.size() && j < hashesSortedQry.size() )
   {
@@ -890,6 +925,9 @@ double MinHash::containJaccard(MinHash * msh)
   		common++;
   	}
   }
+#endif
+#endif
+#endif
 
 	double jaccard = double(common) / denom;
 	return jaccard;
@@ -916,11 +954,11 @@ double MinHash::jaccard(MinHash * msh)
 
 #if defined __AVX512F__ && defined __AVX512CD__
 //	cerr << "the avx512 ===========================================" << endl;
-    //if(parameters.use64)
     if(hashesSortedRef.get64())
     {
         //cerr << "implement the 64bit avx512 addbyxxm " << endl;
         common = u64_intersect_vector_avx512((uint64_t*)hashesSortedRef.hashes64.data(), hashesSortedRef.size(), (uint64_t*)hashesSortedQry.hashes64.data(), hashesSortedQry.size(), sketchSize, &i, &j);
+				cout << "the common from avx512 is: " << common << endl;
 
         denom = i + j - common;
     }
@@ -987,6 +1025,7 @@ double MinHash::jaccard(MinHash * msh)
 
         denom++;
     }
+		cout << "the common from native without SIMD is: " << common << endl;
 #endif
 #endif
 #endif
