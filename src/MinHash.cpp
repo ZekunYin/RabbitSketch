@@ -958,7 +958,7 @@ double MinHash::jaccard(MinHash * msh)
     {
         //cerr << "implement the 64bit avx512 addbyxxm " << endl;
         common = u64_intersect_vector_avx512((uint64_t*)hashesSortedRef.hashes64.data(), hashesSortedRef.size(), (uint64_t*)hashesSortedQry.hashes64.data(), hashesSortedQry.size(), sketchSize, &i, &j);
-				cout << "the common from avx512 is: " << common << endl;
+				//cout << "the common from avx512 is: " << common << endl;
 
         denom = i + j - common;
     }
@@ -1025,7 +1025,7 @@ double MinHash::jaccard(MinHash * msh)
 
         denom++;
     }
-		cout << "the common from native without SIMD is: " << common << endl;
+		//cout << "the common from native without SIMD is: " << common << endl;
 #endif
 #endif
 #endif
