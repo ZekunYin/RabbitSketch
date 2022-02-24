@@ -13,11 +13,11 @@
 
 #include <immintrin.h>
 
-double get_sec(){
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000;
-}
+//double get_sec(){
+//	struct timeval tv;
+//	gettimeofday(&tv, NULL);
+//	return (double) tv.tv_sec + (double) tv.tv_usec / 1000000;
+//}
 #if defined __AVX512F__ && defined __AVX512DQ__
 static void inspect(__m512i va)
 {
